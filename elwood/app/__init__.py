@@ -14,9 +14,14 @@ socketio = SocketIO()
 
 def create_app(config_class=Config):
     print("[STARTUP] Creating Flask app...", flush=True)
+    import os
+    base_app_dir = os.path.abspath(os.path.dirname(__file__))
+    templates_dir = os.path.abspath(os.path.join(base_app_dir, '..', 'templates'))
+    statics_dir = os.path.abspath(os.path.join(base_app_dir, '..', 'static'))
+
     app = Flask(__name__,
-                template_folder='../templates',
-                static_folder='../static')
+                template_folder=templates_dir,
+                static_folder=statics_dir)
     app.config.from_object(config_class)
     print(f"[STARTUP] DATABASE_URL set: {'DATABASE_URL' in app.config and bool(app.config.get('SQLALCHEMY_DATABASE_URI'))}", flush=True)
     print(f"[STARTUP] DB URI prefix: {app.config.get('SQLALCHEMY_DATABASE_URI', '')[:20]}...", flush=True)
@@ -136,6 +141,14 @@ def create_app(config_class=Config):
             print("[STARTUP] Running db.create_all()...", flush=True)
             db.create_all()
             print("[STARTUP] db.create_all() completed successfully.", flush=True)
+            from app.models import User
+            if not User.query.first():
+                try:
+                    from seed import seed
+                    seed(app, auto=True)
+                    print("[STARTUP] Auto-seeded demo accounts successfully.", flush=True)
+                except Exception as se:
+                    print(f"[STARTUP] Auto-seed note: {se}", flush=True)
             # Sync any newly added columns to existing tables safely
             from sqlalchemy import inspect, text
             inspector = inspect(db.engine)
