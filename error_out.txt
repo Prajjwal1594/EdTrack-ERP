@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{% if current_user.is_authenticated and current_user.college %}{{ current_user.college.name }}{% else %}EdTrack{% endif %}{% endblock %}</title>
+  <title>500 – Server Error</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="manifest" href="/static/manifest.json">
   <style>
     :root {
       --forest: #1a3a2a;
@@ -628,292 +628,15 @@
     .avatar-dropdown-body a.av-logout { color: var(--danger); }
     .avatar-dropdown-body a.av-logout:hover { background: var(--danger-light); }
   </style>
-  {% block extra_head %}{% endblock %}
+  
 </head>
 <body>
 
-{% if current_user.is_authenticated %}
-<!-- Sidebar -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-brand">
-    {% if current_user.role == 'superadmin' %}
-      <div class="college-crest" style="background:var(--gold);color:var(--forest);font-size:11px">SA</div>
-      <h2>EdTrack</h2>
-      <span>Super Admin</span>
-    {% else %}
-      <div class="college-crest">{{ (current_user.college.code[:2] if current_user.college else 'ET') }}</div>
-      <h2>{{ current_user.college.name if current_user.college else 'EdTrack' }}</h2>
-      <span>{% if current_user.role == 'admin' %}Admin Portal{% elif current_user.role == 'hr' %}HR Portal{% elif current_user.role == 'faculty' %}Faculty Portal{% elif current_user.role == 'student' %}Student Portal{% else %}Parent Portal{% endif %}</span>
-    {% endif %}
-  </div>
-  <nav class="sidebar-nav">
-    {% if current_user.role == 'superadmin' %}
-      <span class="nav-section-label">Platform</span>
-      <a href="{{ url_for('superadmin.dashboard') }}" class="nav-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
-      <span class="nav-section-label">Colleges</span>
-      <a href="{{ url_for('superadmin.colleges') }}" class="nav-link {% if (request.blueprint or '') == 'superadmin' and 'college' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-building-columns"></i> All Colleges</a>
-      <a href="{{ url_for('superadmin.new_college') }}" class="nav-link {% if request.endpoint == 'superadmin.new_college' %}active{% endif %}"><i class="fas fa-plus-circle"></i> New College</a>
 
-    {% elif current_user.role == 'admin' %}
-      <span class="nav-section-label">Overview</span>
-      <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
-      <span class="nav-section-label">Management</span>
-      <a href="{{ url_for('admin.users') }}" class="nav-link {% if 'admin.users' in (request.endpoint or '') or 'admin.add_user' in (request.endpoint or '') or 'admin.edit_user' in (request.endpoint or '') and not 'erp' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-users"></i> Users</a>
-      <a href="{{ url_for('admin.students') }}" class="nav-link {% if 'admin.students' in (request.endpoint or '') or 'admin.edit_erp_profile' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-user-graduate"></i> ERP Students</a>
-      <a href="{{ url_for('admin.courses_management') }}" class="nav-link {% if request.endpoint == 'admin.courses_management' %}active{% endif %}"><i class="fas fa-graduation-cap"></i> Courses & Streams</a>
-      <a href="{{ url_for('admin.counselor_assignments') }}" class="nav-link {% if request.endpoint == 'admin.counselor_assignments' %}active{% endif %}"><i class="fas fa-user-shield"></i> Counselor Roles</a>
-      <a href="{{ url_for('admin.semesters') }}" class="nav-link {% if request.endpoint == 'admin.semesters' %}active{% endif %}"><i class="fas fa-university"></i> Semesters</a>
-      <a href="{{ url_for('admin.sections') }}" class="nav-link {% if request.endpoint == 'admin.sections' %}active{% endif %}"><i class="fas fa-door-open"></i> Sections</a>
-      <a href="{{ url_for('admin.subjects') }}" class="nav-link {% if request.endpoint == 'admin.subjects' %}active{% endif %}"><i class="fas fa-book"></i> Subjects</a>
-      <a href="{{ url_for('admin.faculty_assignments') }}" class="nav-link {% if request.endpoint == 'admin.faculty_assignments' %}active{% endif %}"><i class="fas fa-chalkboard-user"></i> Faculty Assignments</a>
-      <a href="{{ url_for('admin.parent_links') }}" class="nav-link {% if request.endpoint == 'admin.parent_links' %}active{% endif %}"><i class="fas fa-people-arrows"></i> Parent Links</a>
-      <a href="{{ url_for('timetable.index') }}" class="nav-link {% if request.blueprint == 'timetable' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Timetables</a>
-      <span class="nav-section-label">Academic</span>
-      <a href="{{ url_for('admin.terms') }}" class="nav-link {% if request.endpoint == 'admin.terms' %}active{% endif %}"><i class="fas fa-calendar-days"></i> Academic Terms</a>
-      <a href="{{ url_for('admin.fee_types') }}" class="nav-link {% if request.endpoint == 'admin.fee_types' %}active{% endif %}"><i class="fas fa-receipt"></i> Fee Types</a>
-      <a href="{{ url_for('fees.index') }}" class="nav-link {% if request.blueprint == 'fees' %}active{% endif %}"><i class="fas fa-money-bill-wave"></i> Fee Management</a>
-      <span class="nav-section-label">Communication</span>
-      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
-        <i class="fas fa-envelope"></i> Messages
-        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
-      </a>
-      <span class="nav-section-label">ERP Management</span>
-      <a href="{{ url_for('admin.announcements') }}" class="nav-link {% if request.endpoint == 'admin.announcements' %}active{% endif %}"><i class="fas fa-bullhorn"></i> Announcements</a>
-      <a href="{{ url_for('admin.events') }}" class="nav-link {% if request.endpoint == 'admin.events' %}active{% endif %}"><i class="fas fa-calendar-star"></i> Events</a>
-      <a href="{{ url_for('admin.feedback_list') }}" class="nav-link {% if request.endpoint == 'admin.feedback_list' %}active{% endif %}"><i class="fas fa-comment-dots"></i> Feedback</a>
-      <a href="{{ url_for('admin.grievance_list') }}" class="nav-link {% if request.endpoint == 'admin.grievance_list' %}active{% endif %}"><i class="fas fa-flag"></i> Grievances</a>
-      <a href="{{ url_for('admin.leave_applications') }}" class="nav-link {% if request.endpoint == 'admin.leave_applications' %}active{% endif %}"><i class="fas fa-calendar-check"></i> Leave Applications</a>
-      <span class="nav-section-label">Admissions & CRM</span>
-      <a href="{{ url_for('admissions.enquiries') }}" class="nav-link {% if request.blueprint == 'admissions' and 'enquiries' in request.endpoint %}active{% endif %}"><i class="fas fa-headset"></i> CRM Enquiries</a>
-      <a href="{{ url_for('admissions.applications') }}" class="nav-link {% if request.blueprint == 'admissions' and 'applications' in request.endpoint %}active{% endif %}"><i class="fas fa-file-signature"></i> Applications</a>
-      <span class="nav-section-label">Infrastructure</span>
-      <a href="{{ url_for('infra.library') }}" class="nav-link {% if request.blueprint == 'infra' and 'library' in request.endpoint %}active{% endif %}"><i class="fas fa-book-open"></i> Library</a>
-      <a href="{{ url_for('infra.transport') }}" class="nav-link {% if request.blueprint == 'infra' and 'transport' in request.endpoint %}active{% endif %}"><i class="fas fa-bus"></i> Transport</a>
-      <a href="{{ url_for('infra.hostel') }}" class="nav-link {% if request.blueprint == 'infra' and 'hostel' in request.endpoint %}active{% endif %}"><i class="fas fa-bed"></i> Hostel</a>
-      <a href="{{ url_for('infra.inventory') }}" class="nav-link {% if request.blueprint == 'infra' and 'inventory' in request.endpoint %}active{% endif %}"><i class="fas fa-boxes-stacked"></i> Inventory</a>
+  
 
-      <span class="nav-section-label">Ledger</span>
-      <a href="{{ url_for('finance.ledger') }}" class="nav-link {% if request.blueprint == 'finance' and 'ledger' in request.endpoint %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i> Finance Ledger</a>
-      <span class="nav-section-label">Settings</span>
-      <a href="{{ url_for('admin.lms_integration') }}" class="nav-link {% if request.endpoint == 'admin.lms_integration' %}active{% endif %}"><i class="fas fa-network-wired"></i> LMS Integration</a>
-      <a href="{{ url_for('admin.college_settings') }}" class="nav-link {% if request.endpoint == 'admin.college_settings' %}active{% endif %}"><i class="fas fa-gear"></i> College Settings</a>
 
-    {% elif current_user.role == 'hr' %}
-      <span class="nav-section-label">Overview</span>
-      <a href="{{ url_for('hr.dashboard') }}" class="nav-link {% if request.endpoint == 'hr.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
-      <span class="nav-section-label">Staff Management</span>
-      <a href="{{ url_for('hr.directory') }}" class="nav-link {% if 'hr.directory' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-id-badge"></i> Staff Directory</a>
-      <a href="{{ url_for('hr.attendance') }}" class="nav-link {% if 'hr.attendance' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-clipboard-user"></i> Faculty Attendance</a>
-      <a href="{{ url_for('hr.payroll') }}" class="nav-link {% if 'hr.payroll' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-money-check"></i> Payroll Center</a>
-      <span class="nav-section-label">Communication</span>
-      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
-        <i class="fas fa-envelope"></i> Messages
-        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
-      </a>
 
-    {% elif current_user.role == 'faculty' %}
-      <span class="nav-section-label">Overview</span>
-      <a href="{{ url_for('faculty.dashboard') }}" class="nav-link {% if request.endpoint == 'faculty.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
-      <span class="nav-section-label">Academic</span>
-      <a href="{{ url_for('faculty.grades') }}" class="nav-link {% if 'faculty.grade' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-star-half-stroke"></i> Grades</a>
-      <a href="{{ url_for('faculty.attendance') }}" class="nav-link {% if 'faculty.attendance' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-clipboard-check"></i> Attendance</a>
-      <a href="{{ url_for('faculty.assignments') }}" class="nav-link {% if 'faculty.assignment' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-file-lines"></i> Assignments</a>
-      <a href="{{ url_for('exams.index') }}" class="nav-link {% if request.blueprint == 'exams' %}active{% endif %}"><i class="fas fa-pen-to-square"></i> Exams</a>
-      <a href="{{ url_for('faculty.report_comments') }}" class="nav-link {% if request.endpoint and 'report_comment' in request.endpoint %}active{% endif %}"><i class="fas fa-comment-dots"></i> Report Comments</a>
-      <a href="{{ url_for('faculty.credentials') }}" class="nav-link {% if request.endpoint and 'credentials' in request.endpoint %}active{% endif %}"><i class="fas fa-medal"></i> Credentials</a>
-      <a href="{{ url_for('faculty.soft_skills') }}" class="nav-link {% if request.endpoint and 'soft_skills' in request.endpoint %}active{% endif %}"><i class="fas fa-brain"></i> Soft Skills</a>
-      <a href="{{ url_for('timetable.index') }}" class="nav-link {% if request.blueprint == 'timetable' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> My Schedule</a>
-      <a href="{{ url_for('faculty.my_attendance') }}" class="nav-link {% if request.endpoint == 'faculty.my_attendance' %}active{% endif %}"><i class="fas fa-user-clock"></i> My Attendance</a>
-      <span class="nav-section-label">Reports</span>
-      <a href="{{ url_for('fees.index') }}" class="nav-link {% if request.blueprint == 'fees' %}active{% endif %}"><i class="fas fa-money-bill-wave"></i> Fees</a>
-      <span class="nav-section-label">Communication</span>
-      <a href="{{ url_for('faculty.announcements') }}" class="nav-link {% if request.endpoint == 'faculty.announcements' %}active{% endif %}"><i class="fas fa-bullhorn"></i> Announcements</a>
-      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
-        <i class="fas fa-envelope"></i> Messages
-        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
-      </a>
-
-    {% elif current_user.role == 'student' %}
-      {% set student_obj = current_user.student_profile %}
-      <a href="{{ url_for('student.dashboard') }}" class="nav-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
-      <a href="{{ url_for('timetable.index') }}" class="nav-link {% if request.blueprint == 'timetable' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Time Table</a>
-      <a href="{{ url_for('student.faculty') }}" class="nav-link {% if request.endpoint == 'student.faculty' %}active{% endif %}"><i class="fas fa-chalkboard-user"></i> Faculty</a>
-      <a href="{{ url_for('student.profile_view') }}" class="nav-link {% if request.endpoint == 'student.profile_view' %}active{% endif %}"><i class="fas fa-user"></i> User</a>
-      <a href="{{ url_for('student.subjects') }}" class="nav-link {% if request.endpoint == 'student.subjects' %}active{% endif %}"><i class="fas fa-book"></i> Subject</a>
-      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
-        <i class="fas fa-envelope"></i> Message
-        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
-      </a>
-
-      <!-- Announcement (collapsible) -->
-      <div class="nav-parent">
-        <i class="fas fa-bullhorn nav-icon"></i> Announcement
-        <i class="fas fa-chevron-right nav-chevron"></i>
-      </div>
-      <div class="nav-submenu">
-        <a href="{{ url_for('student.announcements', atype='event') }}" class="nav-link"><i class="fas fa-calendar-star"></i> Event</a>
-        <a href="{{ url_for('student.announcements', atype='holiday') }}" class="nav-link"><i class="fas fa-umbrella-beach"></i> Holiday</a>
-        <a href="{{ url_for('student.announcements', atype='notice') }}" class="nav-link"><i class="fas fa-scroll"></i> Notice</a>
-      </div>
-
-      <a href="{{ url_for('student.events') }}" class="nav-link {% if request.endpoint == 'student.events' %}active{% endif %}"><i class="fas fa-ticket"></i> Event Access</a>
-      <a href="{{ url_for('student.event_qr_list') }}" class="nav-link {% if request.endpoint == 'student.event_qr_list' %}active{% endif %}"><i class="fas fa-qrcode"></i> My Event QR</a>
-      <a href="{{ url_for('student.feedback') }}" class="nav-link {% if request.endpoint == 'student.feedback' %}active{% endif %}"><i class="fas fa-comment-dots"></i> Feedback</a>
-      <a href="{{ url_for('student.grievances') }}" class="nav-link {% if request.endpoint == 'student.grievances' %}active{% endif %}"><i class="fas fa-flag"></i> Grievances</a>
-      <a href="{{ url_for('student.anti_ragging') }}" class="nav-link {% if request.endpoint == 'student.anti_ragging' %}active{% endif %}"><i class="fas fa-shield-halved"></i> Submit Anti-Ragging Undertaking Reference Number</a>
-      <a href="{{ url_for('student.summer_term') }}" class="nav-link {% if request.endpoint == 'student.summer_term' %}active{% endif %}"><i class="fas fa-sun"></i> Summer Term</a>
-
-      <!-- Fee Management (collapsible) -->
-      <div class="nav-parent">
-        <i class="fas fa-indian-rupee-sign nav-icon"></i> Fee Management
-        <i class="fas fa-chevron-right nav-chevron"></i>
-      </div>
-      <div class="nav-submenu">
-        <a href="{{ url_for('student.fee_statement') }}" class="nav-link"><i class="fas fa-file-invoice"></i> Fee Statement</a>
-        <a href="{{ url_for('student.caution_money') }}" class="nav-link"><i class="fas fa-piggy-bank"></i> Caution Money</a>
-        <a href="{{ url_for('student.transaction_history') }}" class="nav-link"><i class="fas fa-clock-rotate-left"></i> Online Transaction History</a>
-      </div>
-
-      <a href="{{ url_for('student.leave_application') }}" class="nav-link {% if request.endpoint == 'student.leave_application' %}active{% endif %}"><i class="fas fa-calendar-check"></i> OD Leave Application</a>
-
-      <!-- Attendance (collapsible) -->
-      <div class="nav-parent">
-        <i class="fas fa-clipboard-check nav-icon"></i> Attendance
-        <i class="fas fa-chevron-right nav-chevron"></i>
-      </div>
-      <div class="nav-submenu">
-        <a href="{{ url_for('student.attendance_report') }}" class="nav-link"><i class="fas fa-chart-bar"></i> Attendance Report</a>
-        <a href="{{ url_for('student.attendance') }}" class="nav-link"><i class="fas fa-user-check"></i> Individual Attendance</a>
-      </div>
-
-      <!-- Examinations (collapsible) -->
-      <div class="nav-parent">
-        <i class="fas fa-pen-to-square nav-icon"></i> Examinations
-        <i class="fas fa-chevron-right nav-chevron"></i>
-      </div>
-      <div class="nav-submenu">
-        <a href="{{ url_for('exams.index') }}" class="nav-link"><i class="fas fa-file-pen"></i> RTU Enrollment Form</a>
-        <a href="{{ url_for('student.marksheets') }}" class="nav-link"><i class="fas fa-scroll"></i> Marksheets</a>
-        <a href="{{ url_for('student.mid_term_marks') }}" class="nav-link"><i class="fas fa-list-ol"></i> Mid Term Marks</a>
-        <a href="{{ url_for('student.moocs_certificates') }}" class="nav-link"><i class="fas fa-graduation-cap"></i> MOOCs Certificates</a>
-        <a href="{{ url_for('student.exam_scheme') }}" class="nav-link"><i class="fas fa-table-list"></i> Examination Scheme</a>
-        <a href="{{ url_for('student.academic_calendar') }}" class="nav-link"><i class="fas fa-calendar-days"></i> Academic Calendars</a>
-      </div>
-
-      <a href="{{ url_for('student.documents') }}" class="nav-link {% if request.endpoint == 'student.documents' %}active{% endif %}"><i class="fas fa-folder-open"></i> View My Documents</a>
-      <a href="{{ url_for('student.document_checklist') }}" class="nav-link {% if request.endpoint == 'student.document_checklist' %}active{% endif %}"><i class="fas fa-list-check"></i> Document Checklist</a>
-
-    {% elif current_user.role == 'parent' %}
-      <a href="{{ url_for('parent.dashboard') }}" class="nav-link {% if request.endpoint == 'parent.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
-      <a href="{{ url_for('parent.dashboard') }}#wallet-section" class="nav-link"><i class="fas fa-wallet"></i> Digital Wallet</a>
-      <a href="{{ url_for('parent.dashboard') }}#fees-section" class="nav-link"><i class="fas fa-money-check-dollar"></i> Fee Status</a>
-      <span class="nav-section-label">Communication</span>
-      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
-        <i class="fas fa-envelope"></i> Messages
-        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
-      </a>
-    {% endif %}
-  </nav>
-  {% if current_user.role != 'student' %}
-  <div class="sidebar-footer">
-    <a href="{{ url_for('auth.profile') }}" class="sidebar-user">
-      <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
-      <div class="user-info">
-        <div class="name">{{ current_user.name }}</div>
-        <div class="role">{{ current_user.role }}</div>
-      </div>
-    </a>
-    <a href="{{ url_for('auth.logout') }}" class="nav-link mt-16" style="margin-top:8px;"><i class="fas fa-right-from-bracket"></i> Log Out</a>
-  </div>
-  {% endif %}
-</aside>
-
-<!-- Main -->
-<div class="main">
-  <header class="topbar">
-    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
-    <span class="topbar-title">{% block page_title %}{% endblock %}</span>
-    <div class="topbar-actions">
-      {% if current_user.role != 'superadmin' %}
-      <a href="{{ url_for('messages.inbox') }}" class="topbar-btn" title="Messages">
-        <i class="fas fa-envelope"></i>
-        {% if current_user.unread_message_count > 0 %}<span class="badge-dot"></span>{% endif %}
-      </a>
-      {% endif %}
-      <!-- Avatar Dropdown -->
-      <div class="avatar-dropdown-wrap">
-        <div class="avatar-btn" id="avatar-toggle" title="{{ current_user.name }}">
-          {{ current_user.name[0].upper() }}
-        </div>
-        <div class="avatar-dropdown" id="avatar-dropdown">
-          <div class="avatar-dropdown-header">
-            <div class="av-name">{{ current_user.name }}</div>
-            <div class="av-role">{{ current_user.role }}</div>
-          </div>
-          <div class="avatar-dropdown-body">
-            {% if current_user.role == 'student' %}
-              <a href="{{ url_for('student.profile_view') }}"><i class="fas fa-id-card"></i> Profile</a>
-              <a href="{{ url_for('auth.profile') }}"><i class="fas fa-lock"></i> Password</a>
-            {% else %}
-              <a href="{{ url_for('auth.profile') }}"><i class="fas fa-id-card"></i> Profile</a>
-              <a href="{{ url_for('auth.profile') }}#password"><i class="fas fa-lock"></i> Password</a>
-            {% endif %}
-            <div class="av-divider"></div>
-            <a href="{{ url_for('auth.logout') }}" class="av-logout"><i class="fas fa-right-from-bracket"></i> Log Out</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <div class="content">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-stack">
-          {% for cat, msg in messages %}
-            <div class="alert alert-{{ cat }}">
-              <i class="fas fa-{% if cat == 'success' %}check-circle{% elif cat == 'danger' %}exclamation-circle{% elif cat == 'warning' %}triangle-exclamation{% else %}info-circle{% endif %}"></i>
-              {{ msg }}
-              <button class="close-btn" onclick="this.parentElement.remove()">×</button>
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-  </div>
-</div>
-
-{% else %}
-  <div class="unauth-container" style="min-height:100vh; width:100%;">
-    {% block content %}{% endblock %}
-    {% block auth_content %}{% endblock %}
-  </div>
-{% endif %}
-
-{% if current_user.is_authenticated and current_user.role != 'superadmin' %}
-  <!-- Floating AI Assistant -->
-  <div class="ai-fab" id="ai-fab" title="{% if current_user.college %}{{ current_user.college.name }} Assistant{% else %}AI Assistant{% endif %}">
-    <i class="fas fa-robot"></i>
-  </div>
-
-  <div class="ai-window" id="ai-window">
-    <div class="ai-header">
-      <i class="fas fa-feather-pointed"></i>
-      <div>
-        <div style="font-weight: 700; font-size: 16px;">Academic Assistant</div>
-        <div style="font-size: 11px; font-family: 'DM Sans', sans-serif; opacity: 0.8;">{% if current_user.college %}{{ current_user.college.name }} AI{% else %}EdTrack Assistant{% endif %}</div>
-      </div>
-    </div>
-    <div class="ai-body" id="ai-chat-body">
-      <div class="ai-msg bot">Hello {{ current_user.name }}! I am your {% if current_user.college %}{{ current_user.college.name }}{% else %}EdTrack{% endif %} assistant. How can I help you today?</div>
-    </div>
-    <div class="ai-footer">
-      <input type="text" id="ai-input" placeholder="Type your question..." autocomplete="off">
-      <button id="ai-send"><i class="fas fa-paper-plane"></i></button>
-    </div>
-  </div>
-{% endif %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -994,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // PWA Service Worker Registration
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").then(function(registration) {
+      navigator.serviceWorker.register("/static/sw.js").then(function(registration) {
         console.log('ElWood PWA ServiceWorker registration successful with scope: ', registration.scope);
       }, function(err) {
         console.log('ElWood PWA ServiceWorker registration failed: ', err);
@@ -1021,7 +744,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Helper for role-based persistent ID (userId is used here)
-    const userId = "{{ current_user.id if current_user.is_authenticated else 'guest' }}";
+    const userId = "guest";
     loadChat();
 
     aiFab.addEventListener('click', () => {
@@ -1053,7 +776,7 @@ document.addEventListener('DOMContentLoaded', function() {
       aiSend.disabled = true;
 
       try {
-        const res = await fetch("{{ url_for('ai.chat') }}", {
+        const res = await fetch("/api/ai/chat", {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg })
@@ -1088,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 </script>
-{% block extra_scripts %}{% endblock %}
+
     <!-- Razorpay Checkout -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>

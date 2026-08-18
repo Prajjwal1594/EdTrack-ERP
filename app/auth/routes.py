@@ -15,28 +15,26 @@ def index():
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
-    try:
-        if current_user.is_authenticated:
-            return redirect(url_for('auth.dashboard'))
-        if request.method == 'POST':
-            email = request.form.get('email', '').strip().lower()
-            password = request.form.get('password', '')
-            remember = request.form.get('remember') == 'on'
-            user = User.query.filter_by(email=email).first()
-            if user and user.check_password(password) and user.is_active:
-                login_user(user, remember=remember)
+    if current_user.is_authenticated:
+        return redirect(url_for('auth.dashboard'))
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        remember = request.form.get('remember') == 'on'
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password) and user.is_active:
+            login_user(user, remember=remember)
+            try:
                 user.last_login = datetime.utcnow()
                 db.session.commit()
-                next_page = request.args.get('next')
-                if next_page:
-                    return redirect(next_page)
-                return redirect(url_for('auth.dashboard'))
-            flash('Invalid email or password.', 'danger')
-        return render_template('auth/login.html')
-    except Exception as e:
-        import traceback
-        from flask import jsonify
-        return jsonify({"error": str(e), "traceback": traceback.format_exc()}), 500
+            except Exception:
+                db.session.rollback()
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('auth.dashboard'))
+        flash('Invalid email or password.', 'danger')
+    return render_template('auth/login.html')
 
 
 @bp.route('/logout')

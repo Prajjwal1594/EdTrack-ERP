@@ -24,8 +24,11 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password) and user.is_active:
             login_user(user, remember=remember)
-            user.last_login = datetime.utcnow()
-            db.session.commit()
+            try:
+                user.last_login = datetime.utcnow()
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
             next_page = request.args.get('next')
             if next_page:
                 return redirect(next_page)
