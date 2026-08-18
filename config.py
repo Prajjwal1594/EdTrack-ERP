@@ -35,16 +35,14 @@ class Config:
     elif _db_url.startswith('postgresql://') and '+pg8000' not in _db_url and '+psycopg2' not in _db_url:
         _db_url = _db_url.replace('postgresql://', 'postgresql+pg8000://', 1)
 
-    # When using pg8000, strip sslmode/ssl query parameters and configure ssl_context
+    # When using pg8000, parse URL with urllib to clean incompatible query parameters and configure SSL
     if '+pg8000' in _db_url:
-        import re
+        from urllib.parse import urlparse, parse_qs, urlunparse
         import ssl
-        has_ssl = 'sslmode' in _db_url or 'ssl' in _db_url
-        _db_url = re.sub(r'[?&]sslmode=[^&]*', '', _db_url)
-        _db_url = re.sub(r'[?&]ssl=[^&]*', '', _db_url)
-        if '?' not in _db_url and '&' in _db_url:
-            _db_url = _db_url.replace('&', '?', 1)
-        _db_url = _db_url.rstrip('?').replace('?&', '?').rstrip('&')
+        parsed = urlparse(_db_url)
+        qs = parse_qs(parsed.query)
+        has_ssl = ('sslmode' in qs or 'ssl' in qs or 'channel_binding' in qs or 'neon.tech' in parsed.netloc or 'supabase.co' in parsed.netloc or 'render.com' in parsed.netloc or 'railway.app' in parsed.netloc)
+        _db_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', '', ''))
         if has_ssl:
             ctx = ssl.create_default_context()
             _engine_options['connect_args'] = {'ssl_context': ctx}
