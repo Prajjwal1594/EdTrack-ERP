@@ -1,0 +1,9 @@
+{
+  "name": "El'Wood International University Admin",
+  "short_name": "El'Wood LMS",
+  "description": "El'Wood Student Administration and Tracking System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a3a2a",
+  "theme_color": "#1a3a2a"
+}

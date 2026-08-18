@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Manage Grievances{% endblock %}
+{% block page_title %}Student Grievances{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.dashboard') }}">Admin</a> / Grievances</div>
+    <h1>Student Grievances</h1>
+  </div>
+  <div class="filter-bar" style="margin:0;">
+    <a href="{{ url_for('admin.grievance_list') }}" class="btn {{ 'btn-primary' if not status_filter else 'btn-ghost' }} btn-sm">All</a>
+    <a href="{{ url_for('admin.grievance_list', status='open') }}" class="btn {{ 'btn-primary' if status_filter=='open' else 'btn-ghost' }} btn-sm">Open</a>
+    <a href="{{ url_for('admin.grievance_list', status='in_progress') }}" class="btn {{ 'btn-primary' if status_filter=='in_progress' else 'btn-ghost' }} btn-sm">In Progress</a>
+    <a href="{{ url_for('admin.grievance_list', status='resolved') }}" class="btn {{ 'btn-primary' if status_filter=='resolved' else 'btn-ghost' }} btn-sm">Resolved</a>
+  </div>
+</div>
+
+{% for gr in grievances %}
+<div class="card mb-16" style="border-left:4px solid {{ 'var(--danger)' if gr.priority=='urgent' else 'var(--warning)' if gr.priority=='high' else 'var(--info)' if gr.priority=='medium' else 'var(--border)' }};">
+  <div class="card-body">
+    <div style="display:flex; justify-content:space-between; align-items:start;">
+      <div>
+        <div style="font-weight:600;">{{ gr.subject }}</div>
+        <div style="display:flex; gap:6px; margin-top:4px;">
+          <span class="badge badge-neutral">{{ gr.category | capitalize }}</span>
+          <span class="badge badge-{{ 'danger' if gr.priority=='urgent' else 'warning' if gr.priority=='high' else 'info' }}">{{ gr.priority | capitalize }}</span>
+          <span class="badge badge-{{ 'success' if gr.status=='resolved' else 'warning' if gr.status=='in_progress' else 'danger' }}">{{ gr.status.replace('_',' ') | capitalize }}</span>
+        </div>
+        <p class="text-muted" style="font-size:13px; margin-top:8px;">{{ gr.description }}</p>
+        <div class="text-muted text-small" style="margin-top:6px;">
+          <i class="fas fa-user"></i> {{ gr.student.user.name if gr.student else 'Unknown' }} · {{ gr.created_at.strftime('%d %b %Y, %I:%M %p') if gr.created_at else '' }}
+        </div>
+      </div>
+    </div>
+    {% if gr.resolution %}
+    <div style="background:var(--cream); border-radius:6px; padding:10px 14px; margin-top:10px; border-left:3px solid var(--success);">
+      <div class="text-small" style="font-weight:600; color:var(--success);">Resolution:</div>
+      <p style="font-size:13px; margin-top:4px;">{{ gr.resolution }}</p>
+    </div>
+    {% endif %}
+    {% if gr.status not in ('resolved', 'closed') %}
+    <form method="POST" action="{{ url_for('admin.resolve_grievance', gid=gr.id) }}" style="margin-top:12px; display:flex; gap:8px; align-items:end;">
+      <div style="flex:1;">
+        <input type="text" name="resolution" class="form-control" placeholder="Enter resolution..." required style="font-size:13px;">
+      </div>
+      <select name="status" class="form-control" style="width:140px; font-size:13px;">
+        <option value="in_progress">In Progress</option>
+        <option value="resolved">Resolved</option>
+        <option value="closed">Closed</option>
+      </select>
+      <button type="submit" class="btn btn-gold btn-sm"><i class="fas fa-check"></i> Update</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-flag"></i><p>No grievances filed.</p></div></div>
+{% endfor %}
+{% endblock %}

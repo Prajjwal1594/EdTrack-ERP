@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Leave Applications{% endblock %}
+{% block page_title %}Leave Applications{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.dashboard') }}">Admin</a> / Leave Applications</div>
+    <h1>Leave Applications</h1>
+  </div>
+  <div class="filter-bar" style="margin:0;">
+    <a href="{{ url_for('admin.leave_applications') }}" class="btn {{ 'btn-primary' if not status_filter else 'btn-ghost' }} btn-sm">All</a>
+    <a href="{{ url_for('admin.leave_applications', status='pending') }}" class="btn {{ 'btn-primary' if status_filter=='pending' else 'btn-ghost' }} btn-sm">Pending</a>
+    <a href="{{ url_for('admin.leave_applications', status='approved') }}" class="btn {{ 'btn-primary' if status_filter=='approved' else 'btn-ghost' }} btn-sm">Approved</a>
+    <a href="{{ url_for('admin.leave_applications', status='rejected') }}" class="btn {{ 'btn-primary' if status_filter=='rejected' else 'btn-ghost' }} btn-sm">Rejected</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Student</th><th>Type</th><th>Period</th><th>Days</th><th>Reason</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for app in applications %}
+        <tr>
+          <td>{{ app.student.user.name if app.student else 'Unknown' }}</td>
+          <td><span class="badge badge-{{ 'gold' if app.leave_type=='od' else 'info' }}">{{ app.leave_type.upper() if app.leave_type=='od' else app.leave_type | capitalize }}</span></td>
+          <td class="text-small">{{ app.from_date.strftime('%d %b') }} — {{ app.to_date.strftime('%d %b %Y') }}</td>
+          <td class="font-mono">{{ app.duration_days }}</td>
+          <td class="text-muted text-small">{{ app.reason[:60] }}{% if app.reason|length > 60 %}...{% endif %}</td>
+          <td><span class="badge badge-{{ 'success' if app.status=='approved' else 'danger' if app.status=='rejected' else 'warning' }}">{{ app.status | capitalize }}</span></td>
+          <td>
+            {% if app.status == 'pending' %}
+            <div style="display:flex; gap:4px;">
+              <form method="POST" action="{{ url_for('admin.leave_action', lid=app.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="approve">
+                <button class="btn btn-xs btn-outline" style="color:var(--success); border-color:var(--success);"><i class="fas fa-check"></i></button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.leave_action', lid=app.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="reject">
+                <button class="btn btn-xs btn-outline" style="color:var(--danger); border-color:var(--danger);"><i class="fas fa-times"></i></button>
+              </form>
+            </div>
+            {% else %}
+            <span class="text-muted text-small">{{ app.approved_at.strftime('%d %b') if app.approved_at else '—' }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted" style="padding:24px;">No leave applications.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

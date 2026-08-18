@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Report Comments{% endblock %}
+{% block page_title %}Report Comments{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Report Comments</h1></div>
+</div>
+<div class="filter-bar">
+  <form method="GET" style="display:flex; gap:10px; flex-wrap:wrap;">
+    <select name="section_id" class="form-control" onchange="this.form.submit()">
+      <option value="">Select Section</option>
+      {% for s in sections %}<option value="{{ s.id }}" {% if s.id == selected_section_id %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}
+    </select>
+    <select name="term_id" class="form-control" onchange="this.form.submit()">
+      {% for t in terms %}<option value="{{ t.id }}" {% if t.id == selected_term_id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+{% if selected_section_id and students %}
+<div class="card">
+  <div class="card-header"><span class="card-title">Enter Comments</span></div>
+  <form method="POST" action="{{ url_for('faculty.save_report_comments') }}">
+    <input type="hidden" name="section_id" value="{{ selected_section_id }}">
+    <input type="hidden" name="term_id" value="{{ selected_term_id or (active_term.id if active_term else '') }}">
+    <div style="display:flex; flex-direction:column; gap:0;">
+      {% for student in students %}
+      {% set existing = comment_map.get(student.id) %}
+      <div style="padding:16px 22px; border-bottom:1px solid var(--border);">
+        <div style="font-weight:500; margin-bottom:8px;">{{ student.user.name }} <span class="text-muted text-small font-mono">({{ student.enrollment_number }})</span></div>
+        <textarea name="comment_{{ student.id }}" class="form-control" rows="2" placeholder="Write a comment for this student's grade sheet...">{{ existing.comment if existing else '' }}</textarea>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="padding:16px 22px;">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save All Comments</button>
+    </div>
+  </form>
+</div>
+{% elif selected_section_id %}
+<div class="card"><div class="empty-state"><i class="fas fa-users"></i><p>No students in this section</p></div></div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-comment-dots"></i><p>Select a section to enter report comments</p></div></div>
+{% endif %}
+{% endblock %}

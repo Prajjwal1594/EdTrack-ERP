@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Submit: {{ assignment.title }}{% endblock %}
+{% block page_title %}Submit Assignment{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.assignments') }}">Assignments</a> / Submit</div>
+    <h1>{{ assignment.title }}</h1>
+    <p>{{ assignment.subject.name }} · Due {{ assignment.due_date.strftime('%b %d, %Y %H:%M') }}</p>
+  </div>
+  <a href="{{ url_for('student.assignments') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+{% if existing_sub %}
+<div class="alert alert-success"><i class="fas fa-check-circle"></i> You have already submitted this assignment on {{ existing_sub.submitted_at.strftime('%b %d, %Y at %H:%M') }}.</div>
+{% else %}
+<div class="card" style="max-width:700px;">
+  {% if assignment.description %}
+  <div class="card-header"><span class="card-title">Instructions</span></div>
+  <div class="card-body" style="white-space:pre-wrap; font-size:14px; color:var(--ink-mid);">{{ assignment.description }}</div>
+  {% endif %}
+  <div class="card-header"><span class="card-title">Your Submission</span></div>
+  <form method="POST" action="{{ url_for('student.submit_assignment', aid=assignment.id) }}">
+    <div class="card-body">
+      <div class="form-group"><label class="form-label">Response / Answer *</label>
+        <textarea name="content" class="form-control" rows="10" placeholder="Write your answer here..." required></textarea></div>
+      {% if assignment.is_overdue %}
+      <div class="alert alert-warning"><i class="fas fa-triangle-exclamation"></i> This assignment is overdue. Late submissions may be penalized.</div>
+      {% endif %}
+    </div>
+    <div class="modal-footer">
+      <a href="{{ url_for('student.assignments') }}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-gold"><i class="fas fa-paper-plane"></i> Submit Assignment</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

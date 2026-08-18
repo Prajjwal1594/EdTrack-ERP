@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Assignments{% endblock %}
+{% block page_title %}Assignments{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Assignments</h1></div>
+  <button class="btn btn-gold" onclick="openModal('addAssignmentModal')"><i class="fas fa-plus"></i> Create Assignment</button>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Title</th><th>Subject</th><th>Section</th><th>Due Date</th><th>Submissions</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for a in my_assignments %}
+        <tr>
+          <td>{{ a.title }}</td>
+          <td>{{ a.subject.name }}</td>
+          <td>{{ a.section.full_name }}</td>
+          <td class="{{ 'text-danger' if a.is_overdue else 'text-muted' }} text-small">{{ a.due_date.strftime('%b %d, %Y %H:%M') }}</td>
+          <td>{{ a.submissions.count() }}</td>
+          <td><span class="badge {{ 'badge-danger' if a.is_overdue else 'badge-success' }}">{{ 'Overdue' if a.is_overdue else 'Active' }}</span></td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('faculty.assignment_submissions', aid=a.id) }}" class="btn btn-xs btn-outline">Grade</a>
+              <form method="POST" action="{{ url_for('faculty.delete_assignment', aid=a.id) }}" style="display:inline;">
+                <button class="btn btn-xs btn-danger" data-confirm="Delete this assignment?" type="submit"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state"><i class="fas fa-file-lines"></i><p>No assignments yet. Create your first one!</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-overlay" id="addAssignmentModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Create Assignment</span><button class="modal-close" onclick="closeModal('addAssignmentModal')">×</button></div>
+    <form method="POST" action="{{ url_for('faculty.add_assignment') }}">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Title *</label>
+          <input type="text" name="title" class="form-control" required placeholder="Assignment title"></div>
+        <div class="form-group"><label class="form-label">Description</label>
+          <textarea name="description" class="form-control" rows="3" placeholder="Assignment instructions..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Subject *</label>
+            <select name="subject_id" class="form-control" required>
+              {% for ta in ta_list %}<option value="{{ ta.subject_id }}">{{ ta.subject.name }}</option>{% endfor %}
+            </select></div>
+          <div class="form-group"><label class="form-label">Section *</label>
+            <select name="section_id" class="form-control" required>
+              {% for ta in ta_list %}<option value="{{ ta.section_id }}">{{ ta.section.full_name }}</option>{% endfor %}
+            </select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Due Date &amp; Time *</label>
+            <input type="datetime-local" name="due_date" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Max Score</label>
+            <input type="number" name="max_score" class="form-control" value="20" min="1"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addAssignmentModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Assignment</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

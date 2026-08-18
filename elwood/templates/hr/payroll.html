@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Payroll Management{% endblock %}
+{% block page_title %}Staff Payroll & Salary{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm border-0 bg-light">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-magic"></i> Generate Monthly Payroll</h5>
+                <p class="text-muted small">This will create pending salary records for all active staff based on their base salary mapping.</p>
+                <form action="{{ url_for('hr.payroll') }}" method="POST" class="row row-cols-lg-auto g-3 align-items-center">
+                    <input type="hidden" name="action" value="generate">
+                    <div class="col-12">
+                        <select name="month" class="form-select" required>
+                            <option value="">Month</option>
+                            {% for m in range(1, 13) %}
+                            <option value="{{ m }}">{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <select name="year" class="form-select" required>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-cog"></i> Process Payroll</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-file-invoice-dollar"></i> Payroll History</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Staff Name</th>
+                    <th>Month/Year</th>
+                    <th>Basic Pay</th>
+                    <th>Deductions</th>
+                    <th>Net Pay</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td><strong>{{ t.staff.user.name }}</strong></td>
+                    <td>{{ t.month }}/{{ t.year }}</td>
+                    <td>₹{{ "%.2f"|format(t.basic_pay) }}</td>
+                    <td class="text-danger">-₹{{ "%.2f"|format(t.deductions or 0.0) }}</td>
+                    <td><strong class="text-success">₹{{ "%.2f"|format(t.net_pay) }}</strong></td>
+                    <td>
+                        <span class="badge {% if t.status == 'Paid' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {{ t.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if t.status == 'Pending' %}
+                        <form action="{{ url_for('hr.mark_paid', tid=t.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-success">Mark Paid</button>
+                        </form>
+                        {% else %}
+                        <a href="{{ url_for('hr.salary_slip', tid=t.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download"></i> Slip
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">No payroll history found. Click generate to start.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

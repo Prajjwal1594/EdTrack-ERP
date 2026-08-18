@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Fee Management{% endblock %}
+{% block page_title %}Fee Management{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Fee Management</h1></div>
+  <div class="flex gap-8">
+    <button class="btn btn-warning" onclick="openModal('deductWalletModal')"><i class="fas fa-wallet"></i> Deduct from Wallet</button>
+    <button class="btn btn-gold" onclick="openModal('addFeeModal')"><i class="fas fa-plus"></i> Add Fee Record</button>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-money-bill-wave"></i></div>
+    <div class="stat-value font-mono">₹{{ '{:,.0f}'.format(total_due) }}</div>
+    <div class="stat-label">Total Due</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-value font-mono">₹{{ '{:,.0f}'.format(total_paid) }}</div>
+    <div class="stat-label">Total Collected</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+    <div class="stat-value font-mono">₹{{ '{:,.0f}'.format(total_pending) }}</div>
+    <div class="stat-label">Pending</div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" style="display:flex; gap:10px; flex-wrap:wrap;">
+    <select name="term_id" class="form-control" onchange="this.form.submit()">
+      <option value="">All Terms</option>
+      {% for t in terms %}<option value="{{ t.id }}" {% if t.id == selected_term_id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+    </select>
+    <select name="status" class="form-control" onchange="this.form.submit()">
+      <option value="">All Statuses</option>
+      {% for s in ['pending','paid','overdue','waived'] %}<option value="{{ s }}" {% if s == status_filter %}selected{% endif %}>{{ s | title }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Fee Type</th><th>Amount</th><th>Due Date</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.student.user.name }}</td>
+          <td>{{ p.fee_type.name }}</td>
+          <td class="font-mono">₹{{ '{:,.0f}'.format(p.amount) }}</td>
+          <td class="text-muted text-small">{{ p.due_date.strftime('%b %d, %Y') if p.due_date else '—' }}</td>
+          <td>
+            <span class="badge badge-{{ 'success' if p.status == 'paid' else 'danger' if p.status == 'overdue' else 'warning' if p.status == 'pending' else 'neutral' }}">
+              {{ p.status | title }}
+            </span>
+          </td>
+          <td>
+            {% if p.status == 'pending' %}
+            <form method="POST" action="{{ url_for('fees.mark_paid', pid=p.id) }}" style="display:inline;">
+              <input type="hidden" name="payment_method" value="cash">
+              <button class="btn btn-xs btn-primary" type="submit">Mark Paid</button>
+            </form>
+            {% elif p.status == 'paid' %}
+            <a href="{{ url_for('fees.download_receipt', pid=p.id) }}" class="btn btn-xs btn-gold" target="_blank"><i class="fas fa-download"></i> PDF</a>
+            {% endif %}
+            <form method="POST" action="{{ url_for('fees.delete_payment', pid=p.id) }}" style="display:inline;">
+              <button class="btn btn-xs btn-danger" data-confirm="Delete this record?" type="submit"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>No fee records found</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Fee Modal -->
+<div class="modal-overlay" id="addFeeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add Fee Record</span>
+      <button class="modal-close" onclick="closeModal('addFeeModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('fees.add_payment') }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Student</label>
+          <select name="student_id" class="form-control" required>
+            <option value="">-- Select --</option>
+            {% for s in students %}<option value="{{ s.id }}">{{ s.user.name }} ({{ s.enrollment_number }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Fee Type</label>
+            <select name="fee_type_id" class="form-control" required>
+              {% for ft in fee_types %}<option value="{{ ft.id }}">{{ ft.name }} (₹{{ ft.amount }})</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Term</label>
+            <select name="term_id" class="form-control">
+              <option value="">— None —</option>
+              {% for t in terms %}<option value="{{ t.id }}" {% if active_term and t.id == active_term.id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Amount (₹)</label>
+            <input type="number" name="amount" class="form-control" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input type="date" name="due_date" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <input type="text" name="notes" class="form-control" placeholder="Optional">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addFeeModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Deduct Wallet Modal -->
+<div class="modal-overlay" id="deductWalletModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fas fa-wallet"></i> Deduct from Student Wallet</span>
+      <button class="modal-close" onclick="closeModal('deductWalletModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('fees.wallet_deduct') }}">
+      <div class="modal-body">
+        <p class="text-muted text-small mb-16">Deduct funds directly from the parent's digital wallet for micro-fees (e.g., field trips, library fines, etc). An email receipt is instantly sent upon deduction.</p>
+        <div class="form-group">
+          <label class="form-label">Student</label>
+          <select name="student_id" class="form-control" required>
+            <option value="">-- Select --</option>
+            {% for s in students %}<option value="{{ s.id }}">{{ s.user.name }} ({{ s.enrollment_number }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Amount ($)</label>
+            <input type="number" name="amount" class="form-control" step="0.01" placeholder="e.g. 5.00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reason</label>
+            <input type="text" name="reason" class="form-control" placeholder="e.g. Science Museum Trip" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('deductWalletModal')">Cancel</button>
+        <button type="submit" class="btn btn-warning"><i class="fas fa-bolt"></i> Deduct Instantly</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

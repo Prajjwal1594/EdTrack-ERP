@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}MOOCs Certificates{% endblock %}
+{% block page_title %}MOOCs Certificates{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / MOOCs Certificates</div>
+    <h1>MOOCs Certificates</h1>
+    <p>Your online course certifications</p>
+  </div>
+</div>
+
+{% if certificates %}
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px;">
+  {% for c in certificates %}
+  <div class="card" style="transition:transform .2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+    <div class="card-body" style="text-align:center; padding:24px;">
+      <div style="width:56px; height:56px; border-radius:50%; background:rgba(201,168,76,.12); color:var(--gold); display:flex; align-items:center; justify-content:center; font-size:22px; margin:0 auto 12px;">
+        <i class="fas fa-award"></i>
+      </div>
+      <div style="font-weight:600; font-size:15px; color:var(--forest);">{{ c.title }}</div>
+      <span class="badge badge-gold" style="margin-top:6px;">{{ c.category }}</span>
+      {% if c.description %}
+      <p style="font-size:12px; color:var(--ink-mid); margin-top:8px;">{{ c.description }}</p>
+      {% endif %}
+      <div style="font-size:12px; color:var(--ink-light); margin-top:8px;">
+        Issued: {{ c.issued_date.strftime('%d %b %Y') if c.issued_date else 'N/A' }}
+        {% if c.issuer %}<br>by {{ c.issuer.name }}{% endif %}
+      </div>
+      <a href="{{ url_for('student.download_credential', cid=c.id) }}" class="btn btn-outline btn-sm" style="margin-top:12px;">
+        <i class="fas fa-download"></i> Download
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-graduation-cap"></i>
+    <p>No MOOCs certificates uploaded yet.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

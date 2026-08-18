@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Academic Terms{% endblock %}
+{% block page_title %}Academic Terms{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Academic Terms</h1></div>
+  <button class="btn btn-gold" onclick="openModal('addTermModal')"><i class="fas fa-plus"></i> Add Term</button>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Term Name</th><th>Type</th><th>Academic Year</th><th>Start Date</th><th>End Date</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for t in terms %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td><span class="badge badge-neutral">{{ t.term_type | title }}</span></td>
+          <td>{{ t.academic_year }}</td>
+          <td>{{ t.start_date.strftime('%b %d, %Y') }}</td>
+          <td>{{ t.end_date.strftime('%b %d, %Y') }}</td>
+          <td>{% if t.is_active %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-neutral">Inactive</span>{% endif %}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              {% if not t.is_active %}
+              <form method="POST" action="{{ url_for('admin.activate_term', tid=t.id) }}" style="display:inline;">
+                <button class="btn btn-xs btn-primary" type="submit">Set Active</button>
+              </form>
+              {% endif %}
+              <form method="POST" action="{{ url_for('admin.delete_term', tid=t.id) }}" style="display:inline;">
+                <button class="btn btn-xs btn-danger" data-confirm="Delete this term?" type="submit"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state"><i class="fas fa-calendar-days"></i><p>No terms configured yet</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-overlay" id="addTermModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Academic Term</span><button class="modal-close" onclick="closeModal('addTermModal')">×</button></div>
+    <form method="POST" action="{{ url_for('admin.add_term') }}">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Term Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Term 1 2024-25" required></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Type</label>
+            <select name="term_type" class="form-control">
+              <option value="term">Term</option><option value="semester">Semester</option><option value="quarter">Quarter</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">Academic Year</label>
+            <input type="text" name="academic_year" class="form-control" value="2024-2025"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Start Date *</label>
+            <input type="date" name="start_date" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">End Date *</label>
+            <input type="date" name="end_date" class="form-control" required></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addTermModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Term</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

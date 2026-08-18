@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Salary Slip - {{ t.staff.user.name }}</title>
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; background: #fff; color: #333; margin: 0; padding: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #1c3249; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #1c3249; font-size: 24px; text-transform: uppercase; }
+        .header p { margin: 5px 0 0; color: #666; font-size: 14px; }
+        
+        .slip-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 20px; text-decoration: underline; }
+        
+        .info-grid { display: block; margin-bottom: 30px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .info-label { font-weight: bold; color: #555; width: 120px; }
+        .info-value { flex: 1; border-bottom: 1px dotted #ccc; padding-left: 5px; }
+
+        .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .table th { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 14px; }
+        .table td { border: 1px solid #dee2e6; padding: 10px; font-size: 14px; }
+        
+        .total-row { background: #f1f3f5; font-weight: bold; }
+        .net-pay { font-size: 18px; color: #2d3e50; }
+        
+        .footer { margin-top: 50px; font-size: 12px; color: #777; }
+        .signature-box { border-top: 1px solid #333; width: 150px; margin-top: 40px; text-align: center; padding-top: 5px; }
+        
+        @page { size: A4; margin: 2cm; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ t.college.name if t.college else "El'Wood International University" }}</h1>
+        <p>Official Salary Statement</p>
+    </div>
+
+    <div class="slip-title">Salary Slip for {{ t.month }}/{{ t.year }}</div>
+
+    <div class="info-grid">
+        <div style="width: 100%; overflow: hidden;">
+            <div style="float: left; width: 48%;">
+                <div class="info-row"><span class="info-label">Employee Name</span><span class="info-value">{{ t.staff.user.name }}</span></div>
+                <div class="info-row"><span class="info-label">Staff ID</span><span class="info-value">EMP-{{ t.staff_id }}</span></div>
+                <div class="info-row"><span class="info-label">Department</span><span class="info-value">{{ t.staff.department or 'General' }}</span></div>
+                <div class="info-row"><span class="info-label">Designation</span><span class="info-value">{{ t.staff.designation or 'Staff' }}</span></div>
+            </div>
+            <div style="float: right; width: 48%;">
+                <div class="info-row"><span class="info-label">Bank A/C</span><span class="info-value">{{ t.staff.bank_account or 'XXXXXXXX' }}</span></div>
+                <div class="info-row"><span class="info-label">IFSC</span><span class="info-value">{{ t.staff.ifsc_code or 'XXXX' }}</span></div>
+                <div class="info-row"><span class="info-label">PAN</span><span class="info-value">{{ t.staff.pan_number or 'XXXX' }}</span></div>
+                <div class="info-row"><span class="info-label">Paid Date</span><span class="info-value">{{ t.paid_at.strftime('%Y-%m-%d') if t.paid_at else '---' }}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th style="text-align: right;">Amount (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Basic Salary</td>
+                <td style="text-align: right;">{{ "{:,.2f}".format(t.basic_pay) }}</td>
+            </tr>
+            <tr>
+                <td>Allowances</td>
+                <td style="text-align: right;">{{ "{:,.2f}".format(t.allowances or 0.0) }}</td>
+            </tr>
+            <tr style="color: #d32f2f;">
+                <td>Deductions (Attendance Loss)</td>
+                <td style="text-align: right;">-{{ "{:,.2f}".format(t.deductions or 0.0) }}</td>
+            </tr>
+            <tr class="total-row net-pay">
+                <td>Net Payable Amount</td>
+                <td style="text-align: right;">₹{{ "{:,.2f}".format(t.net_pay) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; font-size: 13px;">
+        <strong>Note:</strong> This is a computer-generated salary slip and does not require a physical signature for internal purposes.
+    </div>
+
+    <div style="display: flex; justify-content: space-between;">
+        <div class="signature-box">Employee Signature</div>
+        <div class="signature-box">Director / Principal</div>
+    </div>
+
+    <div class="footer">
+        Generated on {{ t.paid_at.strftime('%Y-%m-%d %H:%M') if t.paid_at else '---' }} via EdTrack ERP
+    </div>
+</body>
+</html>

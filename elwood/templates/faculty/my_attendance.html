@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}My Attendance — Faculty Portal{% endblock %}
+{% block page_title %}My Attendance{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>My Attendance Log</h1>
+        <p>View your daily clock-in records and monthly summary.</p>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-value">{{ stats.present }}</div>
+        <div class="stat-label">Days Present (This Month)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fas fa-calendar-times"></i></div>
+        <div class="stat-value">{{ stats.absent }}</div>
+        <div class="stat-label">Days Absent</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon forest"><i class="fas fa-percent"></i></div>
+        <div class="stat-value">{{ (stats.present / stats.total * 100)|round(1) if stats.total > 0 else 100 }}%</div>
+        <div class="stat-label">Attendance Rate</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Attendance History</span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <span class="badge badge-{{ 'success' if record.status == 'Present' else 'danger' }}">
+                            {{ record.status }}
+                        </span>
+                    </td>
+                    <td class="font-mono">{{ record.clock_in.strftime('%H:%M') if record.clock_in else '-' }}</td>
+                    <td class="font-mono">{{ record.clock_out.strftime('%H:%M') if record.clock_out else '-' }}</td>
+                    <td class="text-muted">{{ record.remarks or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4">No attendance records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

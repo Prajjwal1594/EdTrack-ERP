@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Transaction History{% endblock %}
+{% block page_title %}Transaction History{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Transaction History</div>
+    <h1>Online Transaction History</h1>
+    <p>All your completed transactions</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Fee Payments</span>
+    <span class="badge badge-neutral">{{ payments | length }} transactions</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Description</th><th>Amount</th><th>Method</th><th>Reference</th></tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td class="text-small">{{ p.paid_at.strftime('%d %b %Y') if p.paid_at else '—' }}</td>
+          <td>{{ p.fee_type.name if p.fee_type else 'Fee Payment' }}{% if p.term %} — {{ p.term.name }}{% endif %}</td>
+          <td class="font-mono" style="color:var(--success); font-weight:600;">₹{{ '{:,.0f}'.format(p.amount) }}</td>
+          <td class="text-muted">{{ p.payment_method or 'N/A' }}</td>
+          <td class="text-muted text-small font-mono">{{ p.transaction_ref or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted" style="padding:24px;">No transactions found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if caution_records %}
+<div class="card mt-24">
+  <div class="card-header">
+    <span class="card-title">Caution Money Transactions</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Type</th><th>Amount</th><th>Reference</th></tr>
+      </thead>
+      <tbody>
+        {% for c in caution_records %}
+        <tr>
+          <td class="text-small">{{ c.paid_at.strftime('%d %b %Y') if c.paid_at else c.refunded_at.strftime('%d %b %Y') if c.refunded_at else '—' }}</td>
+          <td><span class="badge badge-{{ 'success' if c.status=='paid' else 'info' }}">{{ c.status | capitalize }}</span></td>
+          <td class="font-mono" style="font-weight:600;">₹{{ '{:,.0f}'.format(c.refund_amount if c.status=='refunded' and c.refund_amount else c.amount) }}</td>
+          <td class="text-muted text-small font-mono">{{ c.transaction_ref or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

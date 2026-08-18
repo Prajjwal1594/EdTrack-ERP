@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Timetable Management{% endblock %}
+{% block page_title %}Timetable Management{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Timetable Management</h1>
+    <p>Select a section to view or manage its weekly schedule.</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-24">
+  {% for section in sections %}
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{{ section.full_name }}</span>
+    </div>
+    <div class="card-body">
+      <p class="text-muted text-small mb-16">
+        <i class="fas fa-users"></i> Capacity: {{ section.capacity }} students<br>
+        <i class="fas fa-door-open"></i> Room: {{ section.room_number or 'N/A' }}
+      </p>
+      <div class="flex gap-8">
+        <a href="{{ url_for('timetable.view_section', section_id=section.id) }}" class="btn btn-outline btn-sm" style="flex:1;">
+          <i class="fas fa-eye"></i> View
+        </a>
+        {% if current_user.role == 'admin' or current_user.role == 'faculty' %}
+        <a href="{{ url_for('timetable.manage', section_id=section.id) }}" class="btn btn-primary btn-sm" style="flex:1;">
+          <i class="fas fa-edit"></i> Manage
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="card col-span-full">
+    <div class="empty-state">
+      <i class="fas fa-calendar-times"></i>
+      <p>No sections found for your college. Please create sections in the Admin panel first.</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

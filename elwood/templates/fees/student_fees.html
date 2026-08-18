@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Fee Statement{% endblock %}
+{% block page_title %}Fee Statement{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Fee Statement — {{ student.user.name }}</h1></div>
+</div>
+<div class="stat-grid" style="grid-template-columns:1fr 1fr; max-width:400px;">
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-value font-mono" style="font-size:20px;">₹{{ '{:,.0f}'.format(total_paid) }}</div><div class="stat-label">Paid</div></div>
+  <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div class="stat-value font-mono" style="font-size:20px;">₹{{ '{:,.0f}'.format(total_pending) }}</div><div class="stat-label">Pending</div></div>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Fee Type</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Paid On</th><th>Method</th><th></th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.fee_type.name }}</td>
+          <td class="font-mono">₹{{ '{:,.0f}'.format(p.amount) }}</td>
+          <td class="text-muted text-small">{{ p.due_date.strftime('%b %d, %Y') if p.due_date else '—' }}</td>
+          <td><span class="badge badge-{{ 'success' if p.status == 'paid' else 'danger' if p.status == 'overdue' else 'warning' if p.status == 'pending' else 'neutral' }}">{{ p.status | title }}</span></td>
+          <td class="text-muted text-small">{{ p.paid_at.strftime('%b %d, %Y') if p.paid_at else '—' }}</td>
+          <td class="text-muted text-small">{{ p.payment_method | title if p.payment_method else '—' }}</td>
+          <td>
+            {% if p.status == 'paid' %}
+            <a href="{{ url_for('fees.download_receipt', pid=p.id) }}" class="btn btn-xs btn-gold" target="_blank"><i class="fas fa-download"></i> PDF</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>No fee records</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

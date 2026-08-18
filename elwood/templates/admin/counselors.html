@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Counselor Assignments{% endblock %}
+{% block page_title %}Faculty Counselor Assignments{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.dashboard') }}">Admin</a> / Counselor Assignments</div>
+    <h1>Counselor Assignments</h1>
+    <p>Assign faculty members to counselor leadership roles: Chief Batch Counselor (Course), Head Batch Counselor (Stream), and Batch Counselor (Section).</p>
+  </div>
+</div>
+
+<!-- Tabs / Sections for 3 Counselor Levels -->
+<div class="grid-1 gap-24">
+
+  <!-- 1. Chief Batch Counselor for Course -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <span class="card-title" style="font-size:16px; font-weight:700; color:var(--forest);">
+          <i class="fas fa-user-shield" style="color:var(--gold);"></i> Chief Batch Counselors (By Course)
+        </span>
+        <p class="text-muted text-small" style="margin-top:2px;">Chief counselors oversee all academic batches and operations for an entire Course.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Course Name</th>
+            <th>Course Code</th>
+            <th>Assigned Chief Batch Counselor</th>
+            <th style="width:250px;">Assign / Change Counselor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in courses %}
+          <tr>
+            <td><strong>{{ c.name }}</strong></td>
+            <td><span class="badge badge-neutral">{{ c.code or '—' }}</span></td>
+            <td>
+              {% if c.chief_counselor %}
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div class="user-avatar" style="width:28px; height:28px; font-size:11px; background:var(--forest);">{{ c.chief_counselor.name[0] }}</div>
+                  <div>
+                    <strong style="color:var(--forest);">{{ c.chief_counselor.name }}</strong>
+                    <div class="text-muted text-small">{{ c.chief_counselor.email }}</div>
+                  </div>
+                </div>
+              {% else %}
+                <span class="text-muted"><i>Unassigned</i></span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('admin.assign_course_counselor') }}" style="display:flex; gap:8px;">
+                <input type="hidden" name="course_id" value="{{ c.id }}">
+                <select name="faculty_id" class="form-control form-control-sm">
+                  <option value="">— None (Unassign) —</option>
+                  {% for f in faculty_members %}
+                  <option value="{{ f.id }}" {% if c.chief_counselor_id == f.id %}selected{% endif %}>{{ f.name }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-xs btn-primary"><i class="fas fa-check"></i> Assign</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-center text-muted">No courses found. Add courses first.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2. Head Batch Counselor for Streams -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <span class="card-title" style="font-size:16px; font-weight:700; color:var(--forest);">
+          <i class="fas fa-user-tie" style="color:var(--info);"></i> Head Batch Counselors (By Stream)
+        </span>
+        <p class="text-muted text-small" style="margin-top:2px;">Head counselors manage student batches within specific Academic Streams or Branches.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Stream Name</th>
+            <th>Parent Course</th>
+            <th>Assigned Head Batch Counselor</th>
+            <th style="width:250px;">Assign / Change Counselor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in streams %}
+          <tr>
+            <td><strong>{{ s.name }}</strong></td>
+            <td>{{ s.course.name if s.course else '—' }}</td>
+            <td>
+              {% if s.head_counselor %}
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div class="user-avatar" style="width:28px; height:28px; font-size:11px; background:var(--info);">{{ s.head_counselor.name[0] }}</div>
+                  <div>
+                    <strong style="color:var(--forest);">{{ s.head_counselor.name }}</strong>
+                    <div class="text-muted text-small">{{ s.head_counselor.email }}</div>
+                  </div>
+                </div>
+              {% else %}
+                <span class="text-muted"><i>Unassigned</i></span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('admin.assign_stream_counselor') }}" style="display:flex; gap:8px;">
+                <input type="hidden" name="stream_id" value="{{ s.id }}">
+                <select name="faculty_id" class="form-control form-control-sm">
+                  <option value="">— None (Unassign) —</option>
+                  {% for f in faculty_members %}
+                  <option value="{{ f.id }}" {% if s.head_counselor_id == f.id %}selected{% endif %}>{{ f.name }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-xs btn-primary"><i class="fas fa-check"></i> Assign</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-center text-muted">No streams found. Add streams first.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. Batch Counselor for Sections -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <span class="card-title" style="font-size:16px; font-weight:700; color:var(--forest);">
+          <i class="fas fa-user-check" style="color:var(--success);"></i> Batch Counselors (By Section)
+        </span>
+        <p class="text-muted text-small" style="margin-top:2px;">Batch counselors provide direct guidance and counseling to individual student sections.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Section</th>
+            <th>Course / Stream</th>
+            <th>Assigned Batch Counselor</th>
+            <th style="width:250px;">Assign / Change Counselor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sec in sections %}
+          <tr>
+            <td><strong>{{ sec.full_name }}</strong></td>
+            <td>
+              {{ sec.course.name if sec.course else '' }}
+              {% if sec.stream %} ({{ sec.stream.name }}){% endif %}
+              {% if not sec.course and not sec.stream %}—{% endif %}
+            </td>
+            <td>
+              {% if sec.batch_counselor %}
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div class="user-avatar" style="width:28px; height:28px; font-size:11px; background:var(--success);">{{ sec.batch_counselor.name[0] }}</div>
+                  <div>
+                    <strong style="color:var(--forest);">{{ sec.batch_counselor.name }}</strong>
+                    <div class="text-muted text-small">{{ sec.batch_counselor.email }}</div>
+                  </div>
+                </div>
+              {% else %}
+                <span class="text-muted"><i>Unassigned</i></span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('admin.assign_section_counselor') }}" style="display:flex; gap:8px;">
+                <input type="hidden" name="section_id" value="{{ sec.id }}">
+                <select name="faculty_id" class="form-control form-control-sm">
+                  <option value="">— None (Unassign) —</option>
+                  {% for f in faculty_members %}
+                  <option value="{{ f.id }}" {% if sec.batch_counselor_id == f.id %}selected{% endif %}>{{ f.name }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-xs btn-primary"><i class="fas fa-check"></i> Assign</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-center text-muted">No sections found. Add sections first.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

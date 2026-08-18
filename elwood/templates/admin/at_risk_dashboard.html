@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Early Warning - At Risk Students{% endblock %}
+{% block page_title %}Early Warning System (Goal 30){% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="alert alert-info shadow-sm">
+            <i class="fas fa-robot"></i> <strong>AI Insights:</strong> The system identifies "At-Risk" students based on two key metrics: 
+            <span class="badge bg-danger ms-2">Attendance < 75%</span> or <span class="badge bg-warning text-dark ms-2">Avg Grade < 40%</span>.
+        </div>
+        
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary"><i class="fas fa-exclamation-triangle"></i> Flagged Students ({{ students|length }})</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Section</th>
+                                <th>Attendance</th>
+                                <th>Avg Grade</th>
+                                <th>Flag Reasons</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in students %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="btn btn-sm btn-light rounded-circle me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                            {{ item.student.user.name[0] }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ item.student.user.name }}</div>
+                                            <small class="text-muted">{{ item.student.enrollment_number }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.student.section.full_name if item.student.section else 'N/A' }}</td>
+                                <td>
+                                    <span class="badge {% if item.att_pct < 75 %}bg-danger{% else %}bg-success{% endif %}">
+                                        {{ item.att_pct }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if item.avg_grade < 40 %}bg-danger{% else %}bg-info{% endif %}">
+                                        {{ item.avg_grade }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    {% for reason in item.reasons %}
+                                    <span class="badge bg-light text-dark border me-1">{{ reason }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('admin.student_intervention', sid=item.student.id) }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                        Take Action
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="text-muted mb-2"><i class="fas fa-check-circle fa-3x text-success opacity-50"></i></div>
+                                    <div class="h5">No students currently flagged as At-Risk!</div>
+                                    <p class="small text-muted">All students are meeting the minimum attendance and academic thresholds.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

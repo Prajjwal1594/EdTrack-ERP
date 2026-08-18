@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Anti-Ragging Undertaking{% endblock %}
+{% block page_title %}Anti-Ragging Undertaking{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Anti-Ragging Undertaking</div>
+    <h1>Submit Anti-Ragging Undertaking</h1>
+    <p>Submit your reference number as per UGC guidelines</p>
+  </div>
+</div>
+
+{% if existing %}
+<div class="card mb-24">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-check-circle" style="color:var(--success);"></i> Undertaking Submitted</span>
+    <span class="badge badge-success">Completed</span>
+  </div>
+  <div class="card-body">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div>
+        <div class="form-label">Reference Number</div>
+        <div style="font-size:16px; font-weight:700; font-family:'DM Mono',monospace; color:var(--forest);">{{ existing.reference_number }}</div>
+      </div>
+      <div>
+        <div class="form-label">Academic Year</div>
+        <div style="font-size:14px;">{{ existing.academic_year or 'N/A' }}</div>
+      </div>
+      <div>
+        <div class="form-label">Parent/Guardian Name</div>
+        <div style="font-size:14px;">{{ existing.parent_name or 'N/A' }}</div>
+      </div>
+      <div>
+        <div class="form-label">Parent Contact</div>
+        <div style="font-size:14px;">{{ existing.parent_contact or 'N/A' }}</div>
+      </div>
+      <div>
+        <div class="form-label">Submitted On</div>
+        <div style="font-size:14px;">{{ existing.submitted_at.strftime('%d %b %Y, %I:%M %p') if existing.submitted_at else 'N/A' }}</div>
+      </div>
+      <div>
+        <div class="form-label">Declaration</div>
+        <div style="font-size:14px;">{{ '✅ Accepted' if existing.declaration_accepted else '❌ Not Accepted' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">{{ 'Update Undertaking' if existing else 'Submit New Undertaking' }}</span>
+  </div>
+  <form method="POST">
+    <div class="card-body">
+      <div class="alert alert-info" style="margin-bottom:16px;">
+        <i class="fas fa-info-circle"></i>
+        Obtain your Anti-Ragging Undertaking reference number from <a href="https://www.antiragging.in" target="_blank" style="color:var(--info); font-weight:600;">www.antiragging.in</a> and submit it here.
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Reference Number *</label>
+          <input type="text" name="reference_number" class="form-control" placeholder="e.g., AR-2025-XXXXXXX" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Academic Year</label>
+          <input type="text" name="academic_year" class="form-control" placeholder="e.g., 2025-26" value="2025-26">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Parent/Guardian Name</label>
+          <input type="text" name="parent_name" class="form-control" placeholder="Full name of parent/guardian">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parent Contact Number</label>
+          <input type="text" name="parent_contact" class="form-control" placeholder="Phone number">
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" name="declaration" required>
+          <span style="font-size:13px;">I hereby declare that I have read and understood the Anti-Ragging regulations and undertake to abide by them.</span>
+        </label>
+      </div>
+    </div>
+    <div style="padding:16px 22px; border-top:1px solid var(--border); display:flex; justify-content:flex-end;">
+      <button type="submit" class="btn btn-gold"><i class="fas fa-paper-plane"></i> Submit Undertaking</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

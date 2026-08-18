@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Courses, Streams & Batches{% endblock %}
+{% block page_title %}Courses, Streams & Batches Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.dashboard') }}">Admin</a> / Academic Structure</div>
+    <h1>Courses, Streams & Batches</h1>
+    <p>Define courses (e.g., B.Tech, MBA), streams (e.g., Computer Science, Finance), and academic batches (e.g., 2024-2028).</p>
+  </div>
+</div>
+
+<div class="grid-3 gap-24">
+
+  <!-- 1. Courses Card -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-graduation-cap" style="color:var(--forest);"></i> Courses</span>
+    </div>
+    <div class="card-body" style="padding-bottom:12px;">
+      <form method="POST" action="{{ url_for('admin.courses_management') }}" style="margin-bottom:16px;">
+        <input type="hidden" name="action" value="add_course">
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Course Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. B.Tech, MBA" required>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Course Code</label>
+          <input type="text" name="code" class="form-control" placeholder="e.g. BT, MBA">
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary" style="width:100%;"><i class="fas fa-plus"></i> Add Course</button>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Course</th><th>Code</th></tr></thead>
+          <tbody>
+            {% for c in courses %}
+            <tr>
+              <td><strong>{{ c.name }}</strong></td>
+              <td><span class="badge badge-neutral">{{ c.code or '—' }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="text-muted text-center">No courses added.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Streams Card -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-code-branch" style="color:var(--info);"></i> Streams / Branches</span>
+    </div>
+    <div class="card-body" style="padding-bottom:12px;">
+      <form method="POST" action="{{ url_for('admin.courses_management') }}" style="margin-bottom:16px;">
+        <input type="hidden" name="action" value="add_stream">
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Parent Course</label>
+          <select name="course_id" class="form-control">
+            <option value="">— Select Course —</option>
+            {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Stream Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Computer Science" required>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Stream Code</label>
+          <input type="text" name="code" class="form-control" placeholder="e.g. CSE, ECE">
+        </div>
+        <button type="submit" class="btn btn-sm btn-info" style="width:100%;"><i class="fas fa-plus"></i> Add Stream</button>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Stream</th><th>Course</th></tr></thead>
+          <tbody>
+            {% for s in streams %}
+            <tr>
+              <td><strong>{{ s.name }}</strong></td>
+              <td class="text-muted text-small">{{ s.course.name if s.course else '—' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="text-muted text-center">No streams added.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Batches Card -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-layer-group" style="color:var(--gold);"></i> Batches</span>
+    </div>
+    <div class="card-body" style="padding-bottom:12px;">
+      <form method="POST" action="{{ url_for('admin.courses_management') }}" style="margin-bottom:16px;">
+        <input type="hidden" name="action" value="add_batch">
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Batch Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. 2024-2028" required>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="form-group">
+            <label class="form-label">Start Year</label>
+            <input type="number" name="start_year" class="form-control" placeholder="2024">
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Year</label>
+            <input type="number" name="end_year" class="form-control" placeholder="2028">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-sm btn-gold" style="width:100%;"><i class="fas fa-plus"></i> Add Batch</button>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Batch</th><th>Years</th></tr></thead>
+          <tbody>
+            {% for b in batches %}
+            <tr>
+              <td><strong>{{ b.name }}</strong></td>
+              <td class="text-muted text-small">{{ b.start_year or '—' }} - {{ b.end_year or '—' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="text-muted text-center">No batches added.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

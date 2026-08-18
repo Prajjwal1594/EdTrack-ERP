@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Public Admission Enquiry{% endblock %}
+{% block page_title %}{{ college.name }} - Admission Enquiry{% endblock %}
+{% block content %}
+<div class="row align-items-center justify-content-center" style="min-height: 70vh;">
+  <div class="col-md-6 col-lg-5">
+    <div class="card" style="box-shadow: var(--shadow-lg);">
+      <div class="card-header" style="text-align: center; border-bottom: none; padding-top: 30px;">
+        <h2 style="font-family: 'Playfair Display', serif; color: var(--forest); margin: 0;">Admission Enquiry</h2>
+        <p class="text-muted mt-2" style="font-size: 14px;">Interested in joining <strong>{{ college.name }}</strong>? Fill out this form and our admissions office will contact you.</p>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('admissions.public_inquire', college_id=college.id) }}">
+          
+          <div class="form-group mb-3">
+            <label class="form-label">Student Name *</label>
+            <input type="text" name="student_name" class="form-control" required placeholder="Full Name">
+          </div>
+          
+          <div class="form-group mb-3">
+            <label class="form-label">Parent/Guardian Name</label>
+            <input type="text" name="parent_name" class="form-control" placeholder="Parent Name">
+          </div>
+          
+          <div class="form-row mb-3">
+            <div class="form-group mb-3 mb-md-0" style="flex:1;">
+              <label class="form-label">Phone *</label>
+              <input type="text" name="phone" class="form-control" required placeholder="Phone Number">
+            </div>
+            <div class="form-group mb-3 mb-md-0" style="flex:1;">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" placeholder="Email Address">
+            </div>
+          </div>
+          
+          <div class="form-row mb-3">
+            <div class="form-group mb-3 mb-md-0" style="flex:1;">
+              <label class="form-label">Target Semester</label>
+              <select name="target_class" class="form-control">
+                <option value="">-- Select Semester --</option>
+                <option value="Nursery">Nursery</option>
+                <option value="KG">KG</option>
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+                <option value="5">Semester 5</option>
+                <option value="8">Semester 8</option>
+                <option value="10">Semester 10</option>
+                <option value="12">Semester 12</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group mb-3 mb-md-0" style="flex:1;">
+              <label class="form-label">How did you hear about us?</label>
+              <select name="source" class="form-control">
+                <option value="">-- Select Source --</option>
+                <option value="Website">Website</option>
+                <option value="Advertisement">Advertisement</option>
+                <option value="Friends/Family">Friends/Family</option>
+                <option value="Social Media">Social Media</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group mb-4">
+            <label class="form-label">Any Questions? (Optional)</label>
+            <textarea name="notes" class="form-control" rows="3" placeholder="Write any specific questions you have..."></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 600;">
+            <i class="fas fa-paper-plane" style="margin-right: 6px;"></i> Submit Enquiry
+          </button>
+        </form>
+      </div>
+      <div class="card-footer" style="text-align: center; border-top: none; padding-bottom: 30px;">
+        <a href="{{ url_for('auth.login') }}" style="font-size: 13px; color: var(--gold); text-decoration: none; font-weight: 500;">&larr; Back to Login / Portal</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

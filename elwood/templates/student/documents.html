@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}My Documents{% endblock %}
+{% block page_title %}View My Documents{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Documents</div>
+    <h1>My Documents</h1>
+    <p>View your uploaded documents and their verification status</p>
+  </div>
+  <a href="{{ url_for('student.document_checklist') }}" class="btn btn-outline"><i class="fas fa-list-check"></i> Document Checklist</a>
+</div>
+
+{% if documents %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Document</th><th>Type</th><th>Uploaded</th><th>Status</th><th>Remarks</th></tr>
+      </thead>
+      <tbody>
+        {% for doc in documents %}
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:36px; height:36px; border-radius:8px; background:rgba(201,168,76,.12); color:var(--gold); display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-file-alt"></i>
+              </div>
+              <div>
+                <div style="font-weight:500;">{{ doc.doc_name or doc.doc_type }}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge badge-neutral">{{ doc.doc_type | replace('_', ' ') | capitalize }}</span></td>
+          <td class="text-muted text-small">{{ doc.uploaded_at.strftime('%d %b %Y') if doc.uploaded_at else '—' }}</td>
+          <td>
+            {% if doc.is_verified %}
+            <span class="badge badge-success"><i class="fas fa-check"></i> Verified</span>
+            {% else %}
+            <span class="badge badge-warning">Pending</span>
+            {% endif %}
+          </td>
+          <td class="text-muted text-small">{{ doc.remarks or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-folder-open"></i>
+    <p>No documents uploaded yet. Check the <a href="{{ url_for('student.document_checklist') }}">document checklist</a> to see what's required.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

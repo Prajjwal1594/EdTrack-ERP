@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% if current_user.is_authenticated and current_user.college %}{{ current_user.college.name }}{% else %}EdTrack{% endif %}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <style>
+    :root {
+      --forest: #1a3a2a;
+      --forest-mid: #2d5a42;
+      --forest-light: #3d7a5a;
+      --gold: #c9a84c;
+      --gold-light: #e8c96e;
+      --gold-pale: #f5e9c8;
+      --cream: #faf8f3;
+      --white: #ffffff;
+      --ink: #1a1a1a;
+      --ink-mid: #444;
+      --ink-light: #888;
+      --border: #e2ddd4;
+      --border-dark: #ccc5b8;
+      --danger: #c0392b;
+      --danger-light: #fdf0ee;
+      --success: #27ae60;
+      --success-light: #edfbf2;
+      --warning: #e67e22;
+      --warning-light: #fef6ec;
+      --info: #2980b9;
+      --info-light: #eef6fc;
+      --sidebar-w: 260px;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(26,58,42,.08);
+      --shadow-md: 0 4px 24px rgba(26,58,42,.12);
+      --ai-primary: #c9a84c;
+      --ai-secondary: #1a3a2a;
+    }
+
+    /* ── GLOBAL AI CHATBOT ────────────────────────── */
+    .ai-fab {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      background: var(--ai-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ai-secondary);
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+      z-index: 10000;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: auto;
+    }
+    .ai-fab:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(201, 168, 76, 0.6); }
+    .ai-fab.active { transform: rotate(90deg); background: var(--ai-secondary); color: var(--ai-primary); }
+
+    .ai-window {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      width: 350px;
+      height: 500px;
+      background: var(--white);
+      border-radius: 15px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      z-index: 999;
+      overflow: hidden;
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+    }
+    .ai-window.open { transform: translateY(0); opacity: 1; pointer-events: all; }
+    
+    .ai-header {
+      background: var(--ai-secondary);
+      color: var(--ai-primary);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Playfair Display', serif;
+    }
+    .ai-header i { font-size: 20px; }
+    .ai-body { flex: 1; overflow-y: auto; padding: 20px; background: #fbfaf8; display: flex; flex-direction: column; gap: 12px; }
+    .ai-footer { padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    
+    .ai-msg { padding: 10px 14px; border-radius: 12px; font-size: 13px; max-width: 85%; line-height: 1.5; }
+    .ai-msg.user { align-self: flex-end; background: var(--ai-secondary); color: var(--white); border-bottom-right-radius: 2px; }
+    .ai-msg.bot { align-self: flex-start; background: var(--white); color: var(--ink); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
+    
+    #ai-input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 15px; outline: none; font-size: 13px; }
+    #ai-send { background: var(--ai-primary); color: var(--ai-secondary); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 15px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--forest);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      transition: transform .3s ease;
+    }
+    .sidebar-brand {
+      padding: 24px 20px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-brand .college-crest {
+      width: 42px; height: 42px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 700;
+      color: var(--forest);
+      margin-bottom: 10px;
+    }
+    .sidebar-brand h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      color: var(--white);
+      line-height: 1.3;
+    }
+    .sidebar-brand span {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      color: var(--gold);
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.35);
+      padding: 14px 20px 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      color: rgba(255,255,255,.72);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 400;
+      border-left: 3px solid transparent;
+      transition: all .2s;
+      position: relative;
+    }
+    .nav-link i { width: 18px; text-align: center; font-size: 13px; }
+    .nav-link:hover { color: var(--white); background: rgba(255,255,255,.06); }
+    .nav-link.active {
+      color: var(--gold-light);
+      background: rgba(201,168,76,.12);
+      border-left-color: var(--gold);
+      font-weight: 500;
+    }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--gold);
+      color: var(--forest);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: rgba(255,255,255,.8);
+      padding: 8px 10px; border-radius: 8px;
+      transition: background .2s;
+    }
+    .sidebar-user:hover { background: rgba(255,255,255,.06); }
+    .user-avatar {
+      width: 34px; height: 34px;
+      background: var(--forest-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: var(--white);
+      flex-shrink: 0;
+    }
+    .user-info .name { font-size: 13px; font-weight: 500; }
+    .user-info .role {
+      font-size: 11px;
+      color: rgba(255,255,255,.45);
+      text-transform: capitalize;
+    }
+
+    /* ── MAIN ──────────────────────────────────────── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 60px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 16px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--forest);
+      flex: 1;
+    }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .topbar-btn {
+      width: 36px; height: 36px;
+      border: none; background: transparent;
+      border-radius: 8px; cursor: pointer;
+      color: var(--ink-mid);
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; text-decoration: none; position: relative;
+    }
+    .topbar-btn:hover { background: var(--cream); color: var(--forest); }
+    .badge-dot {
+      width: 8px; height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      position: absolute; top: 6px; right: 6px;
+      border: 2px solid var(--white);
+    }
+
+    .content { padding: 28px; flex: 1; }
+
+    /* ── FLASH MESSAGES ────────────────────────────── */
+    .flash-stack { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      display: flex; align-items: center; gap: 10px;
+      border: 1px solid transparent;
+    }
+    .alert-success { background: var(--success-light); color: #1a6b3c; border-color: #b3e6cc; }
+    .alert-danger  { background: var(--danger-light);  color: #8b1a1a; border-color: #f5c0b8; }
+    .alert-warning { background: var(--warning-light); color: #7a4a10; border-color: #f5d5a8; }
+    .alert-info    { background: var(--info-light);    color: #1a4a6b; border-color: #b3d5f0; }
+    .alert .close-btn {
+      margin-left: auto; background: none; border: none;
+      cursor: pointer; color: inherit; opacity: .5; padding: 0 4px;
+    }
+    .alert .close-btn:hover { opacity: 1; }
+
+    /* ── CARDS ─────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--forest);
+    }
+    .card-body { padding: 22px; }
+
+    /* ── STAT CARDS ────────────────────────────────── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .stat-icon.green  { background: rgba(39,174,96,.12);  color: var(--success); }
+    .stat-icon.gold   { background: rgba(201,168,76,.15); color: var(--gold); }
+    .stat-icon.blue   { background: rgba(41,128,185,.12); color: var(--info); }
+    .stat-icon.orange { background: rgba(230,126,34,.12); color: var(--warning); }
+    .stat-icon.red    { background: rgba(192,57,43,.12);  color: var(--danger); }
+    .stat-icon.forest { background: rgba(26,58,42,.10);   color: var(--forest); }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--ink); font-family: 'DM Mono', monospace; }
+    .stat-label { font-size: 12px; color: var(--ink-light); font-weight: 500; letter-spacing: .02em; }
+
+    /* ── TABLES ────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border);
+      text-align: left;
+      background: var(--cream);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #faf9f6; }
+    tbody td { padding: 12px 16px; font-size: 14px; color: var(--ink-mid); vertical-align: middle; }
+    tbody td:first-child { color: var(--ink); font-weight: 500; }
+
+    /* ── FORMS ─────────────────────────────────────── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-mid); margin-bottom: 6px; }
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      background: var(--white);
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+    .form-control:focus { border-color: var(--forest-light); box-shadow: 0 0 0 3px rgba(45,90,66,.12); }
+    select.form-control { cursor: pointer; }
+    textarea.form-control { resize: vertical; min-height: 90px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    /* ── BUTTONS ───────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-decoration: none;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--forest); color: var(--white); border-color: var(--forest); }
+    .btn-primary:hover { background: var(--forest-mid); }
+    .btn-gold { background: var(--gold); color: var(--forest); border-color: var(--gold); font-weight: 600; }
+    .btn-gold:hover { background: var(--gold-light); }
+    .btn-outline { background: transparent; color: var(--forest); border-color: var(--forest-light); }
+    .btn-outline:hover { background: var(--forest); color: var(--white); }
+    .btn-danger { background: var(--danger); color: var(--white); border-color: var(--danger); }
+    .btn-danger:hover { background: #a93226; }
+    .btn-ghost { background: transparent; color: var(--ink-mid); border-color: var(--border-dark); }
+    .btn-ghost:hover { background: var(--cream); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-xs { padding: 4px 8px; font-size: 11px; border-radius: 6px; }
+
+    /* ── BADGES ────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+    .badge-success { background: var(--success-light); color: var(--success); }
+    .badge-danger  { background: var(--danger-light);  color: var(--danger); }
+    .badge-warning { background: var(--warning-light); color: var(--warning); }
+    .badge-info    { background: var(--info-light);    color: var(--info); }
+    .badge-gold    { background: var(--gold-pale);     color: #7a5a10; }
+    .badge-neutral { background: #f0ece4;              color: var(--ink-mid); }
+
+    /* ── GRADE COLORS ─────────────────────────────── */
+    .grade-A  { color: #1a6b3c; font-weight: 700; }
+    .grade-B  { color: #2980b9; font-weight: 700; }
+    .grade-C  { color: #7d6608; font-weight: 700; }
+    .grade-D  { color: var(--warning); font-weight: 700; }
+    .grade-F  { color: var(--danger); font-weight: 700; }
+
+    /* ── PAGE HEADER ───────────────────────────────── */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+    }
+    .page-header-left h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--forest);
+    }
+    .page-header-left p { font-size: 14px; color: var(--ink-light); margin-top: 3px; }
+    .breadcrumb { font-size: 12px; color: var(--ink-light); margin-bottom: 4px; }
+    .breadcrumb a { color: var(--forest-light); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    /* ── DIVIDER ───────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* ── MODAL ─────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: 14px;
+      width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      animation: slideUp .25s ease;
+    }
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--forest); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink-light); }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MOBILE ────────────────────────────────────── */
+    .menu-toggle {
+      display: none;
+      background: none; border: none; color: var(--forest);
+      font-size: 20px; cursor: pointer; padding: 4px;
+    }
+    @media (max-width: 768px) {
+      .menu-toggle { display: block; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .content { padding: 16px; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ── UTILITIES ─────────────────────────────────── */
+    .flex { display: flex; }
+    .flex-center { display: flex; align-items: center; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .gap-8 { gap: 8px; }
+    .gap-12 { gap: 12px; }
+    .gap-16 { gap: 16px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+    .text-muted { color: var(--ink-light); }
+    .text-small { font-size: 12px; }
+    .text-center { text-align: center; }
+    .text-right  { text-align: right; }
+    .font-mono { font-family: 'DM Mono', monospace; }
+    .empty-state {
+      padding: 48px 24px; text-align: center;
+    }
+    .empty-state i { font-size: 40px; color: var(--border-dark); margin-bottom: 12px; }
+    .empty-state p { color: var(--ink-light); }
+
+    /* ── PROGRESS BAR ──────────────────────────────── */
+    .progress { background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; }
+    .progress-bar { height: 100%; border-radius: 99px; transition: width .5s ease; }
+    .progress-bar.green  { background: var(--success); }
+    .progress-bar.gold   { background: var(--gold); }
+    .progress-bar.orange { background: var(--warning); }
+    .progress-bar.red    { background: var(--danger); }
+
+    /* ── FILTER BAR ────────────────────────────────── */
+    .filter-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+      margin-bottom: 20px;
+    }
+    .filter-bar .form-control { max-width: 200px; }
+
+    /* ── COLLAPSIBLE SIDEBAR MENUS ─────────────────── */
+    .nav-parent {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      color: rgba(255,255,255,.72);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 400;
+      border-left: 3px solid transparent;
+      transition: all .2s;
+      cursor: pointer;
+      user-select: none;
+    }
+    .nav-parent i.nav-icon { width: 18px; text-align: center; font-size: 13px; }
+    .nav-parent:hover { color: var(--white); background: rgba(255,255,255,.06); }
+    .nav-parent .nav-chevron {
+      margin-left: auto;
+      font-size: 10px;
+      transition: transform .25s ease;
+    }
+    .nav-parent.expanded { color: var(--gold-light); }
+    .nav-parent.expanded .nav-chevron { transform: rotate(90deg); }
+    .nav-submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .35s ease-in-out;
+      background: rgba(0,0,0,.12);
+    }
+    .nav-submenu.open {
+      max-height: 600px;
+    }
+    .nav-submenu .nav-link {
+      padding: 8px 20px 8px 50px;
+      font-size: 13px;
+      display: flex;
+    }
+    .nav-submenu .nav-link i { font-size: 11px; }
+
+    /* ── AVATAR DROPDOWN ───────────────────────────── */
+    .avatar-dropdown-wrap { position: relative; }
+    .avatar-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--forest);
+      color: var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+      font-family: 'Playfair Display', serif;
+      cursor: pointer; border: 2px solid var(--gold-pale);
+      transition: all .2s;
+    }
+    .avatar-btn:hover { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.2); }
+    .avatar-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 220px;
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity .2s ease, transform .2s ease, visibility .2s ease;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .avatar-dropdown.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .avatar-dropdown-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    .avatar-dropdown-header .av-name { font-weight: 600; font-size: 14px; color: var(--ink); }
+    .avatar-dropdown-header .av-role { font-size: 11px; color: var(--ink-light); text-transform: capitalize; }
+    .avatar-dropdown-body { padding: 6px; }
+    .avatar-dropdown-body a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--ink-mid);
+      font-size: 13px;
+      transition: background .15s;
+    }
+    .avatar-dropdown-body a:hover { background: var(--cream); color: var(--forest); }
+    .avatar-dropdown-body a i { width: 18px; text-align: center; font-size: 13px; }
+    .avatar-dropdown-body .av-divider { height: 1px; background: var(--border); margin: 4px 6px; }
+    .avatar-dropdown-body a.av-logout { color: var(--danger); }
+    .avatar-dropdown-body a.av-logout:hover { background: var(--danger-light); }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    {% if current_user.role == 'superadmin' %}
+      <div class="college-crest" style="background:var(--gold);color:var(--forest);font-size:11px">SA</div>
+      <h2>EdTrack</h2>
+      <span>Super Admin</span>
+    {% else %}
+      <div class="college-crest">{{ (current_user.college.code[:2] if current_user.college else 'ET') }}</div>
+      <h2>{{ current_user.college.name if current_user.college else 'EdTrack' }}</h2>
+      <span>{% if current_user.role == 'admin' %}Admin Portal{% elif current_user.role == 'hr' %}HR Portal{% elif current_user.role == 'faculty' %}Faculty Portal{% elif current_user.role == 'student' %}Student Portal{% else %}Parent Portal{% endif %}</span>
+    {% endif %}
+  </div>
+  <nav class="sidebar-nav">
+    {% if current_user.role == 'superadmin' %}
+      <span class="nav-section-label">Platform</span>
+      <a href="{{ url_for('superadmin.dashboard') }}" class="nav-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <span class="nav-section-label">Colleges</span>
+      <a href="{{ url_for('superadmin.colleges') }}" class="nav-link {% if (request.blueprint or '') == 'superadmin' and 'college' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-building-columns"></i> All Colleges</a>
+      <a href="{{ url_for('superadmin.new_college') }}" class="nav-link {% if request.endpoint == 'superadmin.new_college' %}active{% endif %}"><i class="fas fa-plus-circle"></i> New College</a>
+
+    {% elif current_user.role == 'admin' %}
+      <span class="nav-section-label">Overview</span>
+      <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <span class="nav-section-label">Management</span>
+      <a href="{{ url_for('admin.users') }}" class="nav-link {% if 'admin.users' in (request.endpoint or '') or 'admin.add_user' in (request.endpoint or '') or 'admin.edit_user' in (request.endpoint or '') and not 'erp' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-users"></i> Users</a>
+      <a href="{{ url_for('admin.students') }}" class="nav-link {% if 'admin.students' in (request.endpoint or '') or 'admin.edit_erp_profile' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-user-graduate"></i> ERP Students</a>
+      <a href="{{ url_for('admin.courses_management') }}" class="nav-link {% if request.endpoint == 'admin.courses_management' %}active{% endif %}"><i class="fas fa-graduation-cap"></i> Courses & Streams</a>
+      <a href="{{ url_for('admin.counselor_assignments') }}" class="nav-link {% if request.endpoint == 'admin.counselor_assignments' %}active{% endif %}"><i class="fas fa-user-shield"></i> Counselor Roles</a>
+      <a href="{{ url_for('admin.semesters') }}" class="nav-link {% if request.endpoint == 'admin.semesters' %}active{% endif %}"><i class="fas fa-university"></i> Semesters</a>
+      <a href="{{ url_for('admin.sections') }}" class="nav-link {% if request.endpoint == 'admin.sections' %}active{% endif %}"><i class="fas fa-door-open"></i> Sections</a>
+      <a href="{{ url_for('admin.subjects') }}" class="nav-link {% if request.endpoint == 'admin.subjects' %}active{% endif %}"><i class="fas fa-book"></i> Subjects</a>
+      <a href="{{ url_for('admin.faculty_assignments') }}" class="nav-link {% if request.endpoint == 'admin.faculty_assignments' %}active{% endif %}"><i class="fas fa-chalkboard-user"></i> Faculty Assignments</a>
+      <a href="{{ url_for('admin.parent_links') }}" class="nav-link {% if request.endpoint == 'admin.parent_links' %}active{% endif %}"><i class="fas fa-people-arrows"></i> Parent Links</a>
+      <a href="{{ url_for('timetable.index') }}" class="nav-link {% if request.blueprint == 'timetable' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Timetables</a>
+      <span class="nav-section-label">Academic</span>
+      <a href="{{ url_for('admin.terms') }}" class="nav-link {% if request.endpoint == 'admin.terms' %}active{% endif %}"><i class="fas fa-calendar-days"></i> Academic Terms</a>
+      <a href="{{ url_for('admin.fee_types') }}" class="nav-link {% if request.endpoint == 'admin.fee_types' %}active{% endif %}"><i class="fas fa-receipt"></i> Fee Types</a>
+      <a href="{{ url_for('fees.index') }}" class="nav-link {% if request.blueprint == 'fees' %}active{% endif %}"><i class="fas fa-money-bill-wave"></i> Fee Management</a>
+      <span class="nav-section-label">Communication</span>
+      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
+        <i class="fas fa-envelope"></i> Messages
+        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
+      </a>
+      <span class="nav-section-label">ERP Management</span>
+      <a href="{{ url_for('admin.announcements') }}" class="nav-link {% if request.endpoint == 'admin.announcements' %}active{% endif %}"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="{{ url_for('admin.events') }}" class="nav-link {% if request.endpoint == 'admin.events' %}active{% endif %}"><i class="fas fa-calendar-star"></i> Events</a>
+      <a href="{{ url_for('admin.feedback_list') }}" class="nav-link {% if request.endpoint == 'admin.feedback_list' %}active{% endif %}"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="{{ url_for('admin.grievance_list') }}" class="nav-link {% if request.endpoint == 'admin.grievance_list' %}active{% endif %}"><i class="fas fa-flag"></i> Grievances</a>
+      <a href="{{ url_for('admin.leave_applications') }}" class="nav-link {% if request.endpoint == 'admin.leave_applications' %}active{% endif %}"><i class="fas fa-calendar-check"></i> Leave Applications</a>
+      <span class="nav-section-label">Admissions & CRM</span>
+      <a href="{{ url_for('admissions.enquiries') }}" class="nav-link {% if request.blueprint == 'admissions' and 'enquiries' in request.endpoint %}active{% endif %}"><i class="fas fa-headset"></i> CRM Enquiries</a>
+      <a href="{{ url_for('admissions.applications') }}" class="nav-link {% if request.blueprint == 'admissions' and 'applications' in request.endpoint %}active{% endif %}"><i class="fas fa-file-signature"></i> Applications</a>
+      <span class="nav-section-label">Infrastructure</span>
+      <a href="{{ url_for('infra.library') }}" class="nav-link {% if request.blueprint == 'infra' and 'library' in request.endpoint %}active{% endif %}"><i class="fas fa-book-open"></i> Library</a>
+      <a href="{{ url_for('infra.transport') }}" class="nav-link {% if request.blueprint == 'infra' and 'transport' in request.endpoint %}active{% endif %}"><i class="fas fa-bus"></i> Transport</a>
+      <a href="{{ url_for('infra.hostel') }}" class="nav-link {% if request.blueprint == 'infra' and 'hostel' in request.endpoint %}active{% endif %}"><i class="fas fa-bed"></i> Hostel</a>
+      <a href="{{ url_for('infra.inventory') }}" class="nav-link {% if request.blueprint == 'infra' and 'inventory' in request.endpoint %}active{% endif %}"><i class="fas fa-boxes-stacked"></i> Inventory</a>
+
+      <span class="nav-section-label">Ledger</span>
+      <a href="{{ url_for('finance.ledger') }}" class="nav-link {% if request.blueprint == 'finance' and 'ledger' in request.endpoint %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i> Finance Ledger</a>
+      <span class="nav-section-label">Settings</span>
+      <a href="{{ url_for('admin.lms_integration') }}" class="nav-link {% if request.endpoint == 'admin.lms_integration' %}active{% endif %}"><i class="fas fa-network-wired"></i> LMS Integration</a>
+      <a href="{{ url_for('admin.college_settings') }}" class="nav-link {% if request.endpoint == 'admin.college_settings' %}active{% endif %}"><i class="fas fa-gear"></i> College Settings</a>
+
+    {% elif current_user.role == 'hr' %}
+      <span class="nav-section-label">Overview</span>
+      <a href="{{ url_for('hr.dashboard') }}" class="nav-link {% if request.endpoint == 'hr.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <span class="nav-section-label">Staff Management</span>
+      <a href="{{ url_for('hr.directory') }}" class="nav-link {% if 'hr.directory' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-id-badge"></i> Staff Directory</a>
+      <a href="{{ url_for('hr.attendance') }}" class="nav-link {% if 'hr.attendance' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-clipboard-user"></i> Faculty Attendance</a>
+      <a href="{{ url_for('hr.payroll') }}" class="nav-link {% if 'hr.payroll' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-money-check"></i> Payroll Center</a>
+      <span class="nav-section-label">Communication</span>
+      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
+        <i class="fas fa-envelope"></i> Messages
+        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
+      </a>
+
+    {% elif current_user.role == 'faculty' %}
+      <span class="nav-section-label">Overview</span>
+      <a href="{{ url_for('faculty.dashboard') }}" class="nav-link {% if request.endpoint == 'faculty.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <span class="nav-section-label">Academic</span>
+      <a href="{{ url_for('faculty.grades') }}" class="nav-link {% if 'faculty.grade' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-star-half-stroke"></i> Grades</a>
+      <a href="{{ url_for('faculty.attendance') }}" class="nav-link {% if 'faculty.attendance' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-clipboard-check"></i> Attendance</a>
+      <a href="{{ url_for('faculty.assignments') }}" class="nav-link {% if 'faculty.assignment' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-file-lines"></i> Assignments</a>
+      <a href="{{ url_for('exams.index') }}" class="nav-link {% if request.blueprint == 'exams' %}active{% endif %}"><i class="fas fa-pen-to-square"></i> Exams</a>
+      <a href="{{ url_for('faculty.report_comments') }}" class="nav-link {% if request.endpoint and 'report_comment' in request.endpoint %}active{% endif %}"><i class="fas fa-comment-dots"></i> Report Comments</a>
+      <a href="{{ url_for('faculty.credentials') }}" class="nav-link {% if request.endpoint and 'credentials' in request.endpoint %}active{% endif %}"><i class="fas fa-medal"></i> Credentials</a>
+      <a href="{{ url_for('faculty.soft_skills') }}" class="nav-link {% if request.endpoint and 'soft_skills' in request.endpoint %}active{% endif %}"><i class="fas fa-brain"></i> Soft Skills</a>
+      <a href="{{ url_for('timetable.index') }}" class="nav-link {% if request.blueprint == 'timetable' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> My Schedule</a>
+      <a href="{{ url_for('faculty.my_attendance') }}" class="nav-link {% if request.endpoint == 'faculty.my_attendance' %}active{% endif %}"><i class="fas fa-user-clock"></i> My Attendance</a>
+      <span class="nav-section-label">Reports</span>
+      <a href="{{ url_for('fees.index') }}" class="nav-link {% if request.blueprint == 'fees' %}active{% endif %}"><i class="fas fa-money-bill-wave"></i> Fees</a>
+      <span class="nav-section-label">Communication</span>
+      <a href="{{ url_for('faculty.announcements') }}" class="nav-link {% if request.endpoint == 'faculty.announcements' %}active{% endif %}"><i class="fas fa-bullhorn"></i> Announcements</a>
+      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
+        <i class="fas fa-envelope"></i> Messages
+        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
+      </a>
+
+    {% elif current_user.role == 'student' %}
+      {% set student_obj = current_user.student_profile %}
+      <a href="{{ url_for('student.dashboard') }}" class="nav-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <a href="{{ url_for('timetable.index') }}" class="nav-link {% if request.blueprint == 'timetable' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Time Table</a>
+      <a href="{{ url_for('student.faculty') }}" class="nav-link {% if request.endpoint == 'student.faculty' %}active{% endif %}"><i class="fas fa-chalkboard-user"></i> Faculty</a>
+      <a href="{{ url_for('student.profile_view') }}" class="nav-link {% if request.endpoint == 'student.profile_view' %}active{% endif %}"><i class="fas fa-user"></i> User</a>
+      <a href="{{ url_for('student.subjects') }}" class="nav-link {% if request.endpoint == 'student.subjects' %}active{% endif %}"><i class="fas fa-book"></i> Subject</a>
+      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
+        <i class="fas fa-envelope"></i> Message
+        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
+      </a>
+
+      <!-- Announcement (collapsible) -->
+      <div class="nav-parent">
+        <i class="fas fa-bullhorn nav-icon"></i> Announcement
+        <i class="fas fa-chevron-right nav-chevron"></i>
+      </div>
+      <div class="nav-submenu">
+        <a href="{{ url_for('student.announcements', atype='event') }}" class="nav-link"><i class="fas fa-calendar-star"></i> Event</a>
+        <a href="{{ url_for('student.announcements', atype='holiday') }}" class="nav-link"><i class="fas fa-umbrella-beach"></i> Holiday</a>
+        <a href="{{ url_for('student.announcements', atype='notice') }}" class="nav-link"><i class="fas fa-scroll"></i> Notice</a>
+      </div>
+
+      <a href="{{ url_for('student.events') }}" class="nav-link {% if request.endpoint == 'student.events' %}active{% endif %}"><i class="fas fa-ticket"></i> Event Access</a>
+      <a href="{{ url_for('student.event_qr_list') }}" class="nav-link {% if request.endpoint == 'student.event_qr_list' %}active{% endif %}"><i class="fas fa-qrcode"></i> My Event QR</a>
+      <a href="{{ url_for('student.feedback') }}" class="nav-link {% if request.endpoint == 'student.feedback' %}active{% endif %}"><i class="fas fa-comment-dots"></i> Feedback</a>
+      <a href="{{ url_for('student.grievances') }}" class="nav-link {% if request.endpoint == 'student.grievances' %}active{% endif %}"><i class="fas fa-flag"></i> Grievances</a>
+      <a href="{{ url_for('student.anti_ragging') }}" class="nav-link {% if request.endpoint == 'student.anti_ragging' %}active{% endif %}"><i class="fas fa-shield-halved"></i> Submit Anti-Ragging Undertaking Reference Number</a>
+      <a href="{{ url_for('student.summer_term') }}" class="nav-link {% if request.endpoint == 'student.summer_term' %}active{% endif %}"><i class="fas fa-sun"></i> Summer Term</a>
+
+      <!-- Fee Management (collapsible) -->
+      <div class="nav-parent">
+        <i class="fas fa-indian-rupee-sign nav-icon"></i> Fee Management
+        <i class="fas fa-chevron-right nav-chevron"></i>
+      </div>
+      <div class="nav-submenu">
+        <a href="{{ url_for('student.fee_statement') }}" class="nav-link"><i class="fas fa-file-invoice"></i> Fee Statement</a>
+        <a href="{{ url_for('student.caution_money') }}" class="nav-link"><i class="fas fa-piggy-bank"></i> Caution Money</a>
+        <a href="{{ url_for('student.transaction_history') }}" class="nav-link"><i class="fas fa-clock-rotate-left"></i> Online Transaction History</a>
+      </div>
+
+      <a href="{{ url_for('student.leave_application') }}" class="nav-link {% if request.endpoint == 'student.leave_application' %}active{% endif %}"><i class="fas fa-calendar-check"></i> OD Leave Application</a>
+
+      <!-- Attendance (collapsible) -->
+      <div class="nav-parent">
+        <i class="fas fa-clipboard-check nav-icon"></i> Attendance
+        <i class="fas fa-chevron-right nav-chevron"></i>
+      </div>
+      <div class="nav-submenu">
+        <a href="{{ url_for('student.attendance_report') }}" class="nav-link"><i class="fas fa-chart-bar"></i> Attendance Report</a>
+        <a href="{{ url_for('student.attendance') }}" class="nav-link"><i class="fas fa-user-check"></i> Individual Attendance</a>
+      </div>
+
+      <!-- Examinations (collapsible) -->
+      <div class="nav-parent">
+        <i class="fas fa-pen-to-square nav-icon"></i> Examinations
+        <i class="fas fa-chevron-right nav-chevron"></i>
+      </div>
+      <div class="nav-submenu">
+        <a href="{{ url_for('exams.index') }}" class="nav-link"><i class="fas fa-file-pen"></i> RTU Enrollment Form</a>
+        <a href="{{ url_for('student.marksheets') }}" class="nav-link"><i class="fas fa-scroll"></i> Marksheets</a>
+        <a href="{{ url_for('student.mid_term_marks') }}" class="nav-link"><i class="fas fa-list-ol"></i> Mid Term Marks</a>
+        <a href="{{ url_for('student.moocs_certificates') }}" class="nav-link"><i class="fas fa-graduation-cap"></i> MOOCs Certificates</a>
+        <a href="{{ url_for('student.exam_scheme') }}" class="nav-link"><i class="fas fa-table-list"></i> Examination Scheme</a>
+        <a href="{{ url_for('student.academic_calendar') }}" class="nav-link"><i class="fas fa-calendar-days"></i> Academic Calendars</a>
+      </div>
+
+      <a href="{{ url_for('student.documents') }}" class="nav-link {% if request.endpoint == 'student.documents' %}active{% endif %}"><i class="fas fa-folder-open"></i> View My Documents</a>
+      <a href="{{ url_for('student.document_checklist') }}" class="nav-link {% if request.endpoint == 'student.document_checklist' %}active{% endif %}"><i class="fas fa-list-check"></i> Document Checklist</a>
+
+    {% elif current_user.role == 'parent' %}
+      <a href="{{ url_for('parent.dashboard') }}" class="nav-link {% if request.endpoint == 'parent.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <a href="{{ url_for('parent.dashboard') }}#wallet-section" class="nav-link"><i class="fas fa-wallet"></i> Digital Wallet</a>
+      <a href="{{ url_for('parent.dashboard') }}#fees-section" class="nav-link"><i class="fas fa-money-check-dollar"></i> Fee Status</a>
+      <span class="nav-section-label">Communication</span>
+      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
+        <i class="fas fa-envelope"></i> Messages
+        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
+      </a>
+    {% endif %}
+  </nav>
+  {% if current_user.role != 'student' %}
+  <div class="sidebar-footer">
+    <a href="{{ url_for('auth.profile') }}" class="sidebar-user">
+      <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
+      <div class="user-info">
+        <div class="name">{{ current_user.name }}</div>
+        <div class="role">{{ current_user.role }}</div>
+      </div>
+    </a>
+    <a href="{{ url_for('auth.logout') }}" class="nav-link mt-16" style="margin-top:8px;"><i class="fas fa-right-from-bracket"></i> Log Out</a>
+  </div>
+  {% endif %}
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+    <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+    <div class="topbar-actions">
+      {% if current_user.role != 'superadmin' %}
+      <a href="{{ url_for('messages.inbox') }}" class="topbar-btn" title="Messages">
+        <i class="fas fa-envelope"></i>
+        {% if current_user.unread_message_count > 0 %}<span class="badge-dot"></span>{% endif %}
+      </a>
+      {% endif %}
+      <!-- Avatar Dropdown -->
+      <div class="avatar-dropdown-wrap">
+        <div class="avatar-btn" id="avatar-toggle" title="{{ current_user.name }}">
+          {{ current_user.name[0].upper() }}
+        </div>
+        <div class="avatar-dropdown" id="avatar-dropdown">
+          <div class="avatar-dropdown-header">
+            <div class="av-name">{{ current_user.name }}</div>
+            <div class="av-role">{{ current_user.role }}</div>
+          </div>
+          <div class="avatar-dropdown-body">
+            {% if current_user.role == 'student' %}
+              <a href="{{ url_for('student.profile_view') }}"><i class="fas fa-id-card"></i> Profile</a>
+              <a href="{{ url_for('auth.profile') }}"><i class="fas fa-lock"></i> Password</a>
+            {% else %}
+              <a href="{{ url_for('auth.profile') }}"><i class="fas fa-id-card"></i> Profile</a>
+              <a href="{{ url_for('auth.profile') }}#password"><i class="fas fa-lock"></i> Password</a>
+            {% endif %}
+            <div class="av-divider"></div>
+            <a href="{{ url_for('auth.logout') }}" class="av-logout"><i class="fas fa-right-from-bracket"></i> Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+          {% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}">
+              <i class="fas fa-{% if cat == 'success' %}check-circle{% elif cat == 'danger' %}exclamation-circle{% elif cat == 'warning' %}triangle-exclamation{% else %}info-circle{% endif %}"></i>
+              {{ msg }}
+              <button class="close-btn" onclick="this.parentElement.remove()">×</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+{% if current_user.is_authenticated and current_user.role != 'superadmin' %}
+  <!-- Floating AI Assistant -->
+  <div class="ai-fab" id="ai-fab" title="{% if current_user.college %}{{ current_user.college.name }} Assistant{% else %}AI Assistant{% endif %}">
+    <i class="fas fa-robot"></i>
+  </div>
+
+  <div class="ai-window" id="ai-window">
+    <div class="ai-header">
+      <i class="fas fa-feather-pointed"></i>
+      <div>
+        <div style="font-weight: 700; font-size: 16px;">Academic Assistant</div>
+        <div style="font-size: 11px; font-family: 'DM Sans', sans-serif; opacity: 0.8;">{% if current_user.college %}{{ current_user.college.name }} AI{% else %}EdTrack Assistant{% endif %}</div>
+      </div>
+    </div>
+    <div class="ai-body" id="ai-chat-body">
+      <div class="ai-msg bot">Hello {{ current_user.name }}! I am your {% if current_user.college %}{{ current_user.college.name }}{% else %}EdTrack{% endif %} assistant. How can I help you today?</div>
+    </div>
+    <div class="ai-footer">
+      <input type="text" id="ai-input" placeholder="Type your question..." autocomplete="off">
+      <button id="ai-send"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Close sidebar on outside click (mobile)
+  document.addEventListener('click', function(e) {
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('open')) {
+      if (!sidebar.contains(e.target) && !e.target.closest('.menu-toggle')) {
+        sidebar.classList.remove('open');
+      }
+    }
+    // Close avatar dropdown on outside click
+    var avDrop = document.getElementById('avatar-dropdown');
+    var avBtn = document.getElementById('avatar-toggle');
+    if (avDrop && avBtn && !avBtn.contains(e.target) && !avDrop.contains(e.target)) {
+      avDrop.classList.remove('open');
+    }
+  });
+
+  // Avatar dropdown toggle
+  var avatarToggle = document.getElementById('avatar-toggle');
+  if (avatarToggle) {
+    avatarToggle.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var dropdown = document.getElementById('avatar-dropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('open');
+      }
+    });
+  }
+
+  // Collapsible sidebar submenu toggle — event delegation
+  document.querySelectorAll('.nav-parent').forEach(function(parent) {
+    parent.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var submenu = this.nextElementSibling;
+      if (!submenu || !submenu.classList.contains('nav-submenu')) return;
+      var isOpen = submenu.classList.contains('open');
+      // Close all other submenus
+      document.querySelectorAll('.nav-submenu.open').forEach(function(s) {
+        s.classList.remove('open');
+        if (s.previousElementSibling) s.previousElementSibling.classList.remove('expanded');
+      });
+      // Toggle this one
+      if (!isOpen) {
+        submenu.classList.add('open');
+        this.classList.add('expanded');
+      }
+    });
+  });
+
+  // Auto-expand submenu if a child link is active
+  document.querySelectorAll('.nav-submenu .nav-link.active').forEach(function(link) {
+    var submenu = link.closest('.nav-submenu');
+    if (submenu) {
+      submenu.classList.add('open');
+      if (submenu.previousElementSibling) submenu.previousElementSibling.classList.add('expanded');
+    }
+  });
+});
+
+  // Modal helpers
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', function(e) { if (e.target === m) m.classList.remove('open'); });
+  });
+
+  // Confirm delete
+  document.querySelectorAll('[data-confirm]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      if (!confirm(btn.dataset.confirm || 'Are you sure?')) e.preventDefault();
+    });
+  });
+
+  // PWA Service Worker Registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").then(function(registration) {
+        console.log('ElWood PWA ServiceWorker registration successful with scope: ', registration.scope);
+      }, function(err) {
+        console.log('ElWood PWA ServiceWorker registration failed: ', err);
+      });
+    });
+  }
+
+  // Global AI Chatbot Logic
+  const aiFab = document.getElementById('ai-fab');
+  const aiWindow = document.getElementById('ai-window');
+  const aiSend = document.getElementById('ai-send');
+  const aiInput = document.getElementById('ai-input');
+  const aiBody = document.getElementById('ai-chat-body');
+
+  if (aiFab) {
+    const saveChat = () => {
+      localStorage.setItem(`elwood_chat_${userId}`, aiBody.innerHTML);
+    };
+
+    const loadChat = () => {
+      const saved = localStorage.getItem(`elwood_chat_${userId}`);
+      if (saved) aiBody.innerHTML = saved;
+      aiBody.scrollTop = aiBody.scrollHeight;
+    };
+
+    // Helper for role-based persistent ID (userId is used here)
+    const userId = "{{ current_user.id if current_user.is_authenticated else 'guest' }}";
+    loadChat();
+
+    aiFab.addEventListener('click', () => {
+      aiFab.classList.toggle('active');
+      aiWindow.classList.toggle('open');
+      if (aiWindow.classList.contains('open')) aiInput.focus();
+    });
+
+    const sendMsg = async () => {
+      const msg = aiInput.value.trim();
+      if (!msg || aiSend.disabled) return;
+
+      // Add User Message
+      const uMsg = document.createElement('div');
+      uMsg.className = 'ai-msg user';
+      uMsg.textContent = msg;
+      aiBody.appendChild(uMsg);
+      aiInput.value = '';
+      aiBody.scrollTop = aiBody.scrollHeight;
+      saveChat();
+
+      // Add Loading
+      const lMsg = document.createElement('div');
+      lMsg.className = 'ai-msg bot';
+      lMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
+      aiBody.appendChild(lMsg);
+      aiBody.scrollTop = aiBody.scrollHeight;
+
+      aiSend.disabled = true;
+
+      try {
+        const res = await fetch("{{ url_for('ai.chat') }}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        lMsg.textContent = data.response || data.error;
+        saveChat();
+      } catch (e) {
+        lMsg.textContent = "I'm sorry, I encountered a connection error.";
+      } finally {
+        aiSend.disabled = false;
+        aiBody.scrollTop = aiBody.scrollHeight;
+      }
+    };
+
+    aiSend.addEventListener('click', sendMsg);
+    aiInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
+  }
+  // Handle sidebar clicks for anchor tags on the same page
+  document.querySelectorAll('.sidebar .nav-link[href*="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      const url = new URL(this.href, window.location.origin);
+      if (url.pathname === window.location.pathname) {
+        const targetId = url.hash.substring(1);
+        const target = document.getElementById(targetId);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth' });
+          history.pushState(null, null, url.hash);
+        }
+      }
+    });
+  });
+</script>
+{% block extra_scripts %}{% endblock %}
+    <!-- Razorpay Checkout -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</body>
+</html>

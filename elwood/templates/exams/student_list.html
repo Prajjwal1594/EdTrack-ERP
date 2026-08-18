@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Exams{% endblock %}
+{% block page_title %}My Exams{% endblock %}
+{% block content %}
+<div class="page-header"><div class="page-header-left"><h1>Exams &amp; Tests</h1></div></div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Title</th><th>Subject</th><th>Duration</th><th>Window</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for e in exams %}
+        {% set sub = submissions.get(e.id) %}
+        <tr>
+          <td>{{ e.title }}</td>
+          <td>{{ e.subject.name }}</td>
+          <td>{{ e.duration_minutes }} min</td>
+          <td class="text-muted text-small">
+            {% if e.start_time %}{{ e.start_time.strftime('%b %d %H:%M') }} — {{ e.end_time.strftime('%b %d %H:%M') if e.end_time else '—' }}
+            {% else %}Open{% endif %}
+          </td>
+          <td>
+            {% if sub and sub.submitted_at %}<span class="badge badge-success">Submitted — {{ sub.percentage }}%</span>
+            {% elif sub %}<span class="badge badge-warning">In Progress</span>
+            {% elif e.is_active %}<span class="badge badge-info">Available</span>
+            {% else %}<span class="badge badge-neutral">Upcoming</span>{% endif %}
+          </td>
+          <td>
+            {% if sub and sub.submitted_at %}
+            <a href="{{ url_for('exams.exam_result', eid=e.id) }}" class="btn btn-xs btn-outline">View Result</a>
+            {% elif e.is_active %}
+            <a href="{{ url_for('exams.take_exam', eid=e.id) }}" class="btn btn-xs btn-gold">Start Exam</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state"><i class="fas fa-pen-to-square"></i><p>No exams available right now</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

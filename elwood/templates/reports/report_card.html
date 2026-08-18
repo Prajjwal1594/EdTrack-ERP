@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Grade Sheet — {{ student.user.name }}{% endblock %}
+{% block page_title %}Grade Sheet{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Grade Sheet</h1>
+    <p>{{ student.user.name }} — {{ selected_term.name if selected_term else 'All Terms' }}</p>
+  </div>
+  <div class="flex gap-8">
+    <form method="GET" style="display:flex; gap:8px;">
+      <select name="term_id" class="form-control">
+        {% for t in terms %}<option value="{{ t.id }}" {% if selected_term_id == t.id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn btn-outline">View</button>
+    </form>
+    <a href="{{ url_for('reports.report_card', student_id=student.id, term_id=selected_term_id, pdf=1) }}" class="btn btn-gold"><i class="fas fa-download"></i> Download PDF</a>
+  </div>
+</div>
+
+<!-- Grade Sheet Body -->
+<div class="card" style="max-width:800px; margin:0 auto;">
+  <!-- Header -->
+  <div style="background:var(--forest); padding:32px; text-align:center; color:white;">
+    <div style="font-size:32px; font-weight:800; color:var(--gold); font-family:'Playfair Display',serif; margin-bottom:4px;">EW</div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:22px; margin-bottom:4px;">El'Wood International University</h2>
+    <p style="opacity:.7; font-size:13px;">Student Progress Grade Sheet</p>
+    {% if selected_term %}<p style="color:var(--gold-light); margin-top:8px; font-size:14px;">{{ selected_term.name }} — {{ selected_term.academic_year }}</p>{% endif %}
+  </div>
+
+  <!-- Student Info -->
+  <div style="padding:24px; border-bottom:1px solid var(--border); display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+    <div><div class="text-muted text-small">Student Name</div><strong>{{ student.user.name }}</strong></div>
+    <div><div class="text-muted text-small">Enrollment No.</div><strong class="font-mono">{{ student.enrollment_number }}</strong></div>
+    <div><div class="text-muted text-small">Semester / Section</div><strong>{{ student.section.full_name if student.section else '—' }}</strong></div>
+    <div><div class="text-muted text-small">Attendance</div>
+      <strong data-dynamic-color="{{ 'success' if att_pct >= 80 else 'warning' if att_pct >= 60 else 'danger' }}">{{ att_pct }}% ({{ present_days }}/{{ total_days }} days)</strong>
+    </div>
+    <div><div class="text-muted text-small">Overall Average</div>
+      <strong class="grade-{{ 'A' if overall_avg >= 80 else 'B' if overall_avg >= 60 else 'C' if overall_avg >= 50 else 'D' if overall_avg >= 40 else 'F' }}" style="font-size:20px;">{{ overall_avg }}%</strong>
+    </div>
+    <div><div class="text-muted text-small">Date Issued</div><strong>{{ today.strftime('%B %d, %Y') }}</strong></div>
+  </div>
+
+  <!-- Grades by Subject -->
+  <div style="padding:24px; border-bottom:1px solid var(--border);">
+    <h3 style="font-family:'Playfair Display',serif; color:var(--forest); margin-bottom:16px;">Academic Performance</h3>
+    {% if subject_summaries %}
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:var(--cream);">
+          <th style="padding:10px 14px; text-align:left; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-light); border-bottom:2px solid var(--border);">Subject</th>
+          <th style="padding:10px 14px; text-align:left; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-light); border-bottom:2px solid var(--border);">Assessments</th>
+          <th style="padding:10px 14px; text-align:center; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-light); border-bottom:2px solid var(--border);">Average</th>
+          <th style="padding:10px 14px; text-align:center; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-light); border-bottom:2px solid var(--border);">Grade</th>
+          <th style="padding:10px 14px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-light); border-bottom:2px solid var(--border);">Performance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sid, summary in subject_summaries.items() %}
+        {% set avg = summary.average %}
+        {% set letter = 'A+' if avg >= 90 else 'A' if avg >= 80 else 'B+' if avg >= 70 else 'B' if avg >= 60 else 'C' if avg >= 50 else 'D' if avg >= 40 else 'F' %}
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:12px 14px; font-weight:500;">{{ summary.subject.name }}</td>
+          <td style="padding:12px 14px; color:var(--ink-light); font-size:13px;">{{ summary.grades | length }} assessments</td>
+          <td style="padding:12px 14px; text-align:center; font-family:'DM Mono',monospace; font-weight:700;">{{ avg }}%</td>
+          <td style="padding:12px 14px; text-align:center;">
+            <span style="font-weight:800; font-size:16px;" data-letter-grade="{{ letter }}">{{ letter }}</span>
+          </td>
+          <td style="padding:12px 14px;">
+            <div style="background:var(--border); border-radius:99px; height:8px; width:100px; overflow:hidden;">
+              <div style="height:100%; border-radius:99px;" data-dynamic-width="{{ avg }}" data-avg-color-threshold="{{ avg }}"></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No grades recorded for this term.</p>
+    {% endif %}
+  </div>
+
+  <!-- Faculty Comments -->
+  {% if comments %}
+  <div style="padding:24px; border-bottom:1px solid var(--border);">
+    <h3 style="font-family:'Playfair Display',serif; color:var(--forest); margin-bottom:16px;">Faculty's Comments</h3>
+    {% for c in comments %}
+    <div style="background:var(--cream); border-left:4px solid var(--gold); padding:14px 16px; border-radius:0 8px 8px 0; margin-bottom:12px;">
+      <p style="font-size:14px; color:var(--ink); margin-bottom:6px;">{{ c.comment }}</p>
+      <p class="text-muted text-small">— {{ c.faculty.name }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Footer -->
+  <div style="padding:20px 24px; text-align:center; color:var(--ink-light); font-size:12px;">
+    <p>This report was generated by El'Wood International University's Student Progress System on {{ today.strftime('%B %d, %Y') }}.</p>
+    <p style="margin-top:4px;">For queries, please contact your faculty advisor or the college administration.</p>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Apply dynamic colors
+  document.querySelectorAll('[data-dynamic-color]').forEach(el => {
+    const type = el.getAttribute('data-dynamic-color');
+    el.style.color = `var(--${type})`;
+  });
+
+  // Apply letter grade colors
+  document.querySelectorAll('[data-letter-grade]').forEach(el => {
+    const letter = el.getAttribute('data-letter-grade');
+    let color = '#333';
+    if (letter.startsWith('A')) color = '#1a6b3c';
+    else if (letter.startsWith('B')) color = '#2980b9';
+    else if (letter === 'C') color = '#7d6608';
+    else if (letter === 'D') color = '#e67e22';
+    else if (letter === 'F') color = '#c0392b';
+    el.style.color = color;
+  });
+
+  // Apply progress widths and colors
+  document.querySelectorAll('[data-dynamic-width]').forEach(el => {
+    const width = el.getAttribute('data-dynamic-width');
+    el.style.width = width + '%';
+    
+    const avg = parseFloat(el.getAttribute('data-avg-color-threshold'));
+    if (!isNaN(avg)) {
+      el.style.background = avg >= 70 ? '#27ae60' : (avg >= 40 ? '#e67e22' : '#c0392b');
+    }
+  });
+});
+</script>
+{% endblock %}

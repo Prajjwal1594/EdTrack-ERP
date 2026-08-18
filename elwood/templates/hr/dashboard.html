@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}HR Dashboard — EdTrack ERP{% endblock %}
+{% block page_title %}HR Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1>Human Resources Overview</h1>
+        <p>Manage college staff, attendance, and payroll transactions.</p>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-chalkboard-user"></i></div>
+        <div class="stat-value">{{ staff_count }}</div>
+        <div class="stat-label">Total Teaching Staff</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-money-check-dollar"></i></div>
+        <div class="stat-value">{{ pending_payroll }}</div>
+        <div class="stat-label">Pending Payrolls</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon gold"><i class="fas fa-user-clock"></i></div>
+        <div class="stat-value">{% if staff_count > 0 %}100%{% else %}0%{% endif %}</div>
+        <div class="stat-label">Today's Presence</div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header"><span class="card-title">HR Management Tools</span></div>
+        <div class="card-body">
+            <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+                <a href="{{ url_for('hr.directory') }}" class="stat-card text-center" style="text-decoration:none; color:inherit;">
+                    <i class="fas fa-id-card-clip fa-2x mb-16" style="color:var(--forest);"></i>
+                    <div class="stat-label">Staff Directory</div>
+                </a>
+                <a href="{{ url_for('hr.attendance') }}" class="stat-card text-center" style="text-decoration:none; color:inherit;">
+                    <i class="fas fa-clipboard-user fa-2x mb-16" style="color:var(--info);"></i>
+                    <div class="stat-label">Mark Attendance</div>
+                </a>
+                <a href="{{ url_for('hr.payroll') }}" class="stat-card text-center" style="text-decoration:none; color:inherit;">
+                    <i class="fas fa-receipt fa-2x mb-16" style="color:var(--success);"></i>
+                    <div class="stat-label">Payroll Center</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card">
+        <div class="card-header"><span class="card-title">Staff Breakdown</span></div>
+        <div class="card-body">
+            <p class="text-muted text-small mb-16">The HR role manages the teaching staff (Faculty) for this college.</p>
+            <div class="flex-between mb-16">
+                <span>Active Faculty</span>
+                <span class="badge badge-success">{{ staff_count }}</span>
+            </div>
+            <div class="divider"></div>
+            <div class="flex-between">
+                <span>Other Personnel</span>
+                <span class="text-muted">Managed by Admin</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

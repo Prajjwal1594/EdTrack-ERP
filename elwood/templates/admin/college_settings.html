@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}College Settings{% endblock %}
+{% block page_title %}College Settings{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>College Settings</h1></div>
+</div>
+<div class="card" style="max-width:600px;">
+  <div class="card-header"><span class="card-title">College Information</span></div>
+  <form method="POST" action="{{ url_for('admin.college_settings') }}">
+    <div class="card-body">
+      <div class="form-group"><label class="form-label">College Name</label>
+        <input type="text" name="name" class="form-control" value="{{ college.name }}" required></div>
+      <div class="form-group"><label class="form-label">Address</label>
+        <textarea name="address" class="form-control" rows="2">{{ college.address or '' }}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control" value="{{ college.phone or '' }}"></div>
+        <div class="form-group"><label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="{{ college.email or '' }}"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
+    </div>
+  </form>
+</div>
+
+<div class="card mt-4" style="max-width:600px;">
+  <div class="card-header bg-dark text-white"><span class="card-title"><i class="fas fa-envelopes-bulk"></i> Automated System Algorithms</span></div>
+  <div class="card-body">
+    <p class="text-muted" style="margin-bottom: 1rem;">Manually trigger the <strong>Weekly Friday Parental Digest</strong> algorithm. This background job aggregates attendance, grades, and pending fee data from the last 7 days and dispatches beautifully tailored progress emails to all registered parent accounts.</p>
+    <div id="digest-preview-container" style="display:none; margin-top:1rem;">
+      <h5 style="font-size:13px; font-weight:700; margin-bottom:5px;">Preview for Sample Parent:</h5>
+      <div id="digest-preview-content"></div>
+      <hr>
+    </div>
+    <form method="POST" action="{{ url_for('admin.trigger_digest') }}">
+      <div style="display:flex; gap:10px;">
+        <button type="button" id="btn-preview-digest" class="btn btn-outline-info" style="flex:1;"><i class="fas fa-eye"></i> Preview</button>
+        <button type="submit" class="btn btn-warning" style="flex:2;"><i class="fas fa-paper-plane"></i> Dispatch Now</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('btn-preview-digest').addEventListener('click', function() {
+  const container = document.getElementById('digest-preview-container');
+  const content = document.getElementById('digest-preview-content');
+  content.innerHTML = '<div style="text-align:center; padding:10px;"><i class="fas fa-spinner fa-spin"></i> Generating...</div>';
+  container.style.display = 'block';
+  fetch('{{ url_for("admin.preview_digest") }}')
+    .then(r => r.text()).then(h => content.innerHTML = h);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Caution Money{% endblock %}
+{% block page_title %}Caution Money{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Caution Money</div>
+    <h1>Caution Money</h1>
+    <p>Security deposit status</p>
+  </div>
+</div>
+
+{% if records %}
+<div style="display:flex; flex-direction:column; gap:16px;">
+  {% for r in records %}
+  <div class="card">
+    <div class="card-body">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:24px; font-weight:700; font-family:'DM Mono',monospace; color:var(--forest);">₹{{ '{:,.0f}'.format(r.amount) }}</div>
+          <div style="font-size:13px; color:var(--ink-mid); margin-top:4px;">
+            {% if r.paid_at %}Paid on {{ r.paid_at.strftime('%d %b %Y') }}{% endif %}
+            {% if r.transaction_ref %} · Ref: {{ r.transaction_ref }}{% endif %}
+          </div>
+          {% if r.remarks %}
+          <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">{{ r.remarks }}</div>
+          {% endif %}
+        </div>
+        <div style="text-align:right;">
+          <span class="badge badge-{{ 'success' if r.status=='paid' else 'info' if r.status=='refunded' else 'danger' if r.status=='forfeited' else 'warning' }}">
+            {{ r.status | capitalize }}
+          </span>
+          {% if r.status == 'refunded' and r.refund_amount %}
+          <div style="font-size:12px; color:var(--success); margin-top:6px;">
+            Refunded: ₹{{ '{:,.0f}'.format(r.refund_amount) }}
+            {% if r.refunded_at %}<br>on {{ r.refunded_at.strftime('%d %b %Y') }}{% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-piggy-bank"></i>
+    <p>No caution money records found.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

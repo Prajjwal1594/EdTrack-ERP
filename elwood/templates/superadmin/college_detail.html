@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}{{ college.name }} — Super Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">
+      <span style="background:var(--forest);color:var(--gold);padding:4px 10px;border-radius:6px;font-size:14px;margin-right:8px">{{ college.code }}</span>
+      {{ college.name }}
+    </h1>
+    <p class="page-subtitle">
+      {% if college.address %}{{ college.address }} &nbsp;·&nbsp; {% endif %}
+      {% if college.email %}{{ college.email }}{% endif %}
+    </p>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a href="{{ url_for('superadmin.edit_college', college_id=college.id) }}" class="btn btn-outline">
+      <i class="fa-solid fa-pen"></i> Edit
+    </a>
+    <a href="{{ url_for('superadmin.colleges') }}" class="btn btn-outline">
+      <i class="fa-solid fa-arrow-left"></i> All Colleges
+    </a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" style="grid-template-columns:repeat(6,1fr);margin-bottom:24px">
+  {% for label, val, icon, color in [
+    ('Students', stats.students, 'user-graduate', '#2980b9'),
+    ('Faculty', stats.faculty, 'chalkboard-faculty', '#8e44ad'),
+    ('Parents',  stats.parents,  'user-group',         '#27ae60'),
+    ('Admins',   stats.admins,   'user-shield',        '#e67e22'),
+    ('Semesters',  stats.semesters,  'door-open',          'var(--forest)'),
+    ('Subjects', stats.subjects, 'book',               'var(--gold)'),
+  ] %}
+  <div class="stat-card" style="padding:16px">
+    <div class="stat-icon" {{ {'style': 'background:' ~ color ~ ';width:36px;height:36px;font-size:15px'} | xmlattr }}><i class="fa-solid fa-{{ icon }}"></i></div>
+    <div class="stat-value" style="font-size:22px">{{ val }}</div>
+    <div class="stat-label">{{ label }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+
+  <!-- Grade distribution -->
+  <div class="card">
+    <div class="card-header"><h3 class="card-title"><i class="fa-solid fa-chart-pie"></i> Grade Distribution</h3></div>
+    <div class="card-body" style="height:200px">
+      <canvas id="gradeChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Academic terms -->
+  <div class="card">
+    <div class="card-header"><h3 class="card-title"><i class="fa-solid fa-calendar"></i> Academic Terms</h3></div>
+    <div class="card-body" style="padding:0;max-height:220px;overflow-y:auto">
+      <table class="data-table">
+        <thead><tr><th>Term</th><th>Period</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for t in terms %}
+          <tr>
+            <td>{{ t.name }}</td>
+            <td style="font-size:12px;color:var(--ink-light)">{{ t.start_date.strftime('%b %Y') }} – {{ t.end_date.strftime('%b %Y') }}</td>
+            <td>
+              {% if t.is_active %}
+              <span class="badge" style="background:var(--success-light);color:var(--success)">Active</span>
+              {% else %}
+              <span class="badge" style="background:var(--cream);color:var(--ink-light)">Inactive</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" style="text-align:center;color:var(--ink-light)">No terms yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- College admins -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">
+    <h3 class="card-title"><i class="fa-solid fa-user-shield"></i> College Admins</h3>
+  </div>
+  <div class="card-body">
+    {% if admins %}
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+      {% for a in admins %}
+      <div style="background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;background:var(--forest);color:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">
+          {{ a.name[0].upper() }}
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:14px">{{ a.name }}</div>
+          <div style="font-size:12px;color:var(--ink-light)">{{ a.email }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Add admin form -->
+    <details style="margin-top:8px">
+      <summary style="cursor:pointer;color:var(--forest-light);font-weight:500;font-size:14px;user-select:none">
+        <i class="fa-solid fa-plus"></i> Add user to this college
+      </summary>
+      <form method="POST" action="{{ url_for('superadmin.add_college_admin', college_id=college.id) }}"
+            style="margin-top:16px;background:var(--cream);padding:16px;border-radius:8px;border:1px solid var(--border)">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:12px;align-items:end">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" class="form-control" required placeholder="Jane Smith">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required placeholder="jane@college.edu">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-control">
+              <option value="admin">Admin</option>
+              <option value="hr">HR</option>
+              <option value="faculty">Faculty</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Password</label>
+            <input type="text" name="password" class="form-control" value="ChangeMe123!">
+          </div>
+          <button type="submit" class="btn btn-primary" style="white-space:nowrap">Add User</button>
+        </div>
+      </form>
+    </details>
+  </div>
+</div>
+
+<!-- Recent users -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header"><h3 class="card-title"><i class="fa-solid fa-users"></i> Recent Users</h3></div>
+  <div class="card-body" style="padding:0">
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead>
+      <tbody>
+        {% for u in recent_users %}
+        <tr>
+          <td><strong>{{ u.name }}</strong></td>
+          <td style="color:var(--ink-light)">{{ u.email }}</td>
+          <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+          <td style="color:var(--ink-light)">{{ u.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" style="text-align:center;color:var(--ink-light)">No users yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Danger zone -->
+<div class="card" style="border-color:var(--danger)">
+  <div class="card-header" style="background:var(--danger-light)">
+    <h3 class="card-title" style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</h3>
+  </div>
+  <div class="card-body" style="display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <strong>Delete this college</strong>
+      <p style="font-size:13px;color:var(--ink-light);margin-top:4px">Permanently removes this college. Only possible when no users are enrolled.</p>
+    </div>
+    <form method="POST" action="{{ url_for('superadmin.delete_college', college_id=college.id) }}"
+          onsubmit="return confirm('Are you sure? This cannot be undone.')">
+      <button type="submit" class="btn btn-sm" style="background:var(--danger);color:#fff;border-color:var(--danger)">
+        <i class="fa-solid fa-trash"></i> Delete College
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const gradeData = JSON.parse('{{ grade_dist | tojson | safe }}');
+const ctx = document.getElementById('gradeChart').getContext('2d');
+new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(gradeData),
+    datasets: [{
+      data: Object.values(gradeData),
+      backgroundColor: ['#27ae60','#2980b9','#8e44ad','#e67e22','#e74c3c','#95a5a6'],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } }
+  }
+});
+</script>
+{% endblock %}

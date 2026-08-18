@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}My Subjects{% endblock %}
+{% block page_title %}Subjects{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Subjects</div>
+    <h1>My Subjects</h1>
+    <p>Subjects for {{ student.section.full_name if student.section else 'your section' }}</p>
+  </div>
+</div>
+
+{% if subjects_data %}
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px,1fr)); gap:16px;">
+  {% for item in subjects_data %}
+  <div class="card" style="transition:transform .2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-book" style="color:var(--gold); margin-right:6px;"></i> {{ item.subject.name }}</span>
+      {% if item.subject.code %}<span class="badge badge-neutral">{{ item.subject.code }}</span>{% endif %}
+    </div>
+    <div class="card-body">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div class="user-avatar" style="width:32px; height:32px; font-size:12px;">{{ item.faculty.name[0].upper() if item.faculty else '?' }}</div>
+        <div>
+          <div style="font-size:13px; font-weight:500;">{{ item.faculty.name if item.faculty else 'TBA' }}</div>
+          <div style="font-size:11px; color:var(--ink-light);">Faculty</div>
+        </div>
+      </div>
+      {% if item.grades %}
+      <div style="border-top:1px solid var(--border); padding-top:10px; margin-top:8px;">
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--ink-light); margin-bottom:6px;">Recent Grades</div>
+        {% for g in item.grades %}
+        <div style="display:flex; justify-content:space-between; font-size:12px; padding:2px 0;">
+          <span class="text-muted">{{ g.exam_name }}</span>
+          <span class="grade-{{ g.letter_grade[0] }}" style="font-size:12px;">{{ g.percentage }}% ({{ g.letter_grade }})</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-book-open"></i>
+    <p>No subjects assigned to your section yet.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Record Soft Skills{% endblock %}
+{% block page_title %}Holistic Performance: Soft Skills & Participation{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-body">
+    <form method="GET" style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
+      <div class="form-group" style="margin-bottom:0; flex:1; min-width:200px;">
+        <label>Section</label>
+        <select name="section_id" onchange="this.form.submit()">
+          <option value="">-- Select Section --</option>
+          {% for s in sections %}
+          <option value="{{ s.id }}" {{ 'selected' if s.id == selected_section_id }}>{{ s.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0; flex:1; min-width:200px;">
+        <label>Week Ending (Friday)</label>
+        <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if selected_section_id %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Weekly Metrics (0-10 Scale)</span>
+    <span class="text-muted text-small ml-auto">Records for {{ selected_date.strftime('%b %d, %Y') }}</span>
+  </div>
+  <form action="{{ url_for('faculty.save_soft_skills') }}" method="POST">
+    <input type="hidden" name="section_id" value="{{ selected_section_id }}">
+    <input type="hidden" name="date" value="{{ selected_date }}">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Leadership</th>
+            <th>Discipline</th>
+            <th>Comm.</th>
+            <th>Teamwork</th>
+            <th>Extra Hrs</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          {% set m = skills_map.get(student.id) %}
+          <tr>
+            <td>
+              <div style="font-weight:500;">{{ student.user.name }}</div>
+              <div class="text-muted text-small">{{ student.enrollment_number }}</div>
+            </td>
+            <td><input type="number" name="leadership_{{ student.id }}" min="0" max="10" step="0.5" value="{{ m.leadership if m else 5.0 }}"></td>
+            <td><input type="number" name="discipline_{{ student.id }}" min="0" max="10" step="0.5" value="{{ m.discipline if m else 5.0 }}"></td>
+            <td><input type="number" name="communication_{{ student.id }}" min="0" max="10" step="0.5" value="{{ m.communication if m else 5.0 }}"></td>
+            <td><input type="number" name="teamwork_{{ student.id }}" min="0" max="10" step="0.5" value="{{ m.teamwork if m else 5.0 }}"></td>
+            <td><input type="number" name="hours_{{ student.id }}" min="0" max="40" step="0.5" value="{{ m.participation_hours if m else 0.0 }}"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer" style="display:flex; justify-content:flex-end; padding:15px;">
+      <button type="submit" class="btn btn-primary">Save All & Update Holistic Scores</button>
+    </div>
+  </form>
+</div>
+{% else %}
+<div class="text-center text-muted" style="padding:40px;">
+  <i class="fas fa-users-viewfinder fa-3x" style="margin-bottom:15px; opacity:0.3;"></i>
+  <p>Select a section to begin recording soft skills.</p>
+</div>
+{% endif %}
+
+<style>
+  input[type="number"] { width: 70px; padding: 4px 8px; font-size: 13px; }
+</style>
+{% endblock %}

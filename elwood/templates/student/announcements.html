@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Announcements{% endblock %}
+{% block page_title %}Announcements{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Announcements</div>
+    <h1>Announcements</h1>
+  </div>
+</div>
+
+<!-- Tab Filters -->
+<div class="filter-bar" style="margin-bottom:20px;">
+  <a href="{{ url_for('student.announcements') }}" class="btn {{ 'btn-primary' if not current_type else 'btn-ghost' }} btn-sm">All</a>
+  <a href="{{ url_for('student.announcements', atype='event') }}" class="btn {{ 'btn-primary' if current_type=='event' else 'btn-ghost' }} btn-sm"><i class="fas fa-calendar-star"></i> Events</a>
+  <a href="{{ url_for('student.announcements', atype='holiday') }}" class="btn {{ 'btn-primary' if current_type=='holiday' else 'btn-ghost' }} btn-sm"><i class="fas fa-umbrella-beach"></i> Holidays</a>
+  <a href="{{ url_for('student.announcements', atype='notice') }}" class="btn {{ 'btn-primary' if current_type=='notice' else 'btn-ghost' }} btn-sm"><i class="fas fa-bullhorn"></i> Notices</a>
+</div>
+
+{% if announcements %}
+<div style="display:flex; flex-direction:column; gap:12px;">
+  {% for a in announcements %}
+  <div class="card" style="border-left:4px solid {{ 'var(--gold)' if a.announcement_type=='event' else 'var(--success)' if a.announcement_type=='holiday' else 'var(--info)' }};">
+    <div class="card-body" style="display:flex; gap:16px; align-items:start;">
+      <div style="width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+        background:{{ 'rgba(201,168,76,.12)' if a.announcement_type=='event' else 'rgba(39,174,96,.12)' if a.announcement_type=='holiday' else 'rgba(41,128,185,.12)' }};
+        color:{{ 'var(--gold)' if a.announcement_type=='event' else 'var(--success)' if a.announcement_type=='holiday' else 'var(--info)' }};">
+        <i class="fas fa-{{ 'calendar-star' if a.announcement_type=='event' else 'umbrella-beach' if a.announcement_type=='holiday' else 'bullhorn' }}"></i>
+      </div>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; align-items:start; gap:8px;">
+          <div>
+            <div style="font-weight:600; font-size:15px; margin-bottom:2px;">{{ a.title }}</div>
+            <span class="badge badge-{{ 'gold' if a.announcement_type=='event' else 'success' if a.announcement_type=='holiday' else 'info' }}">
+              {{ a.announcement_type | capitalize }}
+            </span>
+          </div>
+          <div style="font-size:12px; color:var(--ink-light); white-space:nowrap;">
+            {% if a.date %}{{ a.date.strftime('%d %b %Y') }}{% endif %}
+          </div>
+        </div>
+        {% if a.body %}
+        <div style="font-size:13px; color:var(--ink-mid); margin-top:8px; line-height:1.6;">{{ a.body }}</div>
+        {% endif %}
+        <div style="font-size:11px; color:var(--ink-light); margin-top:8px;">
+          <i class="fas fa-clock"></i> Posted {{ a.created_at.strftime('%d %b %Y, %I:%M %p') if a.created_at else '' }}
+          {% if a.creator %} by {{ a.creator.name }}{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-bullhorn"></i>
+    <p>No announcements at this time.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

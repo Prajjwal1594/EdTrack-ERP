@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Submissions — {{ assignment.title }}{% endblock %}
+{% block page_title %}Grade Submissions{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('faculty.assignments') }}">Assignments</a> / {{ assignment.title }}</div>
+    <h1>{{ assignment.title }}</h1>
+    <p>{{ assignment.subject.name }} · {{ assignment.section.full_name }} · Due {{ assignment.due_date.strftime('%b %d, %Y') }}</p>
+  </div>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Submitted</th><th>Timing</th><th>Grade/{{ assignment.max_score | int }}</th><th>Feedback</th><th></th></tr></thead>
+      <tbody>
+        {% for student in students %}
+        {% set sub = submissions.get(student.id) %}
+        <tr>
+          <td>{{ student.user.name }}</td>
+          <td>
+            {% if sub %}<span class="badge badge-success">Submitted</span>
+            {% else %}<span class="badge badge-warning">Pending</span>{% endif %}
+          </td>
+          <td class="text-muted text-small">
+            {% if sub %}{{ sub.submitted_at.strftime('%b %d %H:%M') }}{% if sub.is_late %} <span class="badge badge-danger">Late</span>{% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if sub and sub.grade is not none %}
+              <span class="font-mono" style="font-weight:600;">{{ sub.grade }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-muted text-small">{{ sub.feedback if sub and sub.feedback else '—' }}</td>
+          <td>
+            <button class="btn btn-xs btn-outline" onclick="openGradeModal({{ student.id }}, '{{ student.user.name }}', {{ sub.grade if sub and sub.grade is not none else 'null' }}, '{{ sub.feedback if sub and sub.feedback else '' }}')">
+              {{ 'Update' if sub and sub.grade is not none else 'Grade' }}
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-overlay" id="gradeModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="gradeModalTitle">Grade Student</span><button class="modal-close" onclick="closeModal('gradeModal')">×</button></div>
+    <form method="POST" id="gradeForm">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Grade (max {{ assignment.max_score | int }})</label>
+          <input type="number" name="grade" id="gradeInput" class="form-control" min="0" max="{{ assignment.max_score }}" step="0.5" required></div>
+        <div class="form-group"><label class="form-label">Feedback</label>
+          <textarea name="feedback" id="feedbackInput" class="form-control" rows="3" placeholder="Optional feedback..."></textarea></div>
+        <input type="hidden" name="student_id" id="gradeStudentId">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Grade</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function openGradeModal(studentId, name, grade, feedback) {
+  document.getElementById('gradeModalTitle').textContent = 'Grade: ' + name;
+  document.getElementById('gradeStudentId').value = studentId;
+  document.getElementById('gradeInput').value = grade || '';
+  document.getElementById('feedbackInput').value = feedback || '';
+  document.getElementById('gradeForm').action = '{{ url_for("faculty.grade_submission", aid=assignment.id) }}';
+  openModal('gradeModal');
+}
+</script>
+{% endblock %}

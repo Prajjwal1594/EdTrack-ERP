@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Manage Events{% endblock %}
+{% block page_title %}Events{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.dashboard') }}">Admin</a> / Events</div>
+    <h1>Manage Events</h1>
+  </div>
+  <button class="btn btn-gold" onclick="openModal('event-modal')"><i class="fas fa-plus"></i> New Event</button>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Event</th><th>Date</th><th>Location</th><th>Registrations</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for e in events %}
+        <tr>
+          <td><strong>{{ e.title }}</strong><br><span class="text-muted text-small">{{ e.description[:60] if e.description else '' }}</span></td>
+          <td class="text-small">{{ e.event_date.strftime('%d %b %Y, %I:%M %p') }}</td>
+          <td class="text-muted">{{ e.location or '—' }}</td>
+          <td><span class="badge badge-neutral">{{ e.registered_count }}{% if e.max_capacity %}/{{ e.max_capacity }}{% endif %}</span></td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.delete_event', eid=e.id) }}" style="display:inline;" onsubmit="return confirm('Delete?')">
+              <button type="submit" class="btn btn-xs btn-ghost" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted" style="padding:24px;">No events yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Create Event</span>
+      <button class="modal-close" onclick="closeModal('event-modal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.add_event') }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" name="title" class="form-control" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Event Date/Time</label>
+            <input type="datetime-local" name="event_date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date/Time</label>
+            <input type="datetime-local" name="end_date" class="form-control">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" name="location" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Capacity</label>
+            <input type="number" name="max_capacity" class="form-control" placeholder="Leave blank for unlimited">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" name="requires_registration" checked> Require Registration</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('event-modal')">Cancel</button>
+        <button type="submit" class="btn btn-gold">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

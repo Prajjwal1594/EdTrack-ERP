@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Summer Term{% endblock %}
+{% block page_title %}Summer Term{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Summer Term</div>
+    <h1>Summer Term</h1>
+    <p>View summer term details and schedules</p>
+  </div>
+</div>
+
+{% if summer_terms %}
+<div style="display:flex; flex-direction:column; gap:16px;">
+  {% for t in summer_terms %}
+  <div class="card" style="border-left:4px solid var(--gold);">
+    <div class="card-body">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:600; font-size:16px; color:var(--forest);">{{ t.name }}</div>
+          <div style="font-size:13px; color:var(--ink-mid); margin-top:4px;">
+            <i class="fas fa-calendar"></i> {{ t.start_date.strftime('%d %b %Y') if t.start_date else '' }} — {{ t.end_date.strftime('%d %b %Y') if t.end_date else '' }}
+          </div>
+          {% if t.academic_year %}
+          <div style="font-size:12px; color:var(--ink-light); margin-top:2px;">Academic Year: {{ t.academic_year }}</div>
+          {% endif %}
+        </div>
+        <span class="badge badge-{{ 'success' if t.is_active else 'neutral' }}">{{ 'Active' if t.is_active else 'Completed' }}</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-sun"></i>
+    <p>No summer terms available.</p>
+  </div>
+</div>
+
+{% if all_terms %}
+<div class="card mt-24">
+  <div class="card-header"><span class="card-title">All Academic Terms</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Term</th><th>Type</th><th>Period</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for t in all_terms %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td><span class="badge badge-neutral">{{ t.term_type | capitalize }}</span></td>
+          <td class="text-muted">{{ t.start_date.strftime('%d %b %Y') }} — {{ t.end_date.strftime('%d %b %Y') }}</td>
+          <td><span class="badge badge-{{ 'success' if t.is_active else 'neutral' }}">{{ 'Active' if t.is_active else 'Ended' }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

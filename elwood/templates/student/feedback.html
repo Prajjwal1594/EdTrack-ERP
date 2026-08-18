@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Feedback{% endblock %}
+{% block page_title %}Feedback{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Feedback</div>
+    <h1>Feedback</h1>
+    <p>Share your thoughts and suggestions</p>
+  </div>
+  <button class="btn btn-gold" onclick="openModal('feedback-modal')"><i class="fas fa-plus"></i> New Feedback</button>
+</div>
+
+<!-- Feedback List -->
+{% if feedbacks %}
+<div style="display:flex; flex-direction:column; gap:12px;">
+  {% for fb in feedbacks %}
+  <div class="card">
+    <div class="card-body">
+      <div style="display:flex; justify-content:space-between; align-items:start; gap:12px;">
+        <div>
+          <div style="font-weight:600; font-size:15px;">{{ fb.subject }}</div>
+          <span class="badge badge-{{ 'gold' if fb.category=='academic' else 'info' if fb.category=='infrastructure' else 'neutral' }}" style="margin-top:4px;">{{ fb.category | capitalize }}</span>
+        </div>
+        <span class="badge badge-{{ 'success' if fb.status=='resolved' else 'warning' if fb.status=='reviewed' else 'neutral' }}">
+          {{ fb.status | capitalize }}
+        </span>
+      </div>
+      <p style="font-size:13px; color:var(--ink-mid); margin-top:10px;">{{ fb.body }}</p>
+      {% if fb.admin_response %}
+      <div style="background:var(--success-light); border-radius:8px; padding:12px; margin-top:10px; border-left:3px solid var(--success);">
+        <div style="font-size:11px; font-weight:600; color:var(--success); margin-bottom:4px;">
+          <i class="fas fa-reply"></i> Response {% if fb.responder %}from {{ fb.responder.name }}{% endif %}
+        </div>
+        <p style="font-size:13px; color:var(--ink);">{{ fb.admin_response }}</p>
+      </div>
+      {% endif %}
+      <div style="font-size:11px; color:var(--ink-light); margin-top:8px;">
+        <i class="fas fa-clock"></i> {{ fb.created_at.strftime('%d %b %Y, %I:%M %p') if fb.created_at else '' }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-comment-dots"></i>
+    <p>No feedback submitted yet.</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- New Feedback Modal -->
+<div class="modal-overlay" id="feedback-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Submit Feedback</span>
+      <button class="modal-close" onclick="closeModal('feedback-modal')">×</button>
+    </div>
+    <form method="POST">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select name="category" class="form-control">
+            <option value="general">General</option>
+            <option value="academic">Academic</option>
+            <option value="infrastructure">Infrastructure</option>
+            <option value="faculty">Faculty</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <input type="text" name="subject" class="form-control" placeholder="Brief subject" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Feedback</label>
+          <textarea name="body" class="form-control" rows="4" placeholder="Describe your feedback in detail..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('feedback-modal')">Cancel</button>
+        <button type="submit" class="btn btn-gold"><i class="fas fa-paper-plane"></i> Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

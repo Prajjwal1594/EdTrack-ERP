@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Exam Result{% endblock %}
+{% block page_title %}Exam Result{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>{{ exam.title }} — Result</h1></div>
+  <a href="{{ url_for('exams.index') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+{% if sub and sub.submitted_at %}
+<div class="card" style="max-width:600px; margin:0 auto 24px;">
+  <div style="text-align:center; padding:40px 24px; background:{{ 'var(--success-light)' if sub.percentage >= 50 else 'var(--danger-light)' }}; border-radius:var(--radius);">
+    <div style="font-size:64px; font-weight:800; font-family:'DM Mono',monospace; color:{{ 'var(--success)' if sub.percentage >= 50 else 'var(--danger)' }};">{{ sub.percentage }}%</div>
+    <div style="font-size:18px; font-weight:600; margin-top:8px;">{{ sub.score | int }} / {{ exam.total_marks | int }} marks</div>
+    <div class="text-muted" style="margin-top:4px;">{{ 'Well done!' if sub.percentage >= 70 else 'Keep practicing!' if sub.percentage >= 40 else 'Please see your faculty.' }}</div>
+  </div>
+</div>
+<div class="card" style="max-width:700px; margin:0 auto;">
+  <div class="card-header"><span class="card-title">Question Review</span></div>
+  {% for q in questions %}
+  {% set my_answer = sub.answers.get(q.id | string, '') %}
+  {% set correct = q.question_type in ('mcq','true_false') and my_answer.lower() == q.correct_answer.lower() %}
+  <div style="padding:16px 22px; border-bottom:1px solid var(--border);">
+    <div style="font-size:13px; font-weight:500; margin-bottom:8px;"><span class="badge badge-gold" style="margin-right:6px;">Q{{ loop.index }}</span>{{ q.question_text }}</div>
+    <div style="font-size:13px;">
+      <span style="color:var(--ink-light);">Your answer: </span>
+      <span style="font-weight:600; color:{{ 'var(--success)' if correct else 'var(--danger)' }};">{{ my_answer or '(no answer)' }}</span>
+      {% if q.question_type in ('mcq','true_false') and not correct %}
+      <span style="color:var(--ink-light); margin-left:12px;">Correct: </span><span style="color:var(--success); font-weight:600;">{{ q.correct_answer }}</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-hourglass"></i><p>No submission found for this exam.</p></div></div>
+{% endif %}
+{% endblock %}
