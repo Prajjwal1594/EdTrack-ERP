@@ -48,7 +48,7 @@ def dashboard():
     # 1. Subject Averages
     subject_avg_data = db.session.query(
         Subject.name, func.avg(Grade.score)
-    ).join(Grade).filter(Subject.college_id == current_user.college_id).group_by(Subject.id).all()
+    ).join(Grade, Grade.subject_id == Subject.id).filter(Subject.college_id == current_user.college_id).group_by(Subject.id).all()
     subject_averages = [{"subject": row[0], "avg": round(row[1], 1)} for row in subject_avg_data]
 
     # 2. Performance Trend (Last 6 Months)
