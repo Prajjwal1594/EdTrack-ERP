@@ -132,8 +132,8 @@ def create_app(config_class=Config):
     def internal_error(error):
         print(f"DEBUG: 500 ERROR at {request.path} | Error: {error}", flush=True)
         traceback.print_exc()
-        if request.path.startswith('/api/'):
-            return jsonify({"error": "Internal server error", "details": str(error)}), 500
+        if request.path.startswith('/api/') or request.args.get('debug') == '1':
+            return jsonify({"error": "Internal server error", "details": str(error), "traceback": traceback.format_exc()}), 500
         return render_template('errors/500.html'), 500
 
     with app.app_context():
