@@ -10,8 +10,16 @@ class Config:
 
     # Postgres connections (Neon/Railway/Render) use 'postgres://' or 'postgresql://'
     # SQLAlchemy 2.x requires 'postgresql://' (uses psycopg2-binary by default)
-    instance_dir = os.path.join(basedir, "instance")
-    os.makedirs(instance_dir, exist_ok=True)
+    is_vercel = bool(os.environ.get('VERCEL'))
+    if is_vercel:
+        instance_dir = "/tmp"
+    else:
+        instance_dir = os.path.join(basedir, "instance")
+        try:
+            os.makedirs(instance_dir, exist_ok=True)
+        except OSError:
+            instance_dir = "/tmp"
+
     _db_url = os.environ.get('DATABASE_URL') or \
         f'sqlite:///{os.path.join(instance_dir, "elwood.db")}'
     if _db_url.startswith('postgres://'):

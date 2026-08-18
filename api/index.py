@@ -1,10 +1,11 @@
 import sys
 import os
 
-# Ensure both root and elwood are on sys.path
-base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-sys.path.insert(0, base_dir)
-sys.path.insert(0, os.path.join(base_dir, 'elwood'))
+base_dir = os.path.abspath(os.path.dirname(__file__))
+parent_dir = os.path.dirname(base_dir)
+
+sys.path.insert(0, parent_dir)
+sys.path.insert(0, os.path.join(parent_dir, 'elwood'))
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('./elwood'))
 
