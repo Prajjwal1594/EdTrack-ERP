@@ -29,19 +29,22 @@ class Config:
         'pool_timeout': 20,
     }
 
+    # Convert all postgresql / postgres URLs to use pg8000 driver
     if _db_url.startswith('postgres://'):
-        _db_url = _db_url.replace('postgres://', 'postgresql+pg8000://' if is_vercel else 'postgresql://', 1)
-    elif _db_url.startswith('postgresql://') and is_vercel and '+pg8000' not in _db_url:
+        _db_url = _db_url.replace('postgres://', 'postgresql+pg8000://', 1)
+    elif _db_url.startswith('postgresql://') and '+pg8000' not in _db_url and '+psycopg2' not in _db_url:
         _db_url = _db_url.replace('postgresql://', 'postgresql+pg8000://', 1)
 
-    # When using pg8000 with SSL (e.g., Neon / Supabase), strip sslmode parameter and pass ssl_context
+    # When using pg8000, strip sslmode/ssl query parameters and configure ssl_context
     if '+pg8000' in _db_url:
         import re
         import ssl
-        has_ssl = 'sslmode=' in _db_url or 'ssl=' in _db_url
-        _db_url = re.sub(r'[?&]sslmode=[^&]+', '', _db_url)
-        _db_url = re.sub(r'[?&]ssl=[^&]+', '', _db_url)
-        _db_url = _db_url.rstrip('?').replace('?&', '?')
+        has_ssl = 'sslmode' in _db_url or 'ssl' in _db_url
+        _db_url = re.sub(r'[?&]sslmode=[^&]*', '', _db_url)
+        _db_url = re.sub(r'[?&]ssl=[^&]*', '', _db_url)
+        if '?' not in _db_url and '&' in _db_url:
+            _db_url = _db_url.replace('&', '?', 1)
+        _db_url = _db_url.rstrip('?').replace('?&', '?').rstrip('&')
         if has_ssl:
             ctx = ssl.create_default_context()
             _engine_options['connect_args'] = {'ssl_context': ctx}
