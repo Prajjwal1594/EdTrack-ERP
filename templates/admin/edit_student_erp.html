@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Edit ERP Profile - {{ user.name }}{% endblock %}
+{% block page_title %}ERP Profile Editor{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.users') }}">Users</a> / Edit ERP Profile</div>
+    <h1>Edit ERP Detailed Profile: {{ user.name }}</h1>
+    <p>Modify comprehensive student data fields specific to the ERP.</p>
+  </div>
+  <a href="{{ url_for('admin.users') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back to Users</a>
+</div>
+
+<div class="card" style="max-width:900px;">
+  <form method="POST" action="{{ url_for('admin.edit_erp_profile', uid=user.id) }}">
+    <div class="card-body">
+    
+      <h3 style="font-size: 18px; color: var(--forest); margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Personal & Enrollment Information</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Blood Group</label>
+          <input type="text" name="blood_group" class="form-control" value="{{ student.blood_group or '' }}" placeholder="O+">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Religion</label>
+          <input type="text" name="religion" class="form-control" value="{{ student.religion or '' }}" placeholder="e.g. Hindu">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Caste</label>
+          <input type="text" name="caste" class="form-control" value="{{ student.caste or '' }}" placeholder="e.g. GEN">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Aadhar Number</label>
+          <input type="text" name="aadhar_number" class="form-control" value="{{ student.aadhar_number or '' }}" placeholder="12-digit number">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Admission Category</label>
+          <input type="text" name="admission_category" class="form-control" value="{{ student.admission_category or '' }}" placeholder="SFS/TFWS/REAP etc">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Session</label>
+          <input type="text" name="session" class="form-control" value="{{ student.session or '' }}" placeholder="e.g. 2022-26">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">TC Date</label>
+          <input type="date" name="tc_date" class="form-control" value="{{ student.tc_date.strftime('%Y-%m-%d') if student.tc_date else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Biometric Card No.</label>
+          <input type="text" name="biometric_card_no" class="form-control" value="{{ student.biometric_card_no or '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Alternate Semester Group</label>
+          <input type="text" name="alternate_semester_group" class="form-control" value="{{ student.alternate_semester_group or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Semester Group</label>
+          <input type="text" name="semester_group" class="form-control" value="{{ student.semester_group or '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Phone 2</label>
+          <input type="text" name="phone2" class="form-control" value="{{ student.phone2 or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Landline</label>
+          <input type="text" name="landline" class="form-control" value="{{ student.landline or '' }}">
+        </div>
+      </div>
+
+      <h3 style="font-size: 18px; color: var(--forest); margin-top: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Academic History (10th)</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">10th Year</label>
+          <input type="number" name="tenth_year" class="form-control" value="{{ student.tenth_year or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">10th Roll No.</label>
+          <input type="text" name="tenth_roll" class="form-control" value="{{ student.tenth_roll or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">10th Board</label>
+          <input type="text" name="tenth_board" class="form-control" value="{{ student.tenth_board or '' }}" placeholder="e.g. CBSE, Delhi">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">10th Obtained Marks</label>
+          <input type="number" step="0.1" name="tenth_obtained" class="form-control" value="{{ student.tenth_obtained or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">10th Max Marks</label>
+          <input type="number" step="0.1" name="tenth_max" class="form-control" value="{{ student.tenth_max or '' }}">
+        </div>
+      </div>
+
+      <h3 style="font-size: 18px; color: var(--forest); margin-top: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Academic History (12th)</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">12th Year</label>
+          <input type="number" name="twelfth_year" class="form-control" value="{{ student.twelfth_year or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">12th Roll No.</label>
+          <input type="text" name="twelfth_roll" class="form-control" value="{{ student.twelfth_roll or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">12th Board</label>
+          <input type="text" name="twelfth_board" class="form-control" value="{{ student.twelfth_board or '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">12th Obtained Marks</label>
+          <input type="number" step="0.1" name="twelfth_obtained" class="form-control" value="{{ student.twelfth_obtained or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">12th Max Marks</label>
+          <input type="number" step="0.1" name="twelfth_max" class="form-control" value="{{ student.twelfth_max or '' }}">
+        </div>
+      </div>
+
+      <h3 style="font-size: 18px; color: var(--forest); margin-top: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Parent & Guardian Information</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Father's Name</label>
+          <input type="text" name="father_name" class="form-control" value="{{ student.father_name or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Father's Occupation</label>
+          <input type="text" name="father_occupation" class="form-control" value="{{ student.father_occupation or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Father's Mobile</label>
+          <input type="text" name="father_mobile" class="form-control" value="{{ student.father_mobile or '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Mother's Name</label>
+          <input type="text" name="mother_name" class="form-control" value="{{ student.mother_name or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mother's Mobile</label>
+          <input type="text" name="mother_mobile" class="form-control" value="{{ student.mother_mobile or '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Local Guardian Name</label>
+          <input type="text" name="local_guardian_name" class="form-control" value="{{ student.local_guardian_name or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Local Guardian Mobile</label>
+          <input type="text" name="local_guardian_mobile" class="form-control" value="{{ student.local_guardian_mobile or '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Local Guardian Address</label>
+          <textarea style="height: 60px;" name="local_guardian_address" class="form-control">{{ student.local_guardian_address or '' }}</textarea>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <a href="{{ url_for('admin.users') }}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save ERP Profile</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

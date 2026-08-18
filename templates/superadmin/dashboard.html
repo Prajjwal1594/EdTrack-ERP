@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Super Admin — EdTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="fa-solid fa-globe" style="color:var(--gold)"></i> Super Admin Console</h1>
+    <p class="page-subtitle">Manage all colleges in your EdTrack instance</p>
+  </div>
+  <a href="{{ url_for('superadmin.new_college') }}" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> New College
+  </a>
+</div>
+
+<!-- Aggregate stats -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+  <div class="stat-card">
+    <div class="stat-icon" style="background:var(--forest-light)"><i class="fa-solid fa-university"></i></div>
+    <div class="stat-value">{{ totals.colleges }}</div>
+    <div class="stat-label">Colleges</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#2980b9"><i class="fa-solid fa-user-graduate"></i></div>
+    <div class="stat-value">{{ totals.students }}</div>
+    <div class="stat-label">Total Students</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#8e44ad"><i class="fa-solid fa-chalkboard-user"></i></div>
+    <div class="stat-value">{{ totals.faculty }}</div>
+    <div class="stat-label">Total Faculty</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:var(--warning)"><i class="fa-solid fa-user-shield"></i></div>
+    <div class="stat-value">{{ totals.admins }}</div>
+    <div class="stat-label">College Admins</div>
+  </div>
+</div>
+
+<!-- Cross-college comparison chart -->
+<div class="card" style="margin-bottom:24px">
+  <div class="card-header">
+    <h3 class="card-title"><i class="fa-solid fa-chart-bar"></i> College Comparison</h3>
+  </div>
+  <div class="card-body" style="height:260px">
+    <canvas id="collegeCompChart"></canvas>
+  </div>
+</div>
+
+<!-- College cards -->
+<div class="card-header" style="margin-bottom:12px;padding:0">
+  <h3 class="card-title"><i class="fa-solid fa-building-columns"></i> All Colleges</h3>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:32px">
+  {% for s in college_summaries %}
+  <div class="card" style="border-left:4px solid var(--gold)">
+    <div class="card-body" style="padding:20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:44px;height:44px;background:var(--forest);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:700;font-size:15px;flex-shrink:0">
+          {{ s.college.code[:3] }}
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:15px">{{ s.college.name }}</div>
+          <div style="font-size:12px;color:var(--ink-light)">{{ s.college.code }}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+        <div style="text-align:center;background:var(--cream);border-radius:8px;padding:8px">
+          <div style="font-size:18px;font-weight:700;color:var(--forest)">{{ s.students }}</div>
+          <div style="font-size:11px;color:var(--ink-light)">Students</div>
+        </div>
+        <div style="text-align:center;background:var(--cream);border-radius:8px;padding:8px">
+          <div style="font-size:18px;font-weight:700;color:var(--forest)">{{ s.faculty }}</div>
+          <div style="font-size:11px;color:var(--ink-light)">Faculty</div>
+        </div>
+        <div style="text-align:center;background:var(--cream);border-radius:8px;padding:8px">
+          <div style="font-size:18px;font-weight:700;color:var(--forest)">{{ s.semesters }}</div>
+          <div style="font-size:11px;color:var(--ink-light)">Semesters</div>
+        </div>
+      </div>
+      {% if s.active_term %}
+      <div style="font-size:12px;color:var(--success);background:var(--success-light);padding:4px 10px;border-radius:20px;display:inline-block;margin-bottom:12px">
+        <i class="fa-solid fa-circle-dot fa-xs"></i> {{ s.active_term.name }}
+      </div>
+      {% endif %}
+      <div style="display:flex;gap:8px">
+        <a href="{{ url_for('superadmin.college_detail', college_id=s.college.id) }}" class="btn btn-sm btn-primary" style="flex:1;text-align:center">View</a>
+        <a href="{{ url_for('superadmin.edit_college', college_id=s.college.id) }}" class="btn btn-sm btn-outline" style="flex:1;text-align:center">Edit</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-light)">
+    <i class="fa-solid fa-university fa-2x" style="margin-bottom:12px;display:block"></i>
+    No colleges yet. <a href="{{ url_for('superadmin.new_college') }}">Create the first one</a>.
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Recent users across all colleges -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Recently Joined Users</h3>
+  </div>
+  <div class="card-body" style="padding:0">
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>College</th><th>Joined</th></tr></thead>
+      <tbody>
+        {% for u in recent_users %}
+        <tr>
+          <td><strong>{{ u.name }}</strong></td>
+          <td style="color:var(--ink-light)">{{ u.email }}</td>
+          <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+          <td>{{ u.college.name if u.college else '—' }}</td>
+          <td style="color:var(--ink-light)">{{ u.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" style="text-align:center;color:var(--ink-light)">No users yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch("{{ url_for('superadmin.api_stats') }}")
+  .then(r => r.json())
+  .then(data => {
+    const ctx = document.getElementById('collegeCompChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.name),
+        datasets: [
+          { label: 'Students', data: data.map(d => d.students), backgroundColor: 'rgba(26,58,42,0.7)', borderRadius: 6 },
+          { label: 'Faculty', data: data.map(d => d.faculty), backgroundColor: 'rgba(201,168,76,0.7)', borderRadius: 6 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+      }
+    });
+  });
+</script>
+{% endblock %}

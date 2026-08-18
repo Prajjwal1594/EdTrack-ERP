@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}My Grades{% endblock %}
+{% block page_title %}My Grades{% endblock %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>My Grades</h1>
+  </div>
+  <form class="filter-bar" method="GET" style="margin:0;">
+    <select name="term_id" class="form-control" onchange="this.form.submit()">
+      <option value="">All Terms</option>
+      {% for t in terms %}
+      <option value="{{ t.id }}" {% if t.id == selected_term_id %}selected{% endif %}>{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{% if chart_labels %}
+<div class="card mb-24">
+  <div class="card-header"><span class="card-title">Performance Trend</span></div>
+  <div class="card-body">
+    <canvas id="gradeChart" height="80"></canvas>
+  </div>
+</div>
+{% endif %}
+
+{% for subj, subj_grades in by_subject.items() %}
+{% set avg = (subj_grades | map(attribute='percentage') | list | sum / subj_grades | length) | round(1) %}
+<div class="card mb-16">
+  <div class="card-header">
+    <span class="card-title">{{ subj }}</span>
+    <div class="flex-center gap-8">
+      <span class="text-muted text-small">Average:</span>
+      <span class="grade-{{ 'A' if avg >= 80 else 'B' if avg >= 60 else 'C' if avg >= 50 else 'D' if avg >= 40 else 'F' }}" style="font-size:18px; font-weight:700; font-family:'DM Mono',monospace;">{{ avg }}%</span>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Exam/Test</th><th>Date</th><th>Score</th><th>Letter</th><th>Remarks</th></tr></thead>
+      <tbody>
+        {% for g in subj_grades %}
+        <tr>
+          <td>{{ g.exam_name }}</td>
+          <td class="text-muted text-small">{{ g.date.strftime('%b %d, %Y') }}</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="progress" style="width:80px;"><div class="progress-bar {{ 'green' if g.percentage >= 70 else 'orange' if g.percentage >= 40 else 'red' }}" style="width:{{ g.percentage }}%"></div></div>
+              <span class="font-mono">{{ g.percentage }}%</span>
+            </div>
+          </td>
+          <td><span class="grade-{{ g.letter_grade[0] }}">{{ g.letter_grade }}</span></td>
+          <td class="text-muted text-small">{{ g.remarks or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-star-half-stroke"></i><p>No grades found for the selected term.</p></div></div>
+{% endfor %}
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+const labels = {{ chart_labels | tojson }};
+const datasets = [];
+const colors = ['#1a3a2a','#c9a84c','#2980b9','#27ae60','#e67e22','#c0392b','#8e44ad'];
+let i = 0;
+{% for subj, data in chart_data.items() %}
+datasets.push({
+  label: {{ subj | tojson }},
+  data: {{ data | tojson }},
+  borderColor: colors[i % colors.length],
+  backgroundColor: colors[i % colors.length] + '20',
+  borderWidth: 2,
+  pointRadius: 4,
+  tension: .3,
+  fill: false
+});
+i++;
+{% endfor %}
+
+if (labels.length && document.getElementById('gradeChart')) {
+  new Chart(document.getElementById('gradeChart'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#e8e0d0' } },
+        x: { grid: { color: '#e8e0d0' } }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

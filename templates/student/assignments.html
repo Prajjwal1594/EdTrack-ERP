@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Assignments{% endblock %}
+{% block page_title %}My Assignments{% endblock %}
+{% block content %}
+<div class="page-header"><div class="page-header-left"><h1>Assignments</h1></div></div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Title</th><th>Subject</th><th>Due Date</th><th>Max Score</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for a in assignments %}
+        {% set sub = submissions.get(a.id) %}
+        <tr>
+          <td>{{ a.title }}</td>
+          <td>{{ a.subject.name }}</td>
+          <td class="{{ 'text-danger' if a.is_overdue and not sub else 'text-muted' }} text-small">{{ a.due_date.strftime('%b %d, %Y %H:%M') }}</td>
+          <td>{{ a.max_score | int }}</td>
+          <td>
+            {% if sub %}
+              <span class="badge badge-success">Submitted{% if sub.is_late %} (Late){% endif %}</span>
+              {% if sub.grade is not none %}<span class="badge badge-gold" style="margin-left:4px;">{{ sub.grade }}/{{ a.max_score | int }}</span>{% endif %}
+            {% elif a.is_overdue %}<span class="badge badge-danger">Overdue</span>
+            {% else %}<span class="badge badge-warning">Pending</span>{% endif %}
+          </td>
+          <td>
+            {% if not sub and not a.is_overdue %}
+            <a href="{{ url_for('student.submit_assignment', aid=a.id) }}" class="btn btn-xs btn-gold">Submit</a>
+            {% elif sub %}<span class="text-muted text-small"><i class="fas fa-check"></i></span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state"><i class="fas fa-file-lines"></i><p>No assignments found</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

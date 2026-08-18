@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Fee Types{% endblock %}
+{% block page_title %}Fee Types{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Fee Types</h1></div>
+  <button class="btn btn-gold" onclick="openModal('addFeeTypeModal')"><i class="fas fa-plus"></i> Add Fee Type</button>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Amount</th><th>Frequency</th><th>Description</th><th></th></tr></thead>
+      <tbody>
+        {% for ft in fee_types %}
+        <tr>
+          <td>{{ ft.name }}</td>
+          <td class="font-mono">₹{{ '{:,.0f}'.format(ft.amount) }}</td>
+          <td><span class="badge badge-neutral">{{ ft.frequency | title }}</span></td>
+          <td class="text-muted text-small">{{ ft.description or '—' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.delete_fee_type', fid=ft.id) }}" style="display:inline;">
+              <button class="btn btn-xs btn-danger" data-confirm="Delete this fee type?" type="submit"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty-state"><i class="fas fa-receipt"></i><p>No fee types yet</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-overlay" id="addFeeTypeModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Fee Type</span><button class="modal-close" onclick="closeModal('addFeeTypeModal')">×</button></div>
+    <form method="POST" action="{{ url_for('admin.add_fee_type') }}">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Fee Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Tuition Fee" required></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Amount (₹) *</label>
+            <input type="number" name="amount" class="form-control" step="0.01" required></div>
+          <div class="form-group"><label class="form-label">Frequency</label>
+            <select name="frequency" class="form-control">
+              <option value="monthly">Monthly</option><option value="term" selected>Per Term</option><option value="annual">Annual</option>
+            </select></div>
+        </div>
+        <div class="form-group"><label class="form-label">Description</label>
+          <input type="text" name="description" class="form-control" placeholder="Optional description"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addFeeTypeModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Fee Type</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

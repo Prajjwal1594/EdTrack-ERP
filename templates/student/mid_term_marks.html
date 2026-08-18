@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Mid Term Marks{% endblock %}
+{% block page_title %}Mid Term Marks{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Mid Term Marks</div>
+    <h1>Mid Term Marks</h1>
+    <p>Your mid-term examination results</p>
+  </div>
+</div>
+
+{% if grades %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Subject</th><th>Exam</th><th>Score</th><th>Max</th><th>Percentage</th><th>Grade</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        {% for g in grades %}
+        <tr>
+          <td>{{ g.subject.name }}</td>
+          <td class="text-muted">{{ g.exam_name }}</td>
+          <td class="font-mono" style="font-weight:600;">{{ g.score }}</td>
+          <td class="text-muted font-mono">{{ g.max_score }}</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="progress" style="width:60px;">
+                <div class="progress-bar {{ 'green' if g.percentage >= 70 else 'orange' if g.percentage >= 40 else 'red' }}" style="width:{{ g.percentage }}%;"></div>
+              </div>
+              <span class="font-mono" style="font-size:13px;">{{ g.percentage }}%</span>
+            </div>
+          </td>
+          <td><span class="grade-{{ g.letter_grade[0] }}">{{ g.letter_grade }}</span></td>
+          <td class="text-muted text-small">{{ g.date.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-file-circle-check"></i>
+    <p>No mid-term marks available yet.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}All Colleges — Super Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="fa-solid fa-building-columns" style="color:var(--gold)"></i> Colleges</h1>
+    <p class="page-subtitle">{{ summaries|length }} college{{ 's' if summaries|length != 1 }} registered</p>
+  </div>
+  <a href="{{ url_for('superadmin.new_college') }}" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> New College
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>College</th>
+          <th>Code</th>
+          <th>Contact</th>
+          <th>Students</th>
+          <th>Faculty</th>
+          <th>Total Users</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in summaries %}
+        <tr>
+          <td>
+            <div style="font-weight:600">{{ s.college.name }}</div>
+            {% if s.college.address %}
+            <div style="font-size:12px;color:var(--ink-light)">{{ s.college.address[:50] }}{% if s.college.address|length > 50 %}…{% endif %}</div>
+            {% endif %}
+          </td>
+          <td><code style="background:var(--cream);padding:2px 6px;border-radius:4px">{{ s.college.code }}</code></td>
+          <td style="color:var(--ink-light);font-size:13px">
+            {% if s.college.email %}{{ s.college.email }}{% endif %}
+            {% if s.college.phone %}<br>{{ s.college.phone }}{% endif %}
+          </td>
+          <td><strong>{{ s.students }}</strong></td>
+          <td><strong>{{ s.faculty }}</strong></td>
+          <td>{{ s.users }}</td>
+          <td style="color:var(--ink-light)">{{ s.college.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <a href="{{ url_for('superadmin.college_detail', college_id=s.college.id) }}" class="btn btn-sm btn-primary">View</a>
+              <a href="{{ url_for('superadmin.edit_college', college_id=s.college.id) }}" class="btn btn-sm btn-outline">Edit</a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" style="text-align:center;padding:40px;color:var(--ink-light)">
+            No colleges yet. <a href="{{ url_for('superadmin.new_college') }}">Create one now</a>.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

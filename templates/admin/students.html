@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}ERP Students Directory{% endblock %}
+{% block page_title %}ERP Students Directory{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>ERP Students Directory</h1>
+    <p>{{ students | length }} student{{ 's' if students | length != 1 }} enrolled in the system.</p>
+  </div>
+  <a href="{{ url_for('admin.add_user') }}" class="btn btn-gold"><i class="fas fa-user-plus"></i> Add Student</a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Enrollment No.</th>
+          <th>Semester/Section</th>
+          <th>Aadhar No.</th>
+          <th>Session</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in students %}
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="user-avatar" style="width:32px; height:32px; font-size:12px; background:var(--forest-light);">{{ u.name[0] }}</div>
+              <div>
+                <span style="font-weight: 500;">{{ u.name }}</span><br>
+                <small class="text-muted">{{ u.email }}</small>
+              </div>
+            </div>
+          </td>
+          <td>{{ u.student_profile.enrollment_number or '—' }}</td>
+          <td>
+            {% if u.student_profile.section %}
+              <span class="badge badge-info">{{ u.student_profile.section.full_name }}</span>
+            {% else %}
+              <span class="badge badge-neutral">Unassigned</span>
+            {% endif %}
+          </td>
+          <td class="text-muted">{{ u.student_profile.aadhar_number or '—' }}</td>
+          <td>{{ u.student_profile.session or '—' }}</td>
+          <td>
+            <span class="badge {{ 'badge-success' if u.is_active else 'badge-danger' }}">
+              {{ 'Active' if u.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('admin.edit_erp_profile', uid=u.id) }}" class="btn btn-xs btn-outline" title="Edit ERP Detailed Profile">
+                <i class="fas fa-id-card"></i> Edit ERP
+              </a>
+              <a href="{{ url_for('admin.edit_user', uid=u.id) }}" class="btn btn-xs btn-ghost" title="Basics/Login Settings">
+                <i class="fas fa-cog"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state"><i class="fas fa-users-slash"></i><p>No students found</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

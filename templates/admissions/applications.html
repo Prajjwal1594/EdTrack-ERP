@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Submitted Applications{% endblock %}
+{% block page_title %}Submitted Applications{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Admission Applications</h1>
+    <p>Review submitted admissions applications.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table p-4">
+      <thead>
+        <tr>
+          <th>Submitted</th>
+          <th>Applicant Name</th>
+          <th>Target Semester</th>
+          <th>Status</th>
+          <th>Fee Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in applications %}
+        <tr>
+          <td class="text-muted" style="white-space: nowrap;">{{ app.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td><strong>{{ app.applicant_name }}</strong></td>
+          <td><span class="badge bg-purple">{{ app.target_class or 'N/A' }}</span></td>
+          <td>
+            {% if app.status == 'Submitted' %}
+              <span class="badge bg-gold" style="color: black;">Submitted</span>
+            {% elif app.status == 'Under Review' %}
+              <span class="badge bg-blue">Under Review</span>
+            {% elif app.status == 'Approved' %}
+              <span class="badge bg-forest">Approved</span>
+            {% elif app.status == 'Rejected' %}
+              <span class="badge bg-red">Rejected</span>
+            {% else %}
+              <span class="badge" style="background-color: var(--text-color);">{{ app.status }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if app.application_fee_status == 'Paid' %}
+              <span class="badge bg-forest">Paid</span>
+            {% else %}
+              <span class="badge bg-red">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline"><i class="fas fa-eye"></i> View</button>
+            <button class="btn btn-sm btn-primary"><i class="fas fa-check"></i> Act</button>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-5">
+            <i class="fas fa-file-signature fa-3x mb-3" style="color: var(--border-color);"></i>
+            <p>No applications found.</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

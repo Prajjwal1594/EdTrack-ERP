@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Fee Statement{% endblock %}
+{% block page_title %}Fee Statement{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Fee Statement</div>
+    <h1>Fee Statement</h1>
+    <p>Your fee summary and payment status</p>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-value font-mono">₹{{ '{:,.0f}'.format(total_paid) }}</div>
+    <div class="stat-label">Total Paid</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+    <div class="stat-value font-mono">₹{{ '{:,.0f}'.format(total_due) }}</div>
+    <div class="stat-label">Pending</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="stat-value font-mono">₹{{ '{:,.0f}'.format(total_overdue) }}</div>
+    <div class="stat-label">Overdue</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Payment Details</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Fee Type</th>
+          <th>Term</th>
+          <th>Amount</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          <th>Paid On</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.fee_type.name if p.fee_type else 'N/A' }}</td>
+          <td class="text-muted">{{ p.term.name if p.term else 'N/A' }}</td>
+          <td class="font-mono">₹{{ '{:,.0f}'.format(p.amount) }}</td>
+          <td class="text-muted text-small">{{ p.due_date.strftime('%d %b %Y') if p.due_date else '—' }}</td>
+          <td>
+            <span class="badge badge-{{ 'success' if p.status=='paid' else 'danger' if p.status=='overdue' else 'warning' if p.status=='pending' else 'neutral' }}">
+              {{ p.status | capitalize }}
+            </span>
+          </td>
+          <td class="text-muted text-small">{{ p.paid_at.strftime('%d %b %Y') if p.paid_at else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted" style="padding:24px;">No fee records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

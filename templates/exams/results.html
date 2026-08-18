@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Exam Results{% endblock %}
+{% block page_title %}Exam Results{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('exams.index') }}">Exams</a> / Results</div>
+    <h1>{{ exam.title }} — Results</h1>
+    <p>{{ submissions | length }} submitted · {{ students_no_sub | length }} not attempted</p>
+  </div>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Score</th><th>Percentage</th><th>Grade</th><th>Submitted At</th></tr></thead>
+      <tbody>
+        {% for sub in submissions | sort(attribute='score', reverse=True) %}
+        {% set pct = sub.percentage %}
+        <tr>
+          <td>{{ sub.student.user.name }}</td>
+          <td class="font-mono">{{ sub.score | int }}/{{ exam.total_marks | int }}</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="progress" style="width:80px;"><div class="progress-bar {{ 'green' if pct >= 70 else 'orange' if pct >= 40 else 'red' }}" style="width:{{ pct }}%"></div></div>
+              <span>{{ pct }}%</span>
+            </div>
+          </td>
+          <td><span class="grade-{{ 'A' if pct >= 80 else 'B' if pct >= 60 else 'C' if pct >= 50 else 'D' if pct >= 40 else 'F' }}">{{ 'A+' if pct >= 90 else 'A' if pct >= 80 else 'B+' if pct >= 70 else 'B' if pct >= 60 else 'C' if pct >= 50 else 'D' if pct >= 40 else 'F' }}</span></td>
+          <td class="text-muted text-small">{{ sub.submitted_at.strftime('%b %d, %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+        {% for s in students_no_sub %}
+        <tr style="opacity:.6;">
+          <td>{{ s.user.name }}</td>
+          <td>—</td><td>—</td><td>—</td>
+          <td><span class="badge badge-neutral">Not Attempted</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

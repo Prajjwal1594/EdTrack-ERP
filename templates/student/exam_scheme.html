@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Examination Scheme{% endblock %}
+{% block page_title %}Examination Scheme{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Examination Scheme</div>
+    <h1>Examination Scheme</h1>
+    <p>Exam schedule and details</p>
+  </div>
+</div>
+
+{% if exams %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Exam</th><th>Subject</th><th>Date & Time</th><th>Duration</th><th>Total Marks</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for e in exams %}
+        <tr>
+          <td style="font-weight:500;">{{ e.title }}</td>
+          <td class="text-muted">{{ e.subject.name if e.subject else 'N/A' }}</td>
+          <td class="text-small">
+            {% if e.start_time %}{{ e.start_time.strftime('%d %b %Y, %I:%M %p') }}{% else %}TBA{% endif %}
+          </td>
+          <td class="font-mono">{{ e.duration_minutes }} min</td>
+          <td class="font-mono">{{ e.total_marks }}</td>
+          <td>
+            {% if e.is_active %}
+            <span class="badge badge-success">Active</span>
+            {% elif e.start_time and e.start_time > now %}
+            <span class="badge badge-gold">Upcoming</span>
+            {% else %}
+            <span class="badge badge-neutral">Completed</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-calendar-alt"></i>
+    <p>No examination schedule available.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

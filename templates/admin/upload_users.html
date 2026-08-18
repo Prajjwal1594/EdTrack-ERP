@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Upload Users{% endblock %}
+{% block page_title %}Bulk User Import (CSV / Excel){% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.users') }}">Users</a> / Upload Users</div>
+    <h1>Bulk User Import</h1>
+    <p>Upload a CSV or Excel file to add multiple users (students, faculty, etc.) at once.</p>
+  </div>
+  <div style="display:flex; gap:10px;">
+    <a href="{{ url_for('admin.sample_csv') }}" class="btn btn-outline"><i class="fas fa-download"></i> Download Sample CSV</a>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back to Users</a>
+  </div>
+</div>
+
+<div class="grid-2 gap-24">
+  <!-- Upload Card -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-file-excel" style="color:var(--forest);"></i> Select Upload File</span>
+    </div>
+    <form method="POST" action="{{ url_for('admin.upload_users') }}" enctype="multipart/form-data">
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Excel / CSV File *</label>
+          <input type="file" name="file" class="form-control" accept=".csv, .xlsx, .xls" required style="padding:10px;">
+          <small class="text-muted" style="margin-top:6px; display:block;">
+            Supported formats: <strong>.csv</strong>, <strong>.xlsx</strong>, <strong>.xls</strong>
+          </small>
+        </div>
+
+        <div style="background:var(--cream); padding:16px; border-radius:8px; border:1px dashed var(--border); margin-top:20px;">
+          <h4 style="font-size:13px; font-weight:600; color:var(--forest); margin-bottom:8px;">
+            <i class="fas fa-info-circle"></i> Supported Columns
+          </h4>
+          <ul style="font-size:12px; color:var(--ink-mid); padding-left:18px; line-height:1.6;">
+            <li><strong>name / full_name</strong>: Required (e.g. "John Smith")</li>
+            <li><strong>email</strong>: Required & unique (e.g. "john@university.edu")</li>
+            <li><strong>role</strong>: student, faculty, admin, parent, hr (default: student)</li>
+            <li><strong>phone</strong>: Phone number</li>
+            <li><strong>password</strong>: Initial password (default: "ChangeMe123!")</li>
+            <li><strong>course / course_name</strong>: Course name (e.g. "B.Tech", "MBA")</li>
+            <li><strong>stream / stream_name / branch</strong>: Stream/Branch (e.g. "Computer Science", "Finance")</li>
+            <li><strong>batch / batch_name</strong>: Batch (e.g. "2024-2028")</li>
+            <li><strong>section / section_name</strong>: Section (e.g. "A", "B")</li>
+            <li><strong>enrollment_number</strong>: Student Enrollment ID (auto-generated if empty)</li>
+            <li><strong>date_of_birth</strong>: Format: YYYY-MM-DD (e.g. "2004-05-15")</li>
+            <li><strong>gender</strong>: Male, Female, Other</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <a href="{{ url_for('admin.users') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-gold"><i class="fas fa-cloud-upload-alt"></i> Import Users</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Instructions & Guidance -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-lightbulb" style="color:var(--gold);"></i> Import Tips & Guidance</span>
+    </div>
+    <div class="card-body" style="line-height:1.6; font-size:13px; color:var(--ink-mid);">
+      <div style="margin-bottom:16px;">
+        <h4 style="font-weight:600; color:var(--forest); font-size:14px; margin-bottom:4px;">Automatic Entity Creation</h4>
+        <p>If a specified <strong>Course</strong>, <strong>Stream</strong>, <strong>Batch</strong>, or <strong>Section</strong> does not already exist in the database, the system will automatically create it and tag the student to it!</p>
+      </div>
+      <div style="margin-bottom:16px;">
+        <h4 style="font-weight:600; color:var(--forest); font-size:14px; margin-bottom:4px;">Duplicate Check</h4>
+        <p>If an email address already exists in the system, that row will be skipped with a warning message so existing data is preserved.</p>
+      </div>
+      <div>
+        <h4 style="font-weight:600; color:var(--forest); font-size:14px; margin-bottom:4px;">Default Credentials</h4>
+        <p>If password is left blank in the uploaded file, the user will be created with default password <code>ChangeMe123!</code>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

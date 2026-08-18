@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}My Attendance{% endblock %}
+{% block page_title %}My Attendance{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Attendance Record</h1></div>
+  <form method="GET" style="display:flex; gap:8px;">
+    <select name="month" class="form-control" onchange="this.form.submit()">
+      {% for m in range(1,13) %}
+      <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1] }}</option>
+      {% endfor %}
+    </select>
+    <select name="year" class="form-control" onchange="this.form.submit()">
+      {% for y in range(2023, 2027) %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-icon {{ 'green' if att_pct >= 80 else 'orange' if att_pct >= 60 else 'red' }}"><i class="fas fa-percent"></i></div><div class="stat-value">{{ att_pct }}%</div><div class="stat-label">Overall Rate</div></div>
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check"></i></div><div class="stat-value">{{ present }}</div><div class="stat-label">Present</div></div>
+  <div class="stat-card"><div class="stat-icon red"><i class="fas fa-times"></i></div><div class="stat-value">{{ absent }}</div><div class="stat-label">Absent</div></div>
+  <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div class="stat-value">{{ late }}</div><div class="stat-label">Late</div></div>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Day</th><th>Status</th><th>Remarks</th></tr></thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.date.strftime('%b %d, %Y') }}</td>
+          <td class="text-muted">{{ r.date.strftime('%A') }}</td>
+          <td><span class="badge badge-{{ 'success' if r.status == 'present' else 'danger' if r.status == 'absent' else 'warning' if r.status == 'late' else 'neutral' }}">{{ r.status | title }}</span></td>
+          <td class="text-muted text-small">{{ r.remarks or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty-state"><i class="fas fa-calendar"></i><p>No attendance records for this month</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

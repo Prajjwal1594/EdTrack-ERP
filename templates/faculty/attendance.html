@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block page_title %}Attendance{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Mark Attendance</h1></div>
+  <a href="{{ url_for('faculty.export_attendance_matrix_csv', section_id=selected_section_id) }}" class="btn btn-outline"><i class="fas fa-file-csv"></i> Export Attendance (CSV Grid)</a>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" style="display:flex; gap:10px; flex-wrap:wrap;" id="filterForm">
+    <select name="section_id" class="form-control" onchange="this.form.submit()">
+      <option value="">Select Section</option>
+      {% for s in sections %}
+      <option value="{{ s.id }}" {% if s.id == selected_section_id %}selected{% endif %}>{{ s.full_name }}</option>
+      {% endfor %}
+    </select>
+    <input type="date" name="date" class="form-control" value="{{ selected_date.isoformat() }}" onchange="this.form.submit()">
+  </form>
+</div>
+
+{% if selected_section_id and students %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">{{ students[0].section.full_name }} — {{ selected_date.strftime('%A, %B %d, %Y') }}</span>
+    <div class="flex-center gap-8">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="setAll('present')">All Present</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="setAll('absent')">All Absent</button>
+    </div>
+  </div>
+  <form method="POST" action="{{ url_for('faculty.save_attendance') }}">
+    <input type="hidden" name="section_id" value="{{ selected_section_id }}">
+    <input type="hidden" name="date" value="{{ selected_date.isoformat() }}">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Student</th><th>Enrollment No.</th>
+            <th>Present</th><th>Late</th><th>Absent</th><th>Excused</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          {% set existing = attendance_map.get(student.id) %}
+          {% set current_status = existing.status if existing else 'present' %}
+          <tr>
+            <td class="text-muted text-small">{{ loop.index }}</td>
+            <td>{{ student.user.name }}</td>
+            <td class="text-muted font-mono text-small">{{ student.enrollment_number }}</td>
+            {% for status in ['present', 'late', 'absent', 'excused'] %}
+            <td style="text-align:center;">
+              <input type="radio" name="status_{{ student.id }}" value="{{ status }}" class="att-radio"
+                     {% if current_status == status %}checked{% endif %}
+                     style="width:18px; height:18px; cursor:pointer; accent-color: var(--forest);">
+            </td>
+            {% endfor %}
+            <td><input type="text" name="remarks_{{ student.id }}" class="form-control" style="max-width:160px;" value="{{ existing.remarks if existing else '' }}" placeholder="Optional"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:16px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px;">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Attendance</button>
+    </div>
+  </form>
+</div>
+{% elif selected_section_id %}
+<div class="card"><div class="empty-state"><i class="fas fa-users"></i><p>No students in this section</p></div></div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-clipboard-check"></i><p>Select a section and date to mark attendance</p></div></div>
+{% endif %}
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function setAll(status) {
+  document.querySelectorAll(`input[type="radio"][value="${status}"]`).forEach(r => r.checked = true);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Faculty Assignments{% endblock %}
+{% block page_title %}Faculty Assignments{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Faculty Assignments</h1></div>
+  <button class="btn btn-gold" onclick="openModal('addAssignmentModal')"><i class="fas fa-plus"></i> Assign Faculty</button>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Faculty</th><th>Subject</th><th>Section</th><th>Academic Year</th><th></th></tr></thead>
+      <tbody>
+        {% for a in assignments %}
+        <tr>
+          <td>{{ a.faculty.name }}</td>
+          <td>{{ a.subject.name }}</td>
+          <td>{{ a.section.full_name }}</td>
+          <td>{{ a.academic_year }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.delete_faculty_assignment', aid=a.id) }}" style="display:inline;">
+              <button class="btn btn-xs btn-danger" data-confirm="Remove this assignment?" type="submit"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty-state"><i class="fas fa-chalkboard-user"></i><p>No faculty assignments yet</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-overlay" id="addAssignmentModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Assign Faculty</span><button class="modal-close" onclick="closeModal('addAssignmentModal')">×</button></div>
+    <form method="POST" action="{{ url_for('admin.add_faculty_assignment') }}">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Faculty *</label>
+          <select name="faculty_id" class="form-control" required>
+            <option value="">-- Select faculty --</option>
+            {% for t in faculty %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+          </select></div>
+        <div class="form-group"><label class="form-label">Subject *</label>
+          <select name="subject_id" class="form-control" required>
+            <option value="">-- Select subject --</option>
+            {% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+          </select></div>
+        <div class="form-group"><label class="form-label">Section *</label>
+          <select name="section_id" class="form-control" required>
+            <option value="">-- Select section --</option>
+            {% for s in sections %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endfor %}
+          </select></div>
+        <div class="form-group"><label class="form-label">Academic Year</label>
+          <input type="text" name="academic_year" class="form-control" value="2024-2025"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addAssignmentModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Assign</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Intervention - {{ student.user.name }}{% endblock %}
+{% block page_title %}Student Intervention: {{ student.user.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0"><i class="fas fa-user-shield"></i> Record Intervention Action</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Intervention Type</label>
+                        <select class="form-select" name="type" required>
+                            <option value="">Choose intervention type...</option>
+                            <option value="parent_call">Phone Call to Parent</option>
+                            <option value="parent_meeting">In-person Parent-Faculty Meeting</option>
+                            <option value="counseling">Student Counseling Session</option>
+                            <option value="warning">Formal Academic Warning</option>
+                            <option value="other">Other Administrative Action</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Session Notes / Observations</label>
+                        <textarea class="form-control" name="notes" rows="6" placeholder="Document the details of the intervention, parent feedback, and agreed next steps..." required></textarea>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" name="notify_parent" id="notify_parent" checked>
+                        <label class="form-check-label" for="notify_parent">
+                            Send automated notification to parent about this intervention
+                        </label>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin.at_risk_dashboard') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-5">Submit Intervention Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

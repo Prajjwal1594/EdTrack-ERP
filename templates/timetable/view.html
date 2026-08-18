@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Timetable - {{ section.full_name }}{% endblock %}
+{% block page_title %}Weekly Timetable: {{ section.full_name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Semester Schedule</span>
+    {% if current_user.role in ['admin', 'faculty'] %}
+    <a href="{{ url_for('timetable.manage', section_id=section.id) }}" class="btn btn-outline btn-sm">Manage Slots</a>
+    {% endif %}
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          {% for day in days %}
+          <th>{{ day }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% set times = [] %}
+        {% for day in days %}
+          {% for slot in timetable[day] %}
+            {% if slot.start_time not in times %}
+              {% set _ = times.append(slot.start_time) %}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+        {% set times = times | sort %}
+
+        {% for t in times %}
+        <tr>
+          <td class="font-mono text-small">{{ t.strftime('%H:%M') }}</td>
+          {% for day in days %}
+          <td>
+            {% for slot in timetable[day] %}
+              {% if slot.start_time == t %}
+              <div class="timetable-slot">
+                <div style="font-weight:600; color:var(--primary);">{{ slot.subject.name }}</div>
+                <div class="text-muted text-small">{{ slot.faculty.name }}</div>
+                {% if slot.room_number %}
+                <div class="text-muted text-small"><i class="fas fa-door-open"></i> {{ slot.room_number }}</div>
+                {% endif %}
+                <div class="text-muted text-extra-small">{{ slot.end_time.strftime('%H:%M') }}</div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted" style="padding:40px;">No slots scheduled yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .timetable-slot {
+    padding: 8px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+    margin-bottom: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .text-extra-small {
+    font-size: 11px;
+  }
+</style>
+{% endblock %}

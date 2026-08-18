@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if action == 'edit' else 'New' }} College — Super Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">
+      <i class="fa-solid fa-{{ 'pen' if action == 'edit' else 'plus-circle' }}" style="color:var(--gold)"></i>
+      {{ 'Edit College' if action == 'edit' else 'Register New College' }}
+    </h1>
+    <p class="page-subtitle">
+      {% if action == 'edit' %}Update details for {{ college.name }}{% else %}Add a new college to your EdTrack instance{% endif %}
+    </p>
+  </div>
+  <a href="{{ url_for('superadmin.colleges') }}" class="btn btn-outline">
+    <i class="fa-solid fa-arrow-left"></i> All Colleges
+  </a>
+</div>
+
+<div style="max-width:640px">
+  <form method="POST">
+    <!-- College info -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3 class="card-title"><i class="fa-solid fa-university"></i> College Information</h3></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">College Name <span style="color:var(--danger)">*</span></label>
+          <input type="text" name="name" class="form-control" required
+                 value="{{ college.name if college else '' }}"
+                 placeholder="e.g. Sunrise International College">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">College Code <span style="color:var(--danger)">*</span></label>
+            <input type="text" name="code" class="form-control" required
+                   value="{{ college.code if college else '' }}"
+                   placeholder="e.g. SIS" maxlength="20"
+                   style="text-transform:uppercase">
+            <div style="font-size:11px;color:var(--ink-light);margin-top:4px">Short, unique identifier. Will be uppercased.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Email</label>
+            <input type="email" name="email" class="form-control"
+                   value="{{ college.email if college else '' }}"
+                   placeholder="info@college.edu">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-control"
+                   value="{{ college.phone if college else '' }}"
+                   placeholder="+1 (555) 000-0000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input type="text" name="address" class="form-control"
+                   value="{{ college.address if college else '' }}"
+                   placeholder="123 College Street, City">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- First admin (only on create) -->
+    {% if action == 'create' %}
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-user-tie"></i> Initial Admin User <span style="font-size:12px;font-weight:400;color:var(--ink-light)">(optional)</span></h3>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--ink-light);margin-bottom:16px">
+          Create the first admin account for this college. You can skip this and add admins later from the college detail page.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">Admin Name</label>
+            <input type="text" name="admin_name" class="form-control" placeholder="Full Name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Admin Email</label>
+            <input type="email" name="admin_email" class="form-control" placeholder="admin@college.edu">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temporary Password</label>
+          <input type="text" name="admin_password" class="form-control" value="ChangeMe123!" placeholder="ChangeMe123!">
+          <div style="font-size:11px;color:var(--ink-light);margin-top:4px">The admin will be prompted to change this on first login.</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div style="display:flex;gap:12px">
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-{{ 'floppy-disk' if action == 'edit' else 'plus' }}"></i>
+        {{ 'Save Changes' if action == 'edit' else 'Create College' }}
+      </button>
+      <a href="{{ url_for('superadmin.college_detail', college_id=college.id) if action == 'edit' else url_for('superadmin.colleges') }}"
+         class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

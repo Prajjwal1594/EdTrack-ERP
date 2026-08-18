@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Welcome, {{ current_user.name.split()[0] }}</h1>
+    <p>{{ student.section.full_name if student.section else 'No section assigned' }} &nbsp;·&nbsp; Enrollment: {{
+      student.enrollment_number }}</p>
+  </div>
+  <div id="dashboard-metadata" 
+       data-student-id="{{ student.id }}" 
+       data-user-id="{{ current_user.id }}"
+       data-insights-url="{{ url_for('ai.get_insights', student_id=student.id) }}"
+       data-chat-url="{{ url_for('ai.chat') }}"
+       data-mark-read-url="{{ url_for('student.mark_notifications_read') }}"></div>
+</div>
+
+<!-- Notifications -->
+{% if overdue_books %}
+<div style="margin-bottom:20px; display:flex; flex-direction:column; gap:8px;">
+  {% for b in overdue_books %}
+   <div class="alert alert-danger" style="animation: slideUp .3s ease both; border-left: 5px solid #d32f2f;">
+    <i class="fas fa-book-dead"></i>
+    <strong>Library Alert:</strong> Your book "{{ b.book.title }}" was due on {{ b.due_date.strftime('%B %d') }}. Please return it to avoid further fines.
+    <button class="close-btn" onclick="this.parentElement.remove()">×</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if notifications %}
+<div style="margin-bottom:20px; display:flex; flex-direction:column; gap:8px;">
+  {% for n in notifications %}
+   <div class="alert alert-{{ 'danger' if n.type in ('low_grade','absent') else 'warning' }}"
+        style="--index: {{ loop.index0 }}; --delay: calc(var(--index) * 0.05s); animation: slideUp .3s ease var(--delay) both;">
+    <i class="fas fa-{{ 'chart-line-down' if n.type == 'low_grade' else 'user-clock' if n.type == 'absent' else 'bell' }}"></i>
+    <strong>{{ n.title }}:</strong> {{ n.message }}
+    <button class="close-btn" onclick="this.parentElement.remove()">×</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-star-half-stroke"></i></div>
+    <div class="stat-value">{{ recent_grades | length }}</div>
+    <div class="stat-label">Recent Grades</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon {{ 'green' if att_pct >= 80 else 'orange' if att_pct >= 60 else 'red' }}"><i
+        class="fas fa-clipboard-check"></i></div>
+    <div class="stat-value">{{ att_pct }}%</div>
+    <div class="stat-label">Attendance (30d)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon orange"><i class="fas fa-file-circle-exclamation"></i></div>
+    <div class="stat-value">{{ pending_assignments | length }}</div>
+    <div class="stat-label">Pending Assignments</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon gold"><i class="fas fa-award"></i></div>
+    <div class="stat-value">{{ student.holistic_growth_score() }}</div>
+    <div class="stat-label">Holistic Growth Score</div>
+  </div>
+</div>
+
+<div style="margin-bottom:20px;">
+  <!-- Holistic Overview Chart -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Holistic Growth Analysis</span></div>
+    <div class="card-body" style="height:350px;">
+      <canvas id="holisticRadarChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:2fr 1fr; gap:20px;">
+  <!-- Recent Grades -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recent Grades</span>
+      <a href="{{ url_for('student.grades') }}" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Exam</th>
+            <th>Score</th>
+            <th>Grade</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in recent_grades %}
+          <tr>
+            <td>{{ g.subject.name }}</td>
+            <td class="text-muted">{{ g.exam_name }}</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="progress" style="width:70px; flex-shrink:0;">
+                  <div
+                    class="progress-bar {{ 'green' if g.percentage >= 70 else 'orange' if g.percentage >= 40 else 'red' }}"
+                    style="--w: {{ g.percentage }}%; width: var(--w);"></div>
+                </div>
+                <span class="font-mono" style="font-size:13px;">{{ g.percentage }}%</span>
+              </div>
+            </td>
+            <td><span class="grade-{{ g.letter_grade[0] }}">{{ g.letter_grade }}</span></td>
+            <td class="text-muted text-small">{{ g.date.strftime('%b %d') }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="text-muted text-center" style="padding:24px">No grades yet</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:16px;">
+    <!-- Pending Assignments -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Due Soon</span>
+        <a href="{{ url_for('student.assignments') }}" class="btn btn-ghost btn-sm">All</a>
+      </div>
+      <div class="card-body" style="display:flex; flex-direction:column; gap:10px;">
+        {% for a in pending_assignments[:4] %}
+        <div style="display:flex; justify-content:space-between; align-items:start; gap:8px;">
+          <div>
+            <div style="font-size:13px; font-weight:500;">{{ a.title }}</div>
+            <div class="text-muted text-small">{{ a.subject.name }} · Due {{ a.due_date.strftime('%b %d') }}</div>
+          </div>
+          <a href="{{ url_for('student.submit_assignment', aid=a.id) }}" class="btn btn-xs btn-gold">Submit</a>
+        </div>
+        {% else %}
+        <p class="text-muted text-small">All caught up! 🎉</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Upcoming Exams -->
+    {% if upcoming_exams %}
+    <div class="card">
+      <div class="card-header"><span class="card-title">Upcoming Exams</span></div>
+      <div class="card-body" style="display:flex; flex-direction:column; gap:10px;">
+        {% for e in upcoming_exams %}
+        <div>
+          <div style="font-size:13px; font-weight:500;">{{ e.title }}</div>
+          <div class="text-muted text-small">{{ e.subject.name }}</div>
+          {% if e.start_time %}<div class="text-muted text-small"><i class="fas fa-clock"></i> {{
+            e.start_time.strftime('%b %d, %H:%M') }}</div>{% endif %}
+          <a href="{{ url_for('exams.take_exam', eid=e.id) }}" class="btn btn-xs btn-outline"
+            style="margin-top:6px;">Open Exam</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Links -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Quick Links</span></div>
+      <div class="card-body" style="display:flex; flex-direction:column; gap:8px;">
+        <a href="{{ url_for('reports.report_card', student_id=student.id) }}" class="btn btn-outline btn-sm"><i
+            class="fas fa-file-alt"></i> View Grade Sheet</a>
+        <a href="{{ url_for('reports.report_card', student_id=student.id) }}?pdf=1" class="btn btn-gold btn-sm"><i
+            class="fas fa-download"></i> Download PDF</a>
+        <a href="{{ url_for('messages.compose') }}" class="btn btn-ghost btn-sm"><i class="fas fa-envelope"></i> Message
+          Faculty</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+  // Load Metadata first
+  const meta = document.getElementById('dashboard-metadata').dataset;
+  const studentId = parseInt(meta.studentId);
+  const userId = parseInt(meta.userId);
+
+  document.querySelectorAll('.alert .close-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      fetch(meta.markReadUrl, { method: 'POST' });
+    });
+  });
+
+  // Load Insights and Init Radar
+
+  let radarChart;
+  fetch(meta.insightsUrl)
+    .then(r => r.json())
+    .then(data => {
+      radarChart = initHolisticRadar('holisticRadarChart', data);
+    });
+
+  // Socket.IO Real-time Updates
+  const socket = io();
+  socket.on('connect', () => {
+    socket.emit('subscribe_student', { student_id: studentId });
+    socket.emit('subscribe_user', { user_id: userId });
+  });
+
+  socket.on('activity_update', (data) => {
+    // Update holistic score on-screen
+    const scoreVal = document.querySelector('.stat-card:last-child .stat-value');
+    if (scoreVal) scoreVal.textContent = data.holistic_score;
+    // Notify user
+    addMsg(`Score updated to ${data.holistic_score}! (${data.holistic_rating})`, 'ai');
+  });
+
+  socket.on('new_notification', (data) => {
+    // Show top alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-info';
+    alertDiv.innerHTML = `<strong>${data.title}:</strong> ${data.message} <button class="close-btn" onclick="this.parentElement.remove()">×</button>`;
+    document.querySelector('.page-header').after(alertDiv);
+  });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Financial Ledger{% endblock %}
+{% block page_title %}College Financial Oversight{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 text-white bg-success">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase opacity-75">Total Income</h6>
+                <h3 class="mb-0">₹{{ "%.2f"|format(total_income) }}</h3>
+                <small><i class="fas fa-arrow-up"></i> All time</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 text-white bg-danger">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase opacity-75">Total Expenses</h6>
+                <h3 class="mb-0">₹{{ "%.2f"|format(total_expense) }}</h3>
+                <small><i class="fas fa-arrow-down"></i> All time</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 text-white bg-dark">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase opacity-75">Net Balance</h6>
+                <h3 class="mb-0">₹{{ "%.2f"|format(net_balance) }}</h3>
+                <small><i class="fas fa-balance-scale"></i> Current Liquidity</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Transaction form -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header bg-primary text-white"><i class="fas fa-plus-circle"></i> New Entry</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-2">
+                        <label class="form-label">Type</label>
+                        <select name="transaction_type" class="form-select" required>
+                            <option value="INCOME">Income</option>
+                            <option value="EXPENSE">Expense</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" placeholder="0.00" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Category</label>
+                        <input type="text" name="category" class="form-control" placeholder="e.g. Utility, Donation, Vendor" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Party Name</label>
+                        <input type="text" name="party_name" class="form-control" placeholder="e.g. Electric Board, John Doe">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-select">
+                            <option>Cash</option>
+                            <option>Bank Transfer</option>
+                            <option>Cheque</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save"></i> Record Transaction</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ledger Table -->
+    <div class="col-md-8">
+        <div class="card mb-4 mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Transaction History</h5>
+                <a href="{{ url_for('finance.ledger_report') }}" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-file-pdf"></i> Export PDF Report
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Category & Party</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Method</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in transactions %}
+                        <tr>
+                            <td><small>{{ t.transaction_date.strftime('%Y-%m-%d') }}</small></td>
+                            <td>
+                                <strong>{{ t.category }}</strong><br>
+                                <small class="text-muted">{{ t.party_name or 'N/A' }}</small>
+                            </td>
+                            <td><strong>₹{{ "%.2f"|format(t.amount) }}</strong></td>
+                            <td>
+                                <span class="badge {% if t.transaction_type == 'INCOME' %}bg-success{% else %}bg-danger{% endif %} badge-pill">
+                                    {{ t.transaction_type }}
+                                </span>
+                            </td>
+                            <td><small>{{ t.payment_method }}</small></td>
+                            <td>
+                                <a href="{{ url_for('finance.delete_transaction', id=t.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this transaction?')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">No transactions recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

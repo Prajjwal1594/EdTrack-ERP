@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Library Management{% endblock %}
+{% block page_title %}Library Management{% endblock %}
+{% block content %}
+<div class="row">
+  <!-- Add Book Panel -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header"><i class="fas fa-plus"></i> Add New Book</div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="form-group mb-2">
+            <label>Title</label>
+            <input type="text" name="title" class="form-control" required>
+          </div>
+          <div class="form-group mb-2">
+            <label>Author</label>
+            <input type="text" name="author" class="form-control">
+          </div>
+          <div class="form-group mb-2">
+            <label>ISBN</label>
+            <input type="text" name="isbn" class="form-control">
+          </div>
+          <div class="form-group mb-2">
+            <label>Category</label>
+            <select name="category" class="form-control">
+              <option>Fiction</option>
+              <option>Science</option>
+              <option>Mathematics</option>
+              <option>History</option>
+              <option>Literature</option>
+            </select>
+          </div>
+          <div class="form-group mb-3">
+            <label>Copies Count</label>
+            <input type="number" name="total_copies" class="form-control" value="1" min="1">
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save"></i> Save Book</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book Table -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header"><i class="fas fa-book"></i> Book Catalog</div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Category</th>
+              <th>Available</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for book in books %}
+            <tr>
+              <td><strong>{{ book.title }}</strong><br><small class="text-muted">ISBN: {{ book.isbn or 'N/A' }}</small></td>
+              <td>{{ book.author }}</td>
+              <td><span class="badge bg-purple">{{ book.category }}</span></td>
+              <td>
+                <span class="badge {% if book.available_copies > 0 %}bg-forest{% else %}bg-red{% endif %}">
+                  {{ book.available_copies }} / {{ book.total_copies }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline"><i class="fas fa-exchange-alt"></i> Issue</button>
+                <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">No books have been added yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

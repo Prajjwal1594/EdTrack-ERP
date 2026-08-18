@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Marksheets{% endblock %}
+{% block page_title %}Marksheets{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Marksheets</div>
+    <h1>Marksheets</h1>
+    <p>View your term-wise marks</p>
+  </div>
+  {% if student %}
+  <a href="{{ url_for('reports.report_card', student_id=student.id) }}?pdf=1" class="btn btn-gold"><i class="fas fa-download"></i> Download PDF</a>
+  {% endif %}
+</div>
+
+<!-- Term Filter -->
+<div class="filter-bar">
+  <a href="{{ url_for('student.marksheets') }}" class="btn {{ 'btn-primary' if not selected_term else 'btn-ghost' }} btn-sm">All Terms</a>
+  {% for t in terms %}
+  <a href="{{ url_for('student.marksheets', term_id=t.id) }}" class="btn {{ 'btn-primary' if selected_term == t.id else 'btn-ghost' }} btn-sm">{{ t.name }}</a>
+  {% endfor %}
+</div>
+
+{% if grades %}
+<div class="stat-grid" style="margin-bottom:20px;">
+  <div class="stat-card">
+    <div class="stat-icon gold"><i class="fas fa-chart-line"></i></div>
+    <div class="stat-value">{{ avg_pct }}%</div>
+    <div class="stat-label">Average Score</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-file-lines"></i></div>
+    <div class="stat-value">{{ grades | length }}</div>
+    <div class="stat-label">Total Exams</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-book"></i></div>
+    <div class="stat-value">{{ by_subject | length }}</div>
+    <div class="stat-label">Subjects</div>
+  </div>
+</div>
+
+{% for subj, subj_grades in by_subject.items() %}
+<div class="card mb-16">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-book" style="color:var(--gold);"></i> {{ subj }}</span>
+    <span class="badge badge-neutral">{{ subj_grades | length }} exam{{ 's' if subj_grades | length != 1 else '' }}</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Exam</th><th>Score</th><th>Max</th><th>Percentage</th><th>Grade</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for g in subj_grades %}
+        <tr>
+          <td>{{ g.exam_name }}</td>
+          <td class="font-mono" style="font-weight:600;">{{ g.score }}</td>
+          <td class="text-muted font-mono">{{ g.max_score }}</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="progress" style="width:60px;">
+                <div class="progress-bar {{ 'green' if g.percentage >= 70 else 'orange' if g.percentage >= 40 else 'red' }}" style="width:{{ g.percentage }}%;"></div>
+              </div>
+              <span class="font-mono" style="font-size:13px;">{{ g.percentage }}%</span>
+            </div>
+          </td>
+          <td><span class="grade-{{ g.letter_grade[0] }}">{{ g.letter_grade }}</span></td>
+          <td class="text-muted text-small">{{ g.date.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-file-lines"></i>
+    <p>No marksheet data available{{ ' for this term' if selected_term else '' }}.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

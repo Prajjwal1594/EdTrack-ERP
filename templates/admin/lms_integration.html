@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}LMS Integration{% endblock %}
+{% block page_title %}LMS Integration{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>LMS Data Synchronization</h1>
+    <p>Export standard CSV formats for importing into Canvas, Moodle, or Google Semesterroom.</p>
+  </div>
+</div>
+
+<div class="card mb-24">
+  <div class="card-header"><span class="card-title">Data Exports</span></div>
+  <div class="list-group">
+    <div class="list-item" style="padding: 20px;">
+      <div class="list-item-content">
+        <h3 style="font-size: 16px; margin-bottom: 5px;">Student Roster Export (.csv)</h3>
+        <p class="text-muted">Standardized CSV containing Student IDS, Names, Emails, and Enrollment numbers for bulk uploading to LMS portals.</p>
+      </div>
+      <div>
+        <a href="{{ url_for('admin.lms_export', dataset='students') }}" class="btn btn-primary" target="_blank"><i class="fas fa-file-csv"></i> Download Students</a>
+      </div>
+    </div>
+    
+    <div class="list-item" style="padding: 20px;">
+      <div class="list-item-content">
+        <h3 style="font-size: 16px; margin-bottom: 5px;">Grades & Performance Export (.csv)</h3>
+        <p class="text-muted">Extracts all grades from the current academic term scoped by subject and student.</p>
+      </div>
+      <div>
+        <a href="{{ url_for('admin.lms_export', dataset='grades') }}" class="btn btn-primary" target="_blank"><i class="fas fa-file-csv"></i> Download Grades</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-24">
+  <div class="card-header"><span class="card-title">Data Imports (Beta)</span></div>
+  <div class="card-body">
+    <div class="alert alert-warning">
+      <i class="fas fa-exclamation-triangle"></i> Full-sync automated imports for Canvas API are currently in development. Please use your LMS portal's manual CSV sync approach above.
+    </div>
+  </div>
+</div>
+{% endblock %}

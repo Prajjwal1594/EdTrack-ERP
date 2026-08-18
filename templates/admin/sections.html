@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Sections{% endblock %}
+{% block page_title %}Sections{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Sections</h1></div>
+  <button class="btn btn-gold" onclick="openModal('addSectionModal')"><i class="fas fa-plus"></i> Add Section</button>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Semester</th><th>Section</th><th>Room</th><th>Capacity</th><th>Students</th><th></th></tr></thead>
+      <tbody>
+        {% for s in sections %}
+        <tr>
+          <td>{{ s.semester_.name }}</td>
+          <td><strong>Section {{ s.name }}</strong></td>
+          <td class="text-muted">{{ s.room_number or '—' }}</td>
+          <td>{{ s.capacity }}</td>
+          <td>{{ s.students.count() }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.delete_section', sid=s.id) }}" style="display:inline;">
+              <button class="btn btn-xs btn-danger" data-confirm="Delete this section?" type="submit"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state"><i class="fas fa-door-open"></i><p>No sections yet</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-overlay" id="addSectionModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Section</span><button class="modal-close" onclick="closeModal('addSectionModal')">×</button></div>
+    <form method="POST" action="{{ url_for('admin.add_section') }}">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Semester *</label>
+          <select name="semester_id" class="form-control" required>
+            {% for c in semesters %}<option value="{{ c.id }}">{{ c.name }} ({{ c.academic_year }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Section Name *</label>
+            <input type="text" name="name" class="form-control" placeholder="e.g. A, B, C" required></div>
+          <div class="form-group"><label class="form-label">Room Number</label>
+            <input type="text" name="room_number" class="form-control" placeholder="e.g. 101"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Capacity</label>
+          <input type="number" name="capacity" class="form-control" value="40" min="1"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addSectionModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Section</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Manage Timetable - {{ section.full_name }}{% endblock %}
+{% block page_title %}Manage Schedule: {{ section.full_name }}{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 2fr; gap:20px;">
+  <!-- Add Slot Form -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Add Slot</span></div>
+    <div class="card-body">
+      <form action="{{ url_for('timetable.manage', section_id=section.id) }}" method="POST">
+        <div class="form-group">
+          <label>Day of Week</label>
+          <select name="day" required>
+            {% for day in days %}
+            <option value="{{ day }}">{{ day }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <select name="subject_id" required>
+            {% for s in subjects %}
+            <option value="{{ s.id }}">{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Faculty</label>
+          <select name="faculty_id" required>
+            {% for t in faculty %}
+            <option value="{{ t.id }}">{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label>Start Time</label>
+            <input type="time" name="start_time" required>
+          </div>
+          <div class="form-group">
+            <label>End Time</label>
+            <input type="time" name="end_time" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Room Number</label>
+          <input type="text" name="room_number" placeholder="e.g. 101">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Add to Timetable</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Current Slots -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Current Slots</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Subject</th>
+            <th>Faculty</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for slot in slots %}
+          <tr>
+            <td>{{ slot.day_of_week[:3] }}</td>
+            <td class="text-small">{{ slot.start_time.strftime('%H:%M') }} - {{ slot.end_time.strftime('%H:%M') }}</td>
+            <td><strong>{{ slot.subject.name }}</strong></td>
+            <td>{{ slot.faculty.name }}</td>
+            <td>
+              <form action="{{ url_for('timetable.delete_slot', slot_id=slot.id) }}" method="POST" style="margin:0">
+                <button type="submit" class="btn btn-xs btn-ghost text-red" onclick="return confirm('Delete slot?')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center text-muted">No slots added yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

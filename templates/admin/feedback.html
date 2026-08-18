@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Manage Feedback{% endblock %}
+{% block page_title %}Student Feedback{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.dashboard') }}">Admin</a> / Feedback</div>
+    <h1>Student Feedback</h1>
+  </div>
+  <div class="filter-bar" style="margin:0;">
+    <a href="{{ url_for('admin.feedback_list') }}" class="btn {{ 'btn-primary' if not status_filter else 'btn-ghost' }} btn-sm">All</a>
+    <a href="{{ url_for('admin.feedback_list', status='pending') }}" class="btn {{ 'btn-primary' if status_filter=='pending' else 'btn-ghost' }} btn-sm">Pending</a>
+    <a href="{{ url_for('admin.feedback_list', status='reviewed') }}" class="btn {{ 'btn-primary' if status_filter=='reviewed' else 'btn-ghost' }} btn-sm">Reviewed</a>
+    <a href="{{ url_for('admin.feedback_list', status='resolved') }}" class="btn {{ 'btn-primary' if status_filter=='resolved' else 'btn-ghost' }} btn-sm">Resolved</a>
+  </div>
+</div>
+
+{% for fb in feedbacks %}
+<div class="card mb-16">
+  <div class="card-body">
+    <div style="display:flex; justify-content:space-between; align-items:start;">
+      <div>
+        <div style="font-weight:600;">{{ fb.subject }}</div>
+        <div style="display:flex; gap:6px; margin-top:4px;">
+          <span class="badge badge-neutral">{{ fb.category | capitalize }}</span>
+          <span class="badge badge-{{ 'success' if fb.status=='resolved' else 'warning' if fb.status=='reviewed' else 'neutral' }}">{{ fb.status | capitalize }}</span>
+        </div>
+        <p class="text-muted" style="font-size:13px; margin-top:8px;">{{ fb.body }}</p>
+        <div class="text-muted text-small" style="margin-top:6px;">
+          <i class="fas fa-user"></i> {{ fb.student.user.name if fb.student else 'Unknown' }} · {{ fb.created_at.strftime('%d %b %Y, %I:%M %p') if fb.created_at else '' }}
+        </div>
+      </div>
+    </div>
+    {% if fb.admin_response %}
+    <div style="background:var(--cream); border-radius:6px; padding:10px 14px; margin-top:10px; border-left:3px solid var(--success);">
+      <div class="text-small" style="font-weight:600; color:var(--success);">Response:</div>
+      <p style="font-size:13px; margin-top:4px;">{{ fb.admin_response }}</p>
+    </div>
+    {% endif %}
+    {% if fb.status != 'resolved' %}
+    <form method="POST" action="{{ url_for('admin.respond_feedback', fid=fb.id) }}" style="margin-top:12px; display:flex; gap:8px; align-items:end;">
+      <div style="flex:1;">
+        <input type="text" name="response" class="form-control" placeholder="Write a response..." required style="font-size:13px;">
+      </div>
+      <select name="status" class="form-control" style="width:120px; font-size:13px;">
+        <option value="reviewed">Reviewed</option>
+        <option value="resolved">Resolved</option>
+      </select>
+      <button type="submit" class="btn btn-gold btn-sm"><i class="fas fa-reply"></i> Respond</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-comment-dots"></i><p>No feedback yet.</p></div></div>
+{% endfor %}
+{% endblock %}

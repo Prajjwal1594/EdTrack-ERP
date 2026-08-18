@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Exams{% endblock %}
+{% block page_title %}Exams{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Exam Management</h1></div>
+  <a href="{{ url_for('exams.create_exam') }}" class="btn btn-gold"><i class="fas fa-plus"></i> Create Exam</a>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Title</th><th>Subject</th><th>Section</th><th>Duration</th><th>Start Time</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for e in exams %}
+        <tr>
+          <td>{{ e.title }}</td>
+          <td>{{ e.subject.name }}</td>
+          <td>{{ e.section.full_name if e.section else '—' }}</td>
+          <td>{{ e.duration_minutes }} min</td>
+          <td class="text-muted text-small">{{ e.start_time.strftime('%b %d, %H:%M') if e.start_time else 'Anytime' }}</td>
+          <td>
+            {% if e.is_published %}<span class="badge badge-success">Published</span>
+            {% else %}<span class="badge badge-neutral">Draft</span>{% endif %}
+          </td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('exams.edit_exam', eid=e.id) }}" class="btn btn-xs btn-outline">Edit</a>
+              <a href="{{ url_for('exams.exam_results', eid=e.id) }}" class="btn btn-xs btn-ghost">Results</a>
+              <form method="POST" action="{{ url_for('exams.delete_exam', eid=e.id) }}" style="display:inline;">
+                <button class="btn btn-xs btn-danger" data-confirm="Delete this exam?" type="submit"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state"><i class="fas fa-pen-to-square"></i><p>No exams yet. Create your first one!</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

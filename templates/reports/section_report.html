@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Section Report{% endblock %}
+{% block page_title %}Section Report{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>{{ section.full_name }} — Performance Report</h1></div>
+  <form method="GET" style="display:flex; gap:8px;">
+    <select name="term_id" class="form-control" onchange="this.form.submit()">
+      {% for t in terms %}<option value="{{ t.id }}" {% if t.id == selected_term_id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Rank</th><th>Student</th><th>Average</th><th>Attendance</th><th>Assessments</th><th></th></tr></thead>
+      <tbody>
+        {% for d in student_data %}
+        <tr>
+          <td><strong class="text-muted">#{{ loop.index }}</strong></td>
+          <td>{{ d.student.user.name }}</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="progress" style="width:80px;"><div class="progress-bar {{ 'green' if d.average >= 70 else 'orange' if d.average >= 40 else 'red' }}" style="width:{{ d.average }}%"></div></div>
+              <span class="font-mono">{{ d.average }}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="{{ 'grade-A' if d.att_pct >= 80 else 'grade-C' if d.att_pct >= 60 else 'grade-F' }}">{{ d.att_pct }}%</span>
+          </td>
+          <td class="text-muted">{{ d.grade_count }}</td>
+          <td>
+            <a href="{{ url_for('reports.report_card', student_id=d.student.id) }}" class="btn btn-xs btn-outline">Grade Sheet</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

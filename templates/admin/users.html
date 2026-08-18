@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Users</h1>
+    <p>{{ users | length }} user{{ 's' if users | length != 1 }}</p>
+  </div>
+  <div style="display:flex; gap:10px;">
+    <a href="{{ url_for('admin.upload_users') }}" class="btn btn-outline"><i class="fas fa-file-excel"></i> Upload Users (CSV/Excel)</a>
+    <a href="{{ url_for('admin.add_user') }}" class="btn btn-gold"><i class="fas fa-user-plus"></i> Add User</a>
+  </div>
+</div>
+
+<div class="filter-bar">
+  {% for role in ['', 'admin', 'faculty', 'student', 'parent'] %}
+  <a href="{{ url_for('admin.users', role=role) }}"
+     class="btn btn-sm {{ 'btn-primary' if role_filter == role else 'btn-ghost' }}">
+    {{ role | title if role else 'All' }}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Academic Details</th><th>Phone</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="user-avatar" style="width:32px; height:32px; font-size:12px; background:var(--forest-light);">{{ u.name[0] }}</div>
+              <div>
+                <strong>{{ u.name }}</strong>
+                {% if u.role == 'student' and u.student_profile %}
+                  <div class="text-muted text-small">{{ u.student_profile.enrollment_number or '—' }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td class="text-muted text-small">{{ u.email }}</td>
+          <td><span class="badge badge-{{ 'gold' if u.role == 'admin' else 'info' if u.role == 'faculty' else 'success' if u.role == 'student' else 'neutral' }}">{{ u.role }}</span></td>
+          <td class="text-muted text-small">
+            {% if u.role == 'student' and u.student_profile %}
+              {% set st = u.student_profile %}
+              <div><strong>{{ st.course_name }}</strong> {% if st.stream_name != 'N/A' %} - {{ st.stream_name }}{% endif %}</div>
+              <div style="font-size:11px; color:var(--ink-light);">Batch: {{ st.batch_name }} | Sec: {{ st.section_name }}</div>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td class="text-muted text-small">{{ u.phone or '—' }}</td>
+          <td><span class="badge {{ 'badge-success' if u.is_active else 'badge-danger' }}">{{ 'Active' if u.is_active else 'Inactive' }}</span></td>
+          <td class="text-muted text-small">{{ u.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{{ url_for('admin.edit_user', uid=u.id) }}" class="btn btn-xs btn-outline"><i class="fas fa-pen"></i></a>
+              {% if u.role == 'student' and u.student_profile %}
+              <a href="{{ url_for('admin.edit_erp_profile', uid=u.id) }}" class="btn btn-xs btn-outline" title="Edit ERP Profile"><i class="fas fa-id-card"></i> ERP</a>
+              <a href="{{ url_for('reports.report_card', student_id=u.student_profile.id) }}" class="btn btn-xs btn-ghost" title="Grade Sheet"><i class="fas fa-file-alt"></i></a>
+              {% endif %}
+              {% if u.id != current_user.id %}
+              <form method="POST" action="{{ url_for('admin.delete_user', uid=u.id) }}" style="display:inline;">
+                <button class="btn btn-xs btn-danger" data-confirm="Deactivate {{ u.name }}?" type="submit"><i class="fas fa-ban"></i></button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No users found</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

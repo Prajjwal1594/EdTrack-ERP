@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ student.user.name }}{% endblock %}
+{% block page_title %}Student Detail{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>{{ student.user.name }}</h1>
+    <p>{{ student.section.full_name if student.section else '—' }} · {{ student.enrollment_number }}</p>
+  </div>
+  <div class="flex gap-8">
+    <a href="{{ url_for('reports.report_card', student_id=student.id) }}" class="btn btn-gold"><i class="fas fa-file-alt"></i> Grade Sheet</a>
+    <a href="{{ url_for('messages.compose') }}?to={{ student.user_id }}" class="btn btn-outline"><i class="fas fa-envelope"></i> Message</a>
+  </div>
+</div>
+<div style="display:grid; grid-template-columns:2fr 1fr; gap:20px;">
+  <div>
+    <div class="card mb-16">
+      <div class="card-header"><span class="card-title">Recent Grades</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Subject</th><th>Exam</th><th>Score</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for g in grades[:15] %}
+            <tr>
+              <td>{{ g.subject.name }}</td>
+              <td>{{ g.exam_name }}</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div class="progress" style="width:60px;"><div class="progress-bar {{ 'green' if g.percentage >= 70 else 'orange' if g.percentage >= 40 else 'red' }}" style="width:{{ g.percentage }}%"></div></div>
+                  <span class="grade-{{ g.letter_grade[0] }}">{{ g.letter_grade }} ({{ g.percentage }}%)</span>
+                </div>
+              </td>
+              <td class="text-muted text-small">{{ g.date.strftime('%b %d') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted text-center" style="padding:20px">No grades</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Attendance</span></div>
+      <div class="card-body" style="text-align:center;">
+        <div style="font-size:48px; font-weight:800; font-family:'DM Mono',monospace; color:{{ 'var(--success)' if att_pct >= 80 else 'var(--warning)' if att_pct >= 60 else 'var(--danger)' }};">{{ att_pct }}%</div>
+        <div class="text-muted text-small">{{ total_att }} total college days</div>
+      </div>
+      <div style="padding:0 0 12px;">
+        {% for r in attendance %}
+        <div style="display:flex; justify-content:space-between; padding:6px 18px; font-size:12px; border-top:1px solid var(--border);">
+          <span>{{ r.date.strftime('%b %d') }}</span>
+          <span class="badge badge-{{ 'success' if r.status == 'present' else 'danger' if r.status == 'absent' else 'warning' }}" style="font-size:10px;">{{ r.status }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

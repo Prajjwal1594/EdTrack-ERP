@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Inbox{% endblock %}
+{% block page_title %}Messages{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Inbox</h1></div>
+  <a href="{{ url_for('messages.compose') }}" class="btn btn-gold"><i class="fas fa-pen"></i> Compose</a>
+</div>
+
+<div style="display:flex; gap:8px; margin-bottom:20px;">
+  <a href="{{ url_for('messages.inbox') }}" class="btn {% if request.endpoint == 'messages.inbox' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm"><i class="fas fa-inbox"></i> Inbox</a>
+  <a href="{{ url_for('messages.sent') }}" class="btn {% if request.endpoint == 'messages.sent' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm"><i class="fas fa-paper-plane"></i> Sent</a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>From</th><th>Subject</th><th>Date</th><th></th></tr></thead>
+      <tbody>
+        {% for msg in messages %}
+        <tr style="{{ 'font-weight:600; background:#f5faf7;' if not msg.read_at and msg.recipient_id == current_user.id }}">
+          <td>
+            {% if not msg.read_at and msg.recipient_id == current_user.id %}
+            <span style="width:8px; height:8px; background:var(--forest); border-radius:50%; display:inline-block; margin-right:6px;"></span>
+            {% endif %}
+            {{ msg.sender.name }}
+          </td>
+          <td>{{ msg.subject }}</td>
+          <td class="text-muted text-small">{{ msg.sent_at.strftime('%b %d, %Y %H:%M') }}</td>
+          <td>
+            <a href="{{ url_for('messages.view_message', mid=msg.id) }}" class="btn btn-xs btn-outline">Read</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty-state"><i class="fas fa-inbox"></i><p>Your inbox is empty</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

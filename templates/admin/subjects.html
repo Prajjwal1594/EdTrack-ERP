@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Subjects{% endblock %}
+{% block page_title %}Subjects{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Subjects</h1></div>
+  <button class="btn btn-gold" onclick="openModal('addSubjectModal')"><i class="fas fa-plus"></i> Add Subject</button>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subject Name</th><th>Code</th><th>Faculty</th><th></th></tr></thead>
+      <tbody>
+        {% for s in subjects %}
+        <tr>
+          <td>{{ s.name }}</td>
+          <td class="font-mono text-muted">{{ s.code or '—' }}</td>
+          <td>{{ s.faculty_assignments | length }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.delete_subject', sid=s.id) }}" style="display:inline;">
+              <button class="btn btn-xs btn-danger" data-confirm="Delete {{ s.name }}?" type="submit"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty-state"><i class="fas fa-book"></i><p>No subjects yet</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-overlay" id="addSubjectModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Subject</span><button class="modal-close" onclick="closeModal('addSubjectModal')">×</button></div>
+    <form method="POST" action="{{ url_for('admin.add_subject') }}">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Subject Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Mathematics" required></div>
+        <div class="form-group"><label class="form-label">Subject Code</label>
+          <input type="text" name="code" class="form-control" placeholder="e.g. MATH" maxlength="10"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addSubjectModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Subject</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

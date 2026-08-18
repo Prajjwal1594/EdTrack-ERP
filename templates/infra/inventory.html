@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Inventory{% endblock %}
+{% block page_title %}Inventory & Stock Management{% endblock %}
+{% block content %}
+<div class="row">
+  <!-- Stock Intake Panel -->
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-header bg-primary text-white"><i class="fas fa-plus-circle"></i> Add Stock Item</div>
+      <div class="card-body">
+        <form method="POST">
+          <input type="hidden" name="action" value="add_item">
+          <div class="form-group mb-2">
+            <label>Item Name</label>
+            <input type="text" name="name" class="form-control" placeholder="e.g. A4 Paper Rim" required>
+          </div>
+          <div class="form-group mb-2">
+            <label>Category</label>
+            <select name="category_id" class="form-select" required>
+              <option value="">-- Select Category --</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-row mb-2 d-flex gap-2">
+            <div class="form-group mb-0 flex-fill">
+              <label>Current Qty</label>
+              <input type="number" name="quantity" class="form-control" value="0">
+            </div>
+            <div class="form-group mb-0 flex-fill">
+              <label>Unit Price (₹)</label>
+              <input type="number" step="0.01" name="unit_price" class="form-control" value="0">
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label>Low Stock Alert Level</label>
+            <input type="number" name="reorder_level" class="form-control" value="5">
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save"></i> Register Item</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header bg-secondary text-white"><i class="fas fa-tags"></i> Manage Categories</div>
+      <div class="card-body">
+        <form method="POST">
+          <input type="hidden" name="action" value="add_category">
+          <div class="input-group">
+            <input type="text" name="category_name" class="form-control" placeholder="New Category" required>
+            <button class="btn btn-outline-secondary" type="submit">Add</button>
+          </div>
+        </form>
+        <div class="mt-3">
+            {% for cat in categories %}
+            <span class="badge bg-light text-dark border mb-1">{{ cat.name }}</span>
+            {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Table -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-boxes-stacked"></i> Current Inventory</span>
+          <span class="badge bg-info">{{ items|length }} Items Total</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Item & Category</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Total Value</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr class="{% if item.quantity <= item.reorder_level %}table-warning{% endif %}">
+              <td>
+                  <strong>{{ item.name }}</strong><br>
+                  <small class="text-muted">{{ item.category.name if item.category else 'Uncategorized' }}</small>
+              </td>
+              <td>{{ item.quantity }} units</td>
+              <td>₹{{ "%.2f"|format(item.unit_price) }}</td>
+              <td>₹{{ "%.2f"|format(item.quantity * item.unit_price) }}</td>
+              <td>
+                {% if item.quantity <= 0 %}
+                  <span class="badge bg-danger">Out of Stock</span>
+                {% elif item.quantity <= item.reorder_level %}
+                  <span class="badge bg-warning text-dark">Low Stock</span>
+                {% else %}
+                  <span class="badge bg-success">In Stock</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ item.id }}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <a href="{{ url_for('infra.delete_inventory', id=item.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this item?')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+
+                <!-- Edit Modal -->
+                <div class="modal fade" id="editModal{{ item.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form action="{{ url_for('infra.edit_inventory', id=item.id) }}" method="POST">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Item: {{ item.name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Item Name</label>
+                                        <input type="text" name="name" class="form-control" value="{{ item.name }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Category</label>
+                                        <select name="category_id" class="form-select" required>
+                                            {% for cat in categories %}
+                                            <option value="{{ cat.id }}" {% if item.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col">
+                                            <label class="form-label">Quantity</label>
+                                            <input type="number" name="quantity" class="form-control" value="{{ item.quantity }}" required>
+                                        </div>
+                                        <div class="col">
+                                            <label class="form-label">Unit Price (₹)</label>
+                                            <input type="number" step="0.01" name="unit_price" class="form-control" value="{{ item.unit_price }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Low Stock Alert Level</label>
+                                        <input type="number" name="reorder_level" class="form-control" value="{{ item.reorder_level }}" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">Inventory list is empty.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

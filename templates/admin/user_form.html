@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if user else 'Add' }} User{% endblock %}
+{% block page_title %}{{ 'Edit' if user else 'Add' }} User{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('admin.users') }}">Users</a> / {{ 'Edit ' + user.name if user else 'Add New User' }}</div>
+    <h1>{{ 'Edit User' if user else 'Add New User' }}</h1>
+  </div>
+  <a href="{{ url_for('admin.users') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card" style="max-width:700px;">
+  <div class="card-header"><span class="card-title">{{ 'Edit' if user else 'New' }} User Details</span></div>
+  <form method="POST" action="{{ url_for('admin.edit_user', uid=user.id) if user else url_for('admin.add_user') }}">
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" name="name" class="form-control" value="{{ user.name if user else '' }}" required placeholder="e.g. John Smith">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" name="email" class="form-control" value="{{ user.email if user else '' }}" required placeholder="user@gmail.com" {% if user %}disabled{% endif %}>
+        </div>
+      </div>
+      {% if not user %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Role *</label>
+          <select name="role" class="form-control" required id="roleSelect" onchange="toggleStudentFields(this.value)">
+            <option value="">-- Select Role --</option>
+             {% for r in ['admin','hr','faculty','student','parent'] %}
+            <option value="{{ r }}">{{ r | title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Initial Password</label>
+          <input type="text" name="password" class="form-control" value="ChangeMe123!" placeholder="Default password">
+        </div>
+      </div>
+      <div id="studentFields" style="display:none;">
+        <hr class="divider">
+        <h4 style="font-size:14px; font-weight:600; color:var(--forest); margin-bottom:14px;"><i class="fas fa-user-graduate"></i> Academic Hierarchy & Details</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Course</label>
+            <select name="course_id" class="form-control">
+              <option value="">— Select Course —</option>
+              {% for c in courses %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stream / Branch</label>
+            <select name="stream_id" class="form-control">
+              <option value="">— Select Stream —</option>
+              {% for str in streams %}
+              <option value="{{ str.id }}">{{ str.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Batch</label>
+            <select name="batch_id" class="form-control">
+              <option value="">— Select Batch —</option>
+              {% for b in batches %}
+              <option value="{{ b.id }}">{{ b.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Section</label>
+            <select name="section_id" class="form-control">
+              <option value="">— Select Section —</option>
+              {% for s in sections %}
+              <option value="{{ s.id }}">{{ s.full_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Enrollment Number</label>
+            <input type="text" name="enrollment_number" class="form-control" placeholder="Auto-generated if blank">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" name="date_of_birth" class="form-control">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-control">
+              <option value="">— Select —</option>
+              <option>Male</option><option>Female</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="text" name="phone" class="form-control" value="{{ user.phone if user else '' }}" placeholder="+1 (555) 0000">
+      </div>
+      {% if user %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">New Password <span class="text-muted text-small">(leave blank to keep current)</span></label>
+          <input type="password" name="new_password" class="form-control" placeholder="New password..." minlength="8">
+        </div>
+      </div>
+      {% if user.role == 'student' and user.student_profile %}
+      <hr class="divider">
+      <h4 style="font-size:14px; font-weight:600; color:var(--forest); margin-bottom:14px;"><i class="fas fa-user-graduate"></i> Edit Student Academic Tagging</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Course</label>
+          <select name="course_id" class="form-control">
+            <option value="">— Select Course —</option>
+            {% for c in courses %}
+            <option value="{{ c.id }}" {% if user.student_profile.course_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stream / Branch</label>
+          <select name="stream_id" class="form-control">
+            <option value="">— Select Stream —</option>
+            {% for str in streams %}
+            <option value="{{ str.id }}" {% if user.student_profile.stream_id == str.id %}selected{% endif %}>{{ str.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Batch</label>
+          <select name="batch_id" class="form-control">
+            <option value="">— Select Batch —</option>
+            {% for b in batches %}
+            <option value="{{ b.id }}" {% if user.student_profile.batch_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Section</label>
+          <select name="section_id" class="form-control">
+            <option value="">— Select Section —</option>
+            {% for s in sections %}
+            <option value="{{ s.id }}" {% if user.student_profile.section_id == s.id %}selected{% endif %}>{{ s.full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% endif %}
+      <div class="form-group" style="margin-top:10px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px;">
+          <input type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %} style="width:16px; height:16px;">
+          Account is active
+        </label>
+      </div>
+      {% endif %}
+    </div>
+    <div class="modal-footer">
+      <a href="{{ url_for('admin.users') }}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Save Changes' if user else 'Create User' }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function toggleStudentFields(role) {
+  document.getElementById('studentFields').style.display = role === 'student' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

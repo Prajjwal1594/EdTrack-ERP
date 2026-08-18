@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 20mm; }
+  body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1f2937; margin: 0; padding: 0; }
+  .header { border-bottom: 2px solid #b18b45; padding-bottom: 20px; margin-bottom: 30px; text-align: center; }
+  .logo-text { font-size: 28px; font-weight: 700; color: #1e3a5f; margin: 0; letter-spacing: -0.5px; }
+  .college-tagline { font-size: 14px; color: #6b7280; margin-top: 5px; }
+  .receipt-title { font-size: 22px; font-weight: 600; color: #1e3a5f; text-align: center; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase; }
+  
+  .info-grid { display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 40px; }
+  .info-box { width: 48%; margin-bottom: 15px; }
+  .info-label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .info-value { font-size: 15px; font-weight: 500; color: #111827; }
+  
+  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+  th { background-color: #f3f4f6; color: #374151; font-weight: 600; text-align: left; padding: 12px 15px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb; }
+  td { padding: 15px; border-bottom: 1px solid #e5e7eb; font-size: 15px; color: #1f2937; }
+  
+  .total-row { border-top: 2px solid #1e3a5f; }
+  .total-row td { font-weight: 700; font-size: 18px; color: #1e3a5f; }
+  
+  .footer { margin-top: 50px; text-align: center; font-size: 13px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+  
+  .status-badge { display: inline-block; padding: 6px 12px; background-color: #10b981; color: white; border-radius: 4px; font-weight: 600; font-size: 13px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1 class="logo-text">El'Wood International University</h1>
+  <div class="college-tagline">Excellence in Education</div>
+</div>
+
+<div class="receipt-title">Official Fee Receipt</div>
+
+<div class="info-grid">
+  <div class="info-box">
+    <div class="info-label">Receipt Number</div>
+    <div class="info-value">#RCPT-{{ "%05d" | format(payment.id) }}</div>
+  </div>
+  <div class="info-box" style="text-align: right;">
+    <div class="info-label">Payment Date</div>
+    <div class="info-value">{{ payment.paid_at.strftime('%B %d, %Y') if payment.paid_at else today.strftime('%B %d, %Y') }}</div>
+  </div>
+  
+  <div class="info-box">
+    <div class="info-label">Student Name</div>
+    <div class="info-value">{{ payment.student.user.name }}</div>
+  </div>
+  <div class="info-box" style="text-align: right;">
+    <div class="info-label">Enrollment No.</div>
+    <div class="info-value">{{ payment.student.enrollment_number }}</div>
+  </div>
+  
+  <div class="info-box">
+    <div class="info-label">Semester / Section</div>
+    <div class="info-value">{{ payment.student.section.full_name if payment.student.section else 'N/A' }}</div>
+  </div>
+  <div class="info-box" style="text-align: right;">
+    <div class="info-label">Academic Term</div>
+    <div class="info-value">{{ payment.term.name if payment.term else 'Whole Year' }}</div>
+  </div>
+  
+  <div class="info-box">
+    <div class="info-label">Payment Method</div>
+    <div class="info-value" style="text-transform: capitalize;">{{ payment.payment_method }}</div>
+  </div>
+  <div class="info-box" style="text-align: right;">
+    <div class="info-label">Transaction Ref</div>
+    <div class="info-value">{{ payment.transaction_ref or 'N/A' }}</div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th style="text-align: right;">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <strong>{{ payment.fee_type.name }}</strong>
+        {% if payment.notes %}
+        <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">{{ payment.notes }}</div>
+        {% endif %}
+      </td>
+      <td style="text-align: right;">${{ "%.2f"|format(payment.amount) }}</td>
+    </tr>
+    <tr class="total-row">
+      <td style="text-align: right;">Total Paid</td>
+      <td style="text-align: right;">${{ "%.2f"|format(payment.amount) }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px;">
+  <div>
+    <div class="status-badge">Payment Successful</div>
+  </div>
+  <div style="text-align: center; width: 200px;">
+    <div style="border-bottom: 1px solid #111827; height: 40px; margin-bottom: 5px;"></div>
+    <div class="info-label">Authorized Signature</div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Thank you for your payment!</p>
+  <p>El'Wood International University • 123 Education Lane • info@gmail.com • (555) 123-4567</p>
+  <p style="margin-top: 10px; font-size: 11px; color: #9ca3af;">Generated on {{ today.strftime('%Y-%m-%d') }}</p>
+</div>
+
+</body>
+</html>

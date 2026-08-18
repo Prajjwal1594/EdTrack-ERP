@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Grades{% endblock %}
+{% block page_title %}Grade Management{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Grade Management</h1></div>
+  <button class="btn btn-gold" onclick="openModal('addGradeModal')"><i class="fas fa-plus"></i> Add Grade</button>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" style="display:flex; gap:10px; flex-wrap:wrap;">
+    <select name="ta_id" class="form-control" onchange="this.form.submit()">
+      <option value="">Select Subject/Section</option>
+      {% for ta in ta_list %}
+      <option value="{{ ta.id }}" {% if ta.id == selected_ta_id %}selected{% endif %}>{{ ta.subject.name }} — {{ ta.section.full_name }}</option>
+      {% endfor %}
+    </select>
+    <select name="term_id" class="form-control" onchange="this.form.submit()">
+      <option value="">All Terms</option>
+      {% for t in terms %}
+      <option value="{{ t.id }}" {% if t.id == selected_term_id %}selected{% endif %}>{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">{{ selected_ta.subject.name ~ ' — ' ~ selected_ta.section.full_name if selected_ta else 'All Grades' }}</span>
+    <span class="text-muted text-small">{{ grades | length }} records</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Exam/Test</th><th>Score</th><th>Grade</th><th>Date</th><th>Remarks</th><th></th></tr></thead>
+      <tbody>
+        {% for g in grades %}
+        <tr>
+          <td>{{ g.student.user.name }}</td>
+          <td>{{ g.exam_name }}</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="progress" style="width:70px;"><div class="progress-bar {{ 'green' if g.percentage >= 70 else 'orange' if g.percentage >= 40 else 'red' }}" style="width:{{ g.percentage }}%"></div></div>
+              <span class="font-mono">{{ g.percentage }}%</span>
+            </div>
+          </td>
+          <td><span class="grade-{{ g.letter_grade[0] }}">{{ g.letter_grade }}</span></td>
+          <td class="text-muted text-small">{{ g.date.strftime('%b %d, %Y') }}</td>
+          <td class="text-muted text-small">{{ g.remarks or '—' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('faculty.delete_grade', gid=g.id) }}" style="display:inline;">
+              <button type="submit" class="btn btn-xs btn-danger" data-confirm="Delete this grade?"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state"><i class="fas fa-star"></i><p>Select a subject/section to view grades</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Grade Modal -->
+<div class="modal-overlay" id="addGradeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add Grade</span>
+      <button class="modal-close" onclick="closeModal('addGradeModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('faculty.add_grade') }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Subject / Section</label>
+          <select name="ta_id" class="form-control" id="ta_select" onchange="updateStudents(this.value)" required>
+            <option value="">-- Select --</option>
+            {% for ta in ta_list %}
+            <option value="{{ ta.id }}" data-subject="{{ ta.subject_id }}" data-section="{{ ta.section_id }}">{{ ta.subject.name }} — {{ ta.section.full_name }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="subject_id" id="subject_id_field">
+          <input type="hidden" name="section_id" id="section_id_field">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student</label>
+          <select name="student_id" class="form-control" id="student_select" required>
+            <option value="">-- Select subject first --</option>
+            {% for s in students %}
+            <option value="{{ s.id }}" data-section="{{ s.section_id }}">{{ s.user.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Term</label>
+          <select name="term_id" class="form-control" required>
+            {% for t in terms %}
+            <option value="{{ t.id }}" {% if active_term and t.id == active_term.id %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Exam / Test Name</label>
+            <input type="text" name="exam_name" class="form-control" placeholder="e.g. Mid-Term Exam" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control" value="{{ today.isoformat() if today else '' }}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Score</label>
+            <input type="number" name="score" class="form-control" min="0" max="100" step="0.5" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Score</label>
+            <input type="number" name="max_score" class="form-control" value="100" min="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Remarks (optional)</label>
+          <input type="text" name="remarks" class="form-control" placeholder="e.g. Good improvement">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addGradeModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Grade</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function updateStudents(taId) {
+  if (!taId) return;
+  const opt = document.querySelector(`#ta_select option[value="${taId}"]`);
+  const sectionId = opt ? opt.dataset.section : null;
+  const subjectId = opt ? opt.dataset.subject : null;
+  document.getElementById('subject_id_field').value = subjectId || '';
+  document.getElementById('section_id_field').value = sectionId || '';
+
+  const sel = document.getElementById('student_select');
+  sel.innerHTML = '<option value="">-- Select student --</option>';
+  document.querySelectorAll('#student_select_source option').forEach(o => {
+    if (!sectionId || o.dataset.section == sectionId) {
+      sel.appendChild(o.cloneNode(true));
+    }
+  });
+}
+// Clone student options to hidden source
+const src = document.createElement('select');
+src.id = 'student_select_source';
+src.style.display = 'none';
+document.getElementById('student_select').querySelectorAll('option').forEach(o => src.appendChild(o.cloneNode(true)));
+document.body.appendChild(src);
+</script>
+{% endblock %}

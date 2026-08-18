@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}CRM Enquiries{% endblock %}
+{% block page_title %}CRM Enquiries{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Admissions Leads (Enquiries)</h1>
+    <p>Manage prospective student leads and follow-ups.</p>
+  </div>
+  <div class="page-header-right">
+    <button class="btn btn-primary"><i class="fas fa-plus"></i> Manual Entry</button>
+    <a href="{{ url_for('admissions.public_inquire', college_id=current_user.college_id) }}" target="_blank" class="btn btn-outline"><i class="fas fa-external-link-alt"></i> Public Form</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table p-4">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Student Name</th>
+          <th>Parent Name</th>
+          <th>Target Semester</th>
+          <th>Contact</th>
+          <th>Source</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for enq in enquiries %}
+        <tr>
+          <td class="text-muted" style="white-space: nowrap;">{{ enq.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td><strong>{{ enq.student_name }}</strong></td>
+          <td>{{ enq.parent_name or '-' }}</td>
+          <td><span class="badge bg-purple">{{ enq.target_class or 'N/A' }}</span></td>
+          <td>
+            <div style="font-size: 13px;">
+              <i class="fas fa-phone fa-fw text-muted"></i> {{ enq.phone }}<br>
+              {% if enq.email %}<i class="fas fa-envelope fa-fw text-muted"></i> {{ enq.email }}{% endif %}
+            </div>
+          </td>
+          <td>{{ enq.source or 'Unknown' }}</td>
+          <td>
+            {% if enq.status == 'New' %}
+              <span class="badge bg-gold" style="color: black;"><i class="fas fa-sparkles"></i> New</span>
+            {% elif enq.status == 'Follow-up' %}
+              <span class="badge bg-blue">Follow-up</span>
+            {% elif enq.status == 'Registered' %}
+              <span class="badge bg-forest">Registered</span>
+            {% else %}
+              <span class="badge bg-red">Closed</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('admissions.update_enquiry_status', eid=enq.id) }}" style="display:inline-block;">
+              <select name="status" class="form-control" style="width: 120px; display:inline-block; height:32px; font-size:13px; padding:2px;" onchange="this.form.submit()">
+                <option value="New" {% if enq.status == 'New' %}selected{% endif %}>New</option>
+                <option value="Follow-up" {% if enq.status == 'Follow-up' %}selected{% endif %}>Follow-up</option>
+                <option value="Registered" {% if enq.status == 'Registered' %}selected{% endif %}>Registered</option>
+                <option value="Closed" {% if enq.status == 'Closed' %}selected{% endif %}>Closed</option>
+              </select>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3" style="color: var(--border-color);"></i>
+            <p>No admission enquiries found.</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

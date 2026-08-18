@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Edit Exam{% endblock %}
+{% block page_title %}Edit Exam{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('exams.index') }}">Exams</a> / Edit</div>
+    <h1>{{ exam.title }}</h1>
+    <p>{{ exam.subject.name }} · {{ exam.duration_minutes }} min · {{ exam.total_marks | int }} marks</p>
+  </div>
+  <div class="flex gap-8">
+    <form method="POST" action="{{ url_for('exams.edit_exam', eid=exam.id) }}" style="display:inline;">
+      <input type="hidden" name="action" value="{{ 'unpublish' if exam.is_published else 'publish' }}">
+      <button class="btn {{ 'btn-danger' if exam.is_published else 'btn-gold' }}" type="submit">
+        <i class="fas fa-{{ 'eye-slash' if exam.is_published else 'eye' }}"></i>
+        {{ 'Unpublish' if exam.is_published else 'Publish Exam' }}
+      </button>
+    </form>
+    <a href="{{ url_for('exams.exam_results', eid=exam.id) }}" class="btn btn-outline">View Results</a>
+  </div>
+</div>
+<div style="display:grid; grid-template-columns:2fr 1fr; gap:20px;">
+  <div>
+    <div class="card mb-16">
+      <div class="card-header"><span class="card-title">Questions ({{ questions | length }})</span></div>
+      {% for q in questions %}
+      <div style="padding:16px 22px; border-bottom:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:start; gap:12px;">
+          <div style="flex:1;">
+            <div style="font-size:13px; font-weight:600; margin-bottom:4px;">
+              <span class="badge badge-gold" style="margin-right:6px;">Q{{ loop.index }}</span>
+              {{ q.question_text }}
+            </div>
+            <div class="text-muted text-small">
+              Type: {{ q.question_type | replace('_',' ') | title }} · {{ q.marks | int }} mark{{ 's' if q.marks != 1 }}
+              {% if q.correct_answer %} · Correct: <strong>{{ q.correct_answer }}</strong>{% endif %}
+            </div>
+            {% if q.options %}
+            <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">
+              {% for opt in q.options %}<span class="badge badge-neutral">{{ opt }}</span>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <form method="POST" action="{{ url_for('exams.delete_question', qid=q.id) }}" style="display:inline;">
+            <button class="btn btn-xs btn-danger" data-confirm="Delete this question?" type="submit"><i class="fas fa-trash"></i></button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-question-circle"></i><p>No questions yet. Add your first question →</p></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Add Question</span></div>
+      <form method="POST" action="{{ url_for('exams.edit_exam', eid=exam.id) }}">
+        <input type="hidden" name="action" value="add_question">
+        <div class="card-body">
+          <div class="form-group"><label class="form-label">Question *</label>
+            <textarea name="question_text" class="form-control" rows="3" required placeholder="Enter the question..."></textarea></div>
+          <div class="form-group"><label class="form-label">Type</label>
+            <select name="question_type" class="form-control" id="qtype" onchange="toggleOptions(this.value)">
+              <option value="mcq">Multiple Choice</option>
+              <option value="true_false">True / False</option>
+              <option value="short_answer">Short Answer</option>
+            </select></div>
+          <div id="optionsDiv" class="form-group">
+            <label class="form-label">Options (one per line)</label>
+            <textarea name="options[]" class="form-control" rows="4" placeholder="Option A&#10;Option B&#10;Option C&#10;Option D" id="optionsField"></textarea>
+          </div>
+          <div class="form-group"><label class="form-label">Correct Answer</label>
+            <input type="text" name="correct_answer" class="form-control" placeholder="e.g. Option A or True"></div>
+          <div class="form-group"><label class="form-label">Marks</label>
+            <input type="number" name="marks" class="form-control" value="1" min="0.5" step="0.5"></div>
+          <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-plus"></i> Add Question</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function toggleOptions(type) {
+  document.getElementById('optionsDiv').style.display = type === 'mcq' ? 'block' : 'none';
+  if (type === 'true_false') {
+    document.querySelector('[name="correct_answer"]').placeholder = 'True or False';
+  } else {
+    document.querySelector('[name="correct_answer"]').placeholder = 'e.g. Option A';
+  }
+}
+// Override options[] to split by newlines
+document.querySelector('form').addEventListener('submit', function(e) {
+  const ta = document.getElementById('optionsField');
+  if (ta && document.getElementById('qtype').value === 'mcq') {
+    const lines = ta.value.split('\n').filter(l => l.trim());
+    // Remove the textarea, add individual inputs
+    ta.parentNode.querySelectorAll('input[name="options[]"]').forEach(i => i.remove());
+    lines.forEach(line => {
+      const inp = document.createElement('input');
+      inp.type = 'hidden'; inp.name = 'options[]'; inp.value = line.trim();
+      ta.parentNode.appendChild(inp);
+    });
+  }
+});
+</script>
+{% endblock %}

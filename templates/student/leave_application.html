@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Leave Application{% endblock %}
+{% block page_title %}OD / Leave Application{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Leave Application</div>
+    <h1>OD / Leave Application</h1>
+    <p>Apply for on-duty or leave</p>
+  </div>
+  <button class="btn btn-gold" onclick="openModal('leave-modal')"><i class="fas fa-plus"></i> New Application</button>
+</div>
+
+{% if applications %}
+<div style="display:flex; flex-direction:column; gap:12px;">
+  {% for app in applications %}
+  <div class="card" style="border-left:4px solid {{ 'var(--success)' if app.status=='approved' else 'var(--danger)' if app.status=='rejected' else 'var(--warning)' }};">
+    <div class="card-body">
+      <div style="display:flex; justify-content:space-between; align-items:start;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="badge badge-{{ 'gold' if app.leave_type=='od' else 'info' if app.leave_type=='sick' else 'neutral' }}">
+              {{ app.leave_type.upper() if app.leave_type == 'od' else app.leave_type | capitalize }}
+            </span>
+            <span style="font-weight:600; font-size:14px;">{{ app.duration_days }} day{{ 's' if app.duration_days != 1 else '' }}</span>
+          </div>
+          <div style="font-size:13px; color:var(--ink-mid); margin-top:6px;">
+            <i class="fas fa-calendar"></i> {{ app.from_date.strftime('%d %b %Y') }} — {{ app.to_date.strftime('%d %b %Y') }}
+          </div>
+          <p style="font-size:13px; color:var(--ink-mid); margin-top:6px;">{{ app.reason }}</p>
+          {% if app.admin_remarks %}
+          <div style="background:var(--cream); border-radius:6px; padding:8px 12px; margin-top:8px;">
+            <div style="font-size:11px; font-weight:600; color:var(--ink-light);">Admin Remarks:</div>
+            <div style="font-size:13px;">{{ app.admin_remarks }}</div>
+          </div>
+          {% endif %}
+        </div>
+        <div style="text-align:right;">
+          <span class="badge badge-{{ 'success' if app.status=='approved' else 'danger' if app.status=='rejected' else 'warning' }}">
+            {{ app.status | capitalize }}
+          </span>
+          <div style="font-size:11px; color:var(--ink-light); margin-top:6px;">
+            {{ app.created_at.strftime('%d %b %Y') if app.created_at else '' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-calendar-check"></i>
+    <p>No leave applications submitted.</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- New Leave Modal -->
+<div class="modal-overlay" id="leave-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Leave Application</span>
+      <button class="modal-close" onclick="closeModal('leave-modal')">×</button>
+    </div>
+    <form method="POST">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Leave Type</label>
+          <select name="leave_type" class="form-control">
+            <option value="od">On Duty (OD)</option>
+            <option value="sick">Sick Leave</option>
+            <option value="personal">Personal Leave</option>
+            <option value="family">Family Emergency</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">From Date</label>
+            <input type="date" name="from_date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">To Date</label>
+            <input type="date" name="to_date" class="form-control" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reason</label>
+          <textarea name="reason" class="form-control" rows="3" placeholder="Explain the reason for leave..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('leave-modal')">Cancel</button>
+        <button type="submit" class="btn btn-gold"><i class="fas fa-paper-plane"></i> Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

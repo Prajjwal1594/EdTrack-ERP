@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}My Event QR{% endblock %}
+{% block page_title %}My Event QR Codes{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / My Event QR</div>
+    <h1>My Event QR Codes</h1>
+    <p>Show these at the event entrance for check-in</p>
+  </div>
+</div>
+
+{% if registrations %}
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px;">
+  {% for reg in registrations %}
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{{ reg.event.title }}</span>
+      {% if reg.attended %}
+      <span class="badge badge-success">Attended</span>
+      {% else %}
+      <span class="badge badge-gold">Active</span>
+      {% endif %}
+    </div>
+    <div class="card-body" style="text-align:center;">
+      <!-- QR Code (using API) -->
+      <div style="background:var(--white); border:2px solid var(--border); border-radius:12px; padding:16px; display:inline-block; margin-bottom:12px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data={{ reg.qr_code }}" alt="Event QR Code" style="width:160px; height:160px;">
+      </div>
+      <div style="font-size:12px; font-family:'DM Mono',monospace; color:var(--ink-light); margin-bottom:8px;">{{ reg.qr_code }}</div>
+      <div style="font-size:13px; color:var(--ink-mid);">
+        <i class="fas fa-calendar"></i> {{ reg.event.event_date.strftime('%d %b %Y, %I:%M %p') }}
+      </div>
+      {% if reg.event.location %}
+      <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">
+        <i class="fas fa-location-dot"></i> {{ reg.event.location }}
+      </div>
+      {% endif %}
+      <div style="font-size:11px; color:var(--ink-light); margin-top:8px;">
+        Registered: {{ reg.registered_at.strftime('%d %b %Y') if reg.registered_at else '' }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-qrcode"></i>
+    <p>You haven't registered for any events yet.</p>
+    <a href="{{ url_for('student.events') }}" class="btn btn-gold btn-sm mt-16">Browse Events</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

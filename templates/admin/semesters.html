@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Semesters{% endblock %}
+{% block page_title %}Semesters{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>Semesters</h1></div>
+  <button class="btn btn-gold" onclick="openModal('addSemesterModal')"><i class="fas fa-plus"></i> Add Semester</button>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Semester Name</th><th>Academic Year</th><th>Sections</th><th>Students</th><th></th></tr></thead>
+      <tbody>
+        {% for c in semesters %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td>{{ c.academic_year }}</td>
+          <td>{{ c.sections.count() }}</td>
+          <td>{% set total = namespace(count=0) %}{% for s in c.sections %}{% set total.count = total.count + s.students.count() %}{% endfor %}{{ total.count }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.delete_semester', cid=c.id) }}" style="display:inline;">
+              <button class="btn btn-xs btn-danger" data-confirm="Delete semester {{ c.name }}?" type="submit"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty-state"><i class="fas fa-university"></i><p>No semesters yet. Add your first semester!</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addSemesterModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add Semester</span>
+      <button class="modal-close" onclick="closeModal('addSemesterModal')">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.add_semester') }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Semester Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Semester 10" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Academic Year *</label>
+          <input type="text" name="academic_year" class="form-control" placeholder="e.g. 2024-2025" value="2024-2025" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addSemesterModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Semester</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

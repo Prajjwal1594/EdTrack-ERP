@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ thread_root.subject }}{% endblock %}
+{% block page_title %}Message{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left"><h1>{{ thread_root.subject }}</h1></div>
+  <a href="{{ url_for('messages.inbox') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+<div style="max-width:700px; display:flex; flex-direction:column; gap:16px;">
+  {% for m in thread %}
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <strong>{{ m.sender.name }}</strong>
+        <span class="text-muted text-small"> → {{ m.recipient.name }}</span>
+      </div>
+      <span class="text-muted text-small">{{ m.sent_at.strftime('%b %d, %Y %H:%M') }}</span>
+    </div>
+    <div class="card-body" style="white-space:pre-wrap; font-size:14px; line-height:1.7;">{{ m.body }}</div>
+  </div>
+  {% endfor %}
+
+  <!-- Reply -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Reply</span></div>
+    <form method="POST" action="{{ url_for('messages.reply', mid=thread_root.id) }}">
+      <div class="card-body">
+        <textarea name="body" class="form-control" rows="5" placeholder="Type your reply..." required></textarea>
+      </div>
+      <div class="modal-footer">
+        <form method="POST" action="{{ url_for('messages.delete_message', mid=thread_root.id) }}" style="margin-right:auto;">
+          <button type="submit" class="btn btn-ghost btn-sm" data-confirm="Delete this message thread?"><i class="fas fa-trash"></i> Delete</button>
+        </form>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-reply"></i> Send Reply</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

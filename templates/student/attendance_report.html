@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Attendance Report{% endblock %}
+{% block page_title %}Attendance Report{% endblock %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Attendance Report</div>
+    <h1>Attendance Report</h1>
+    <p>Overall attendance statistics</p>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">Total Days</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-value">{{ present }}</div>
+    <div class="stat-label">Present</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon red"><i class="fas fa-times-circle"></i></div>
+    <div class="stat-value">{{ absent }}</div>
+    <div class="stat-label">Absent</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+    <div class="stat-value">{{ late }}</div>
+    <div class="stat-label">Late</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon {{ 'green' if att_pct >= 75 else 'orange' if att_pct >= 60 else 'red' }}">
+      <i class="fas fa-percentage"></i>
+    </div>
+    <div class="stat-value">{{ att_pct }}%</div>
+    <div class="stat-label">Attendance Rate</div>
+  </div>
+</div>
+
+{% if att_pct < 75 %}
+<div class="alert alert-danger" style="margin-bottom:20px;">
+  <i class="fas fa-exclamation-triangle"></i>
+  <strong>Warning:</strong> Your attendance is below the required 75% threshold. Please ensure regular attendance.
+</div>
+{% endif %}
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Monthly Attendance Chart</span></div>
+    <div class="card-body" style="height:300px;">
+      <canvas id="monthlyChart"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Monthly Breakdown</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Month</th><th>Present</th><th>Absent</th><th>Late</th><th>%</th></tr></thead>
+        <tbody>
+          {% for key, data in monthly_data.items() | sort(reverse=True) %}
+          <tr>
+            <td>{{ data.label }}</td>
+            <td style="color:var(--success); font-weight:600;">{{ data.present }}</td>
+            <td style="color:var(--danger); font-weight:600;">{{ data.absent }}</td>
+            <td style="color:var(--warning);">{{ data.late }}</td>
+            <td class="font-mono">{{ ((data.present / data.total * 100) | round(1)) if data.total > 0 else 0 }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+  const monthlyData = {{ monthly_data | tojson }};
+  const labels = Object.values(monthlyData).map(d => d.label);
+  const presentData = Object.values(monthlyData).map(d => d.present);
+  const absentData = Object.values(monthlyData).map(d => d.absent);
+  const lateData = Object.values(monthlyData).map(d => d.late);
+
+  new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Present', data: presentData, backgroundColor: 'rgba(39,174,96,0.7)', borderRadius: 4 },
+        { label: 'Absent', data: absentData, backgroundColor: 'rgba(192,57,43,0.7)', borderRadius: 4 },
+        { label: 'Late', data: lateData, backgroundColor: 'rgba(230,126,34,0.7)', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+    }
+  });
+</script>
+{% endblock %}
+{% endblock %}

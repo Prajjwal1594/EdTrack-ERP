@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}My Faculty{% endblock %}
+{% block page_title %}Faculty Directory{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Faculty</div>
+    <h1>My Faculty</h1>
+    <p>Faculty assigned to {{ student.section.full_name if student.section else 'your section' }}</p>
+  </div>
+</div>
+
+{% if faculty_assignments %}
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px;">
+  {% for ta in faculty_assignments %}
+  <div class="card" style="transition:transform .2s, box-shadow .2s;" onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='var(--shadow-md)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+    <div class="card-body" style="display:flex; align-items:center; gap:16px;">
+      <div class="user-avatar" style="width:50px; height:50px; font-size:18px; background:var(--forest-light);">
+        {{ ta.faculty.name[0].upper() if ta.faculty else '?' }}
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:600; font-size:15px; color:var(--ink);">{{ ta.faculty.name if ta.faculty else 'Unassigned' }}</div>
+        <div style="font-size:13px; color:var(--ink-mid);">{{ ta.subject.name if ta.subject else 'N/A' }}</div>
+        {% if ta.faculty and ta.faculty.email %}
+        <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">
+          <i class="fas fa-envelope" style="width:14px;"></i> {{ ta.faculty.email }}
+        </div>
+        {% endif %}
+        {% if ta.faculty and ta.faculty.phone %}
+        <div style="font-size:12px; color:var(--ink-light);">
+          <i class="fas fa-phone" style="width:14px;"></i> {{ ta.faculty.phone }}
+        </div>
+        {% endif %}
+      </div>
+      <a href="{{ url_for('messages.compose') }}?to={{ ta.faculty.id if ta.faculty else '' }}" class="btn btn-xs btn-outline" title="Send Message">
+        <i class="fas fa-envelope"></i>
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-chalkboard-user"></i>
+    <p>No faculty assigned to your section yet.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

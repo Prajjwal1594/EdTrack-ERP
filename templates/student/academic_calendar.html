@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Academic Calendar{% endblock %}
+{% block page_title %}Academic Calendar{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Academic Calendar</div>
+    <h1>Academic Calendar</h1>
+    <p>Term dates and academic schedule</p>
+  </div>
+</div>
+
+{% if terms %}
+<div style="display:flex; flex-direction:column; gap:16px;">
+  {% for t in terms %}
+  <div class="card" style="border-left:4px solid {{ 'var(--gold)' if t.is_active else 'var(--border)' }}; transition:transform .2s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+    <div class="card-body">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:600; font-size:16px; color:var(--forest);">{{ t.name }}</div>
+          <div style="display:flex; gap:12px; margin-top:6px; font-size:13px; color:var(--ink-mid);">
+            <span><i class="fas fa-play" style="color:var(--success); width:14px;"></i> {{ t.start_date.strftime('%d %b %Y') }}</span>
+            <span><i class="fas fa-stop" style="color:var(--danger); width:14px;"></i> {{ t.end_date.strftime('%d %b %Y') }}</span>
+            {% if t.academic_year %}
+            <span><i class="fas fa-graduation-cap" style="color:var(--gold); width:14px;"></i> {{ t.academic_year }}</span>
+            {% endif %}
+          </div>
+          <!-- Duration bar -->
+          {% set today_date = today if today is defined else none %}
+          <div style="margin-top:10px;">
+            <div class="progress" style="width:200px; height:6px;">
+              {% if t.is_active %}
+              <div class="progress-bar gold" style="width:50%;"></div>
+              {% elif t.end_date < (today_date or t.end_date) %}
+              <div class="progress-bar green" style="width:100%;"></div>
+              {% else %}
+              <div class="progress-bar" style="width:0%; background:var(--border);"></div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <span class="badge badge-{{ 'success' if t.is_active else 'neutral' }}">
+            {{ 'Current Term' if t.is_active else t.term_type | capitalize }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-calendar"></i>
+    <p>No academic calendar data available.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
