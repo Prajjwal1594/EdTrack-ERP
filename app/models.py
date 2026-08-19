@@ -1068,3 +1068,53 @@ class FinancialLedger(db.Model):
 
     college = db.relationship('College')
 
+
+class AssetRecord(db.Model):
+    """Purchased item record with physical location (Block, Floor, Corridor, Room, Dept)."""
+    __tablename__ = 'asset_records'
+    id = db.Column(db.Integer, primary_key=True)
+    college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'), nullable=False)
+    item_name = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(100), default='Furniture & Fixtures') # Furniture, IT, Lab, Electrical, Stationary, Plumbing, Maintenance
+    quantity = db.Column(db.Integer, default=1)
+    unit_cost = db.Column(db.Float, default=0.0)
+    total_cost = db.Column(db.Float, default=0.0)
+    purchase_date = db.Column(db.Date)
+    vendor_name = db.Column(db.String(150))
+    invoice_no = db.Column(db.String(100))
+    warranty_expiry = db.Column(db.Date)
+
+    # Physical Location Allocation Details
+    block_name = db.Column(db.String(100))   # Block / Building name
+    floor_level = db.Column(db.String(50))    # Floor level
+    corridor_wing = db.Column(db.String(100)) # Corridor / Wing
+    room_number = db.Column(db.String(100))   # Room / Lab / Hall No.
+    department = db.Column(db.String(100))    # Department allocated to
+    status = db.Column(db.String(50), default='In Use') # In Use, In Storage, Under Repair, Disposed
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    college = db.relationship('College')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'item_name': self.item_name,
+            'category': self.category,
+            'quantity': self.quantity,
+            'unit_cost': self.unit_cost,
+            'total_cost': self.total_cost,
+            'purchase_date': self.purchase_date.strftime('%Y-%m-%d') if self.purchase_date else '',
+            'vendor_name': self.vendor_name or '',
+            'invoice_no': self.invoice_no or '',
+            'warranty_expiry': self.warranty_expiry.strftime('%Y-%m-%d') if self.warranty_expiry else '',
+            'block_name': self.block_name or '',
+            'floor_level': self.floor_level or '',
+            'corridor_wing': self.corridor_wing or '',
+            'room_number': self.room_number or '',
+            'department': self.department or '',
+            'status': self.status or 'In Use',
+            'notes': self.notes or ''
+        }
+
+

@@ -70,6 +70,25 @@ def sync_database_schema(engine):
             ('college_id', 'INTEGER'),
             ('is_active', 'BOOLEAN DEFAULT TRUE'),
             ('avatar_url', 'VARCHAR(255)'),
+        ],
+        'asset_records': [
+            ('college_id', 'INTEGER'),
+            ('item_name', 'VARCHAR(200)'),
+            ('category', 'VARCHAR(100)'),
+            ('quantity', 'INTEGER'),
+            ('unit_cost', 'FLOAT'),
+            ('total_cost', 'FLOAT'),
+            ('purchase_date', 'DATE'),
+            ('vendor_name', 'VARCHAR(150)'),
+            ('invoice_no', 'VARCHAR(100)'),
+            ('warranty_expiry', 'DATE'),
+            ('block_name', 'VARCHAR(100)'),
+            ('floor_level', 'VARCHAR(50)'),
+            ('corridor_wing', 'VARCHAR(100)'),
+            ('room_number', 'VARCHAR(100)'),
+            ('department', 'VARCHAR(100)'),
+            ('status', 'VARCHAR(50)'),
+            ('notes', 'TEXT'),
         ]
     }
 

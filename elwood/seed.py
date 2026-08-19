@@ -349,6 +349,18 @@ def seed(app=None, auto=False):
                         date=d, status=status, marked_by=faculty2[0].id
                     ))
 
+        # Demo Asset Records with physical location allocation
+        from app.models import AssetRecord
+        sample_assets_1 = [
+            AssetRecord(college_id=college1.id, item_name="Dell OptiPlex 7090 Desktop Computers", category="IT & Computers", quantity=25, unit_cost=750.0, total_cost=18750.0, purchase_date=date(2023, 8, 15), vendor_name="Dell India Pvt Ltd", invoice_no="INV-DEL-88401", warranty_expiry=date(2026, 8, 15), block_name="Science Block A", floor_level="2nd Floor", corridor_wing="East Wing", room_number="Computer Lab 1 (Room 204)", department="Computer Science", status="In Use", notes="Installed and configured for CS Lab sessions"),
+            AssetRecord(college_id=college1.id, item_name="Epson 4K Projectors & Mounting Kits", category="Electrical & Lighting", quantity=6, unit_cost=620.0, total_cost=3720.0, purchase_date=date(2023, 9, 10), vendor_name="Metro Electronics", invoice_no="ME-2023-9912", warranty_expiry=date(2025, 9, 10), block_name="Main Academic Building", floor_level="1st Floor", corridor_wing="North Corridor", room_number="Lecture Hall 102 & 104", department="Academic Affairs", status="In Use", notes="Mounted on ceiling with HDMI cabling"),
+            AssetRecord(college_id=college1.id, item_name="High-Back Ergonomic Executive Chairs", category="Furniture & Fixtures", quantity=15, unit_cost=180.0, total_cost=2700.0, purchase_date=date(2023, 10, 5), vendor_name="Featherlite Office Furniture", invoice_no="FL-88120", warranty_expiry=date(2025, 10, 5), block_name="Admin Block", floor_level="Ground Floor", corridor_wing="Central Wing", room_number="Dean & Faculty Cabins", department="Administration", status="In Use", notes="Allocated for senior faculty cabins"),
+            AssetRecord(college_id=college1.id, item_name="Digital Oscilloscopes & Multimeters", category="Lab Equipment", quantity=10, unit_cost=450.0, total_cost=4500.0, purchase_date=date(2023, 11, 20), vendor_name="Tektronix Scientific", invoice_no="TK-77401", warranty_expiry=date(2026, 11, 20), block_name="Science Block A", floor_level="3rd Floor", corridor_wing="West Corridor", room_number="Physics & Electronics Lab", department="Physics Dept", status="In Use", notes="Calibrated and bench-tested"),
+            AssetRecord(college_id=college1.id, item_name="Daikin 2.0 Ton Inverter Air Conditioners", category="Electrical & Lighting", quantity=4, unit_cost=850.0, total_cost=3400.0, purchase_date=date(2024, 1, 15), vendor_name="Cooling Solutions Co.", invoice_no="CS-2024-110", warranty_expiry=date(2027, 1, 15), block_name="Central Library Building", floor_level="1st Floor", corridor_wing="Reading Section Wing", room_number="Digital Library Hall", department="Central Library", status="In Use", notes="Dual outdoor compressor units on roof")
+        ]
+        for a in sample_assets_1:
+            db.session.add(a)
+
         db.session.commit()
         print("\nDatabase seeded successfully!\n")
         print("=" * 56)

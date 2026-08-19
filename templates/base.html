@@ -700,10 +700,11 @@
       <a href="{{ url_for('admin.lms_integration') }}" class="nav-link {% if request.endpoint == 'admin.lms_integration' %}active{% endif %}"><i class="fas fa-network-wired"></i> LMS Integration</a>
       <a href="{{ url_for('admin.college_settings') }}" class="nav-link {% if request.endpoint == 'admin.college_settings' %}active{% endif %}"><i class="fas fa-gear"></i> College Settings</a>
 
-    {% elif current_user.role == 'accountant' %}
+      {% elif current_user.role == 'accountant' %}
       <span class="nav-section-label">Finance & Fees</span>
       <a href="{{ url_for('fees.index') }}" class="nav-link {% if request.blueprint == 'fees' %}active{% endif %}"><i class="fas fa-money-bill-wave"></i> Fee Management</a>
-      <a href="{{ url_for('finance.ledger') }}" class="nav-link {% if request.blueprint == 'finance' and 'ledger' in request.endpoint %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i> Buy / Sell & Ledger</a>
+      <a href="{{ url_for('finance.ledger') }}" class="nav-link {% if request.blueprint == 'finance' and request.endpoint == 'finance.ledger' %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i> Buy / Sell & Ledger</a>
+      <a href="{{ url_for('finance.assets') }}" class="nav-link {% if request.blueprint == 'finance' and 'assets' in request.endpoint %}active{% endif %}"><i class="fas fa-boxes-stacked"></i> Asset & Item Location Tracker</a>
       <a href="{{ url_for('finance.ledger_report') }}" class="nav-link"><i class="fas fa-file-pdf"></i> Financial Reports</a>
       <span class="nav-section-label">Communication</span>
       <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
