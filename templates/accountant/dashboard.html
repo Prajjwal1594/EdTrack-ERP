@@ -29,26 +29,26 @@
     <!-- Fee Collections -->
     <div class="stat-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-left:4px solid #27ae60;">
       <div style="font-size:12px; font-weight:600; color:var(--ink-mid); text-transform:uppercase;">Total Fee Collected</div>
-      <div style="font-size:26px; font-weight:700; color:#27ae60; margin-top:6px;">${{ "{:,.2f}".format(total_fee_collected) }}</div>
+      <div style="font-size:26px; font-weight:700; color:#27ae60; margin-top:6px;">₹{{ "{:,.2f}".format(total_fee_collected) }}</div>
       <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Received student tuition & fees</div>
     </div>
     <!-- Pending Dues -->
     <div class="stat-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-left:4px solid #e74c3c;">
       <div style="font-size:12px; font-weight:600; color:var(--ink-mid); text-transform:uppercase;">Pending Fee Dues</div>
-      <div style="font-size:26px; font-weight:700; color:#e74c3c; margin-top:6px;">${{ "{:,.2f}".format(total_fee_pending) }}</div>
+      <div style="font-size:26px; font-weight:700; color:#e74c3c; margin-top:6px;">₹{{ "{:,.2f}".format(total_fee_pending) }}</div>
       <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Outstanding fee balance</div>
     </div>
     <!-- Buy/Sell Ledger Expenses -->
     <div class="stat-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-left:4px solid var(--forest);">
       <div style="font-size:12px; font-weight:600; color:var(--ink-mid); text-transform:uppercase;">General Ledger Expenses</div>
-      <div style="font-size:26px; font-weight:700; color:var(--forest); margin-top:6px;">${{ "{:,.2f}".format(total_ledger_expense) }}</div>
+      <div style="font-size:26px; font-weight:700; color:var(--forest); margin-top:6px;">₹{{ "{:,.2f}".format(total_ledger_expense) }}</div>
       <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Vendor payments & campus operational costs</div>
     </div>
     <!-- Asset Investment Value -->
     <div class="stat-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-left:4px solid var(--gold);">
       <div style="font-size:12px; font-weight:600; color:var(--ink-mid); text-transform:uppercase;">Tracked Physical Assets</div>
       <div style="font-size:26px; font-weight:700; color:var(--gold); margin-top:6px;">{{ total_assets_count }} Items</div>
-      <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Value: ${{ "{:,.2f}".format(total_assets_value) }}</div>
+      <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Value: ₹{{ "{:,.2f}".format(total_assets_value) }}</div>
     </div>
   </div>
 
@@ -142,7 +142,7 @@
                   {{ p.fee_type.name if p.fee_type else 'Tuition Fee' }}
                 </td>
                 <td style="padding:12px 14px; font-size:13px; font-weight:700;">
-                  ${{ "{:,.2f}".format(p.amount) }}
+                  ₹{{ "{:,.2f}".format(p.amount) }}
                 </td>
                 <td style="padding:12px 14px;">
                   {% if p.status == 'paid' %}
@@ -194,7 +194,7 @@
                   <div style="font-size:11px; color:var(--ink-light);">{{ a.room_number }} ({{ a.floor_level }})</div>
                 </td>
                 <td style="padding:12px 14px; font-size:13px; font-weight:600;">
-                  ${{ "{:,.2f}".format(a.total_cost) }}
+                  ₹{{ "{:,.2f}".format(a.total_cost) }}
                   <div style="font-size:11px; color:var(--ink-light);">Qty: {{ a.quantity }}</div>
                 </td>
                 <td style="padding:12px 14px;">

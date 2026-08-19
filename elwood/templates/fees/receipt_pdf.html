@@ -89,11 +89,11 @@
         <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">{{ payment.notes }}</div>
         {% endif %}
       </td>
-      <td style="text-align: right;">${{ "%.2f"|format(payment.amount) }}</td>
+      <td style="text-align: right;">₹{{ "%.2f"|format(payment.amount) }}</td>
     </tr>
     <tr class="total-row">
       <td style="text-align: right;">Total Paid</td>
-      <td style="text-align: right;">${{ "%.2f"|format(payment.amount) }}</td>
+      <td style="text-align: right;">₹{{ "%.2f"|format(payment.amount) }}</td>
     </tr>
   </tbody>
 </table>
