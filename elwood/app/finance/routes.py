@@ -88,6 +88,6 @@ def ledger_report():
         response.headers['Content-Disposition'] = f'attachment; filename=financial_ledger_{datetime.now().strftime("%Y-%m-%d")}.pdf'
         return response
     except Exception as e:
-        flash(f'PDF generation failed: {e}.', 'danger')
-        return redirect(url_for('finance.ledger'))
+        flash(f'PDF generation note: {e}. Showing HTML version instead.', 'warning')
+        return html
 

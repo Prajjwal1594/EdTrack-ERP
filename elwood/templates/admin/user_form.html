@@ -286,7 +286,6 @@
           <textarea style="height: 50px;" name="local_guardian_address" class="form-control">{{ st.local_guardian_address if st else '' }}</textarea>
         </div>
       </div>
-      {% endif %}
       <div class="form-group" style="margin-top:14px;">
         <label class="form-label">Phone Number</label>
         <input type="text" name="phone" class="form-control" value="{{ user.phone if user else '' }}" placeholder="+1 (555) 0000">
@@ -298,13 +297,13 @@
           <input type="password" name="new_password" class="form-control" placeholder="New password..." minlength="8">
         </div>
       </div>
+      {% endif %}
       <div class="form-group" style="margin-top:10px;">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px;">
-          <input type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %} style="width:16px; height:16px;">
+          <input type="checkbox" name="is_active" {% if user and user.is_active %}checked{% elif not user %}checked{% endif %} style="width:16px; height:16px;">
           Account is active
         </label>
       </div>
-      {% endif %}
     </div>
     <div class="modal-footer">
       <a href="{{ url_for('admin.users') }}" class="btn btn-ghost">Cancel</a>

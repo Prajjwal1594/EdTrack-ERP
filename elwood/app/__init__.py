@@ -170,6 +170,16 @@ def create_app(config_class=Config):
                     db.session.add(new_acc2)
                     db.session.commit()
                     print("[STARTUP] Ensured demo accountant2@sunrise.edu exists.", flush=True)
+
+                hr_user = User.query.filter_by(email='hr@gmail.com').first()
+                if not hr_user:
+                    admin_user = User.query.filter_by(role='admin').first()
+                    cid = admin_user.college_id if admin_user else 1
+                    new_hr = User(name="Amanda Miller", email="hr@gmail.com", role="hr", college_id=cid, phone="+1 555-0005")
+                    new_hr.set_password("hr123")
+                    db.session.add(new_hr)
+                    db.session.commit()
+                    print("[STARTUP] Ensured demo hr@gmail.com exists.", flush=True)
             # Sync any newly added columns to existing tables safely
             from sqlalchemy import inspect, text
             inspector = inspect(db.engine)

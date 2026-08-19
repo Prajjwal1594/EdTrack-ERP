@@ -147,6 +147,11 @@ def seed(app=None, auto=False):
         accountant1.set_password("accountant123")
         db.session.add(accountant1)
 
+        hr1 = User(name="Amanda Miller", email="hr@gmail.com",
+                   role="hr", college_id=college1.id, phone="+1 555-0005")
+        hr1.set_password("hr123")
+        db.session.add(hr1)
+
         faculty_data_1 = [
             ("Mr. James Harrison", "faculty@gmail.com", "faculty123"),
             ("Ms. Priya Sharma",   "priya@gmail.com",   "faculty123"),
