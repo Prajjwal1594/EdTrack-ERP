@@ -35,19 +35,19 @@
     <div class="stat-label">Students</div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon gold"><i class="fas fa-people-arrows"></i></div>
+    <div class="stat-icon gold"><i class="fas fa-receipt"></i></div>
+    <div class="stat-value">{{ stats.accountants }}</div>
+    <div class="stat-label">Accountants</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon orange"><i class="fas fa-id-badge"></i></div>
+    <div class="stat-value">{{ stats.hr }}</div>
+    <div class="stat-label">HR Staff</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon forest"><i class="fas fa-people-arrows"></i></div>
     <div class="stat-value">{{ stats.parents }}</div>
     <div class="stat-label">Parents</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon forest"><i class="fas fa-university"></i></div>
-    <div class="stat-value">{{ stats.semesters }}</div>
-    <div class="stat-label">Semesters</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon orange"><i class="fas fa-book"></i></div>
-    <div class="stat-value">{{ stats.subjects }}</div>
-    <div class="stat-label">Subjects</div>
   </div>
 </div>
 
@@ -92,7 +92,7 @@
           {% for u in recent_users %}
           <tr>
             <td>{{ u.name }}</td>
-            <td><span class="badge badge-{% if u.role == 'admin' %}gold{% elif u.role == 'faculty' %}info{% elif u.role == 'student' %}success{% else %}neutral{% endif %}">{{ u.role }}</span></td>
+            <td><span class="badge badge-{% if u.role == 'admin' %}gold{% elif u.role == 'accountant' %}warning{% elif u.role == 'hr' %}warning{% elif u.role == 'faculty' %}info{% elif u.role == 'student' %}success{% else %}neutral{% endif %}">{{ u.role }}</span></td>
             <td class="text-muted text-small">{{ u.email }}</td>
             <td class="text-muted text-small">{{ u.created_at.strftime('%b %d, %Y') }}</td>
             <td><a href="{{ url_for('admin.edit_user', uid=u.id) }}" class="btn btn-ghost btn-xs"><i class="fas fa-pen"></i></a></td>

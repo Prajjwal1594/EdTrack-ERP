@@ -33,6 +33,8 @@ def dashboard():
         'students': User.query.filter_by(role='student').count(),
         'faculty': User.query.filter_by(role='faculty').count(),
         'admins':   User.query.filter_by(role='admin').count(),
+        'accountants': User.query.filter_by(role='accountant').count(),
+        'hr': User.query.filter_by(role='hr').count(),
     }
 
     # Per-college summary cards
@@ -132,6 +134,8 @@ def college_detail(college_id):
         'faculty': User.query.filter_by(college_id=college.id, role='faculty').count(),
         'parents':  User.query.filter_by(college_id=college.id, role='parent').count(),
         'admins':   User.query.filter_by(college_id=college.id, role='admin').count(),
+        'accountants': User.query.filter_by(college_id=college.id, role='accountant').count(),
+        'hr': User.query.filter_by(college_id=college.id, role='hr').count(),
         'semesters':  Semester.query.filter_by(college_id=college.id).count(),
         'subjects': Subject.query.filter_by(college_id=college.id).count(),
     }

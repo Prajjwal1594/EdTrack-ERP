@@ -37,7 +37,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
-    role = db.Column(db.String(20), nullable=False)  # admin, faculty, student, parent
+    role = db.Column(db.String(20), nullable=False)  # admin, accountant, hr, faculty, student, parent
     college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'))
     is_active = db.Column(db.Boolean, default=True)
     avatar = db.Column(db.String(300))

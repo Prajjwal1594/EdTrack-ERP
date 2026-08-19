@@ -36,6 +36,8 @@ def dashboard():
         'faculty': User.query.filter_by(role='faculty', college_id=current_user.college_id).count(),
         'students': User.query.filter_by(role='student', college_id=current_user.college_id).count(),
         'parents': User.query.filter_by(role='parent', college_id=current_user.college_id).count(),
+        'accountants': User.query.filter_by(role='accountant', college_id=current_user.college_id).count(),
+        'hr': User.query.filter_by(role='hr', college_id=current_user.college_id).count(),
         'semesters': Semester.query.filter_by(college_id=current_user.college_id).count(),
         'subjects': Subject.query.filter_by(college_id=current_user.college_id).count(),
     }
@@ -74,12 +76,13 @@ def dashboard():
 
     # 3. User Distribution
     user_dist = [
-        {"role": "Admins", "count": stats['faculty']},
+        {"role": "Admins", "count": User.query.filter_by(role='admin', college_id=current_user.college_id).count()},
+        {"role": "Accountants", "count": stats['accountants']},
+        {"role": "HR", "count": stats['hr']},
         {"role": "Faculty", "count": stats['faculty']},
         {"role": "Students", "count": stats['students']},
         {"role": "Parents", "count": stats['parents']}
     ]
-    user_dist[0]['count'] = User.query.filter_by(role='admin', college_id=current_user.college_id).count()
 
     recent_users = User.query.filter_by(college_id=current_user.college_id).order_by(User.created_at.desc()).limit(5).all()
     return render_template('admin/dashboard.html', stats=stats, college=college,
