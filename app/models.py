@@ -204,9 +204,12 @@ class Student(db.Model):
     batch_id = db.Column(db.Integer, db.ForeignKey('batches.id'), nullable=True)
     section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=True)
     enrollment_number = db.Column(db.String(30), unique=True)
+    roll_number = db.Column(db.String(30))
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.String(10))
     address = db.Column(db.Text)
+    state = db.Column(db.String(100))
+    country = db.Column(db.String(100))
     enrollment_date = db.Column(db.Date, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
 

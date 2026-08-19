@@ -142,6 +142,109 @@ def users():
     return render_template('admin/users.html', users=users, role_filter=role_filter)
 
 
+def populate_student_fields(student, form):
+    student.course_id = form.get('course_id', type=int) or student.course_id
+    student.stream_id = form.get('stream_id', type=int) or student.stream_id
+    student.batch_id = form.get('batch_id', type=int) or student.batch_id
+    student.section_id = form.get('section_id', type=int) or student.section_id
+    
+    if form.get('enrollment_number'):
+        student.enrollment_number = form.get('enrollment_number').strip()
+    if form.get('roll_number'):
+        student.roll_number = form.get('roll_number').strip()
+        
+    dob_str = form.get('date_of_birth')
+    if dob_str:
+        try:
+            student.date_of_birth = datetime.strptime(dob_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+            
+    if 'gender' in form:
+        student.gender = form.get('gender')
+    if 'address' in form:
+        student.address = form.get('address')
+    if 'state' in form:
+        student.state = form.get('state')
+    if 'country' in form:
+        student.country = form.get('country')
+        
+    if 'blood_group' in form:
+        student.blood_group = form.get('blood_group')
+    if 'religion' in form:
+        student.religion = form.get('religion')
+    if 'caste' in form:
+        student.caste = form.get('caste')
+    if 'aadhar_number' in form:
+        student.aadhar_number = form.get('aadhar_number')
+    if 'admission_category' in form:
+        student.admission_category = form.get('admission_category')
+    if 'session' in form:
+        student.session = form.get('session')
+        
+    tc_date_str = form.get('tc_date')
+    if tc_date_str:
+        try:
+            student.tc_date = datetime.strptime(tc_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+    elif 'tc_date' in form and not tc_date_str:
+        student.tc_date = None
+        
+    if 'biometric_card_no' in form:
+        student.biometric_card_no = form.get('biometric_card_no')
+    if 'alternate_semester_group' in form:
+        student.alternate_semester_group = form.get('alternate_semester_group')
+    if 'semester_group' in form:
+        student.semester_group = form.get('semester_group')
+    if 'phone2' in form:
+        student.phone2 = form.get('phone2')
+    if 'landline' in form:
+        student.landline = form.get('landline')
+
+    # Academic History (10th)
+    if 'tenth_year' in form:
+        student.tenth_year = form.get('tenth_year', type=int)
+    if 'tenth_roll' in form:
+        student.tenth_roll = form.get('tenth_roll')
+    if 'tenth_board' in form:
+        student.tenth_board = form.get('tenth_board')
+    if 'tenth_obtained' in form:
+        student.tenth_obtained = form.get('tenth_obtained', type=float)
+    if 'tenth_max' in form:
+        student.tenth_max = form.get('tenth_max', type=float)
+
+    # Academic History (12th)
+    if 'twelfth_year' in form:
+        student.twelfth_year = form.get('twelfth_year', type=int)
+    if 'twelfth_roll' in form:
+        student.twelfth_roll = form.get('twelfth_roll')
+    if 'twelfth_board' in form:
+        student.twelfth_board = form.get('twelfth_board')
+    if 'twelfth_obtained' in form:
+        student.twelfth_obtained = form.get('twelfth_obtained', type=float)
+    if 'twelfth_max' in form:
+        student.twelfth_max = form.get('twelfth_max', type=float)
+
+    # Parent / Guardian Info
+    if 'father_name' in form:
+        student.father_name = form.get('father_name')
+    if 'father_occupation' in form:
+        student.father_occupation = form.get('father_occupation')
+    if 'father_mobile' in form:
+        student.father_mobile = form.get('father_mobile')
+    if 'mother_name' in form:
+        student.mother_name = form.get('mother_name')
+    if 'mother_mobile' in form:
+        student.mother_mobile = form.get('mother_mobile')
+    if 'local_guardian_name' in form:
+        student.local_guardian_name = form.get('local_guardian_name')
+    if 'local_guardian_mobile' in form:
+        student.local_guardian_mobile = form.get('local_guardian_mobile')
+    if 'local_guardian_address' in form:
+        student.local_guardian_address = form.get('local_guardian_address')
+
+
 @bp.route('/users/add', methods=['GET', 'POST'])
 @admin_required
 def add_user():
@@ -162,23 +265,12 @@ def add_user():
         db.session.flush()
 
         if user.role == 'student':
-            course_id = request.form.get('course_id', type=int)
-            stream_id = request.form.get('stream_id', type=int)
-            batch_id = request.form.get('batch_id', type=int)
-            section_id = request.form.get('section_id', type=int)
             enrollment_num = request.form.get('enrollment_number') or f'EW{user.id:05d}'
-            dob_str = request.form.get('date_of_birth')
-            dob = datetime.strptime(dob_str, '%Y-%m-%d').date() if dob_str else None
             student = Student(
                 user_id=user.id,
-                course_id=course_id,
-                stream_id=stream_id,
-                batch_id=batch_id,
-                section_id=section_id,
-                enrollment_number=enrollment_num,
-                date_of_birth=dob,
-                gender=request.form.get('gender', '')
+                enrollment_number=enrollment_num
             )
+            populate_student_fields(student, request.form)
             db.session.add(student)
         db.session.commit()
         flash(f'User {user.name} created successfully.', 'success')
@@ -202,11 +294,12 @@ def edit_user(uid):
         new_pass = request.form.get('new_password', '').strip()
         if new_pass:
             user.set_password(new_pass)
-        if user.role == 'student' and user.student_profile:
-            user.student_profile.course_id = request.form.get('course_id', type=int)
-            user.student_profile.stream_id = request.form.get('stream_id', type=int)
-            user.student_profile.batch_id = request.form.get('batch_id', type=int)
-            user.student_profile.section_id = request.form.get('section_id', type=int)
+        if user.role == 'student':
+            if not user.student_profile:
+                student = Student(user_id=user.id, enrollment_number=f'EW{user.id:05d}')
+                db.session.add(student)
+                user.student_profile = student
+            populate_student_fields(user.student_profile, request.form)
         db.session.commit()
         flash('User updated.', 'success')
         return redirect(url_for('admin.users'))
@@ -235,46 +328,7 @@ def edit_erp_profile(uid):
     student = user.student_profile
     if request.method == 'POST':
         try:
-            # Personal Info
-            student.blood_group = request.form.get('blood_group')
-            student.religion = request.form.get('religion')
-            student.caste = request.form.get('caste')
-            student.aadhar_number = request.form.get('aadhar_number')
-            student.admission_category = request.form.get('admission_category')
-            student.session = request.form.get('session')
-            
-            tc_date_str = request.form.get('tc_date')
-            student.tc_date = datetime.strptime(tc_date_str, '%Y-%m-%d').date() if tc_date_str else None
-            student.biometric_card_no = request.form.get('biometric_card_no')
-            student.alternate_semester_group = request.form.get('alternate_semester_group')
-            student.semester_group = request.form.get('semester_group')
-            student.phone2 = request.form.get('phone2')
-            student.landline = request.form.get('landline')
-
-            # Academic History (10th)
-            student.tenth_year = request.form.get('tenth_year', type=int)
-            student.tenth_roll = request.form.get('tenth_roll')
-            student.tenth_board = request.form.get('tenth_board')
-            student.tenth_obtained = request.form.get('tenth_obtained', type=float)
-            student.tenth_max = request.form.get('tenth_max', type=float)
-
-            # Academic History (12th)
-            student.twelfth_year = request.form.get('twelfth_year', type=int)
-            student.twelfth_roll = request.form.get('twelfth_roll')
-            student.twelfth_board = request.form.get('twelfth_board')
-            student.twelfth_obtained = request.form.get('twelfth_obtained', type=float)
-            student.twelfth_max = request.form.get('twelfth_max', type=float)
-
-            # Parent / Guardian Info
-            student.father_name = request.form.get('father_name')
-            student.father_occupation = request.form.get('father_occupation')
-            student.father_mobile = request.form.get('father_mobile')
-            student.mother_name = request.form.get('mother_name')
-            student.mother_mobile = request.form.get('mother_mobile')
-            student.local_guardian_name = request.form.get('local_guardian_name')
-            student.local_guardian_mobile = request.form.get('local_guardian_mobile')
-            student.local_guardian_address = request.form.get('local_guardian_address')
-
+            populate_student_fields(student, request.form)
             db.session.commit()
             flash('ERP detailed profile updated successfully.', 'success')
             return redirect(url_for('admin.edit_erp_profile', uid=uid))

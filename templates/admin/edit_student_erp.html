@@ -18,6 +18,10 @@
       <h3 style="font-size: 18px; color: var(--forest); margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Personal & Enrollment Information</h3>
       <div class="form-row">
         <div class="form-group">
+          <label class="form-label">Roll Number</label>
+          <input type="text" name="roll_number" class="form-control" value="{{ student.roll_number or '' }}" placeholder="e.g. 22ESKCA089">
+        </div>
+        <div class="form-group">
           <label class="form-label">Blood Group</label>
           <input type="text" name="blood_group" class="form-control" value="{{ student.blood_group or '' }}" placeholder="O+">
         </div>
@@ -25,12 +29,12 @@
           <label class="form-label">Religion</label>
           <input type="text" name="religion" class="form-control" value="{{ student.religion or '' }}" placeholder="e.g. Hindu">
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Caste</label>
           <input type="text" name="caste" class="form-control" value="{{ student.caste or '' }}" placeholder="e.g. GEN">
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Aadhar Number</label>
           <input type="text" name="aadhar_number" class="form-control" value="{{ student.aadhar_number or '' }}" placeholder="12-digit number">
@@ -39,12 +43,12 @@
           <label class="form-label">Admission Category</label>
           <input type="text" name="admission_category" class="form-control" value="{{ student.admission_category or '' }}" placeholder="SFS/TFWS/REAP etc">
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Session</label>
           <input type="text" name="session" class="form-control" value="{{ student.session or '' }}" placeholder="e.g. 2022-26">
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-group">
           <label class="form-label">TC Date</label>
           <input type="date" name="tc_date" class="form-control" value="{{ student.tc_date.strftime('%Y-%m-%d') if student.tc_date else '' }}">
@@ -72,6 +76,20 @@
         <div class="form-group">
           <label class="form-label">Landline</label>
           <input type="text" name="landline" class="form-control" value="{{ student.landline or '' }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input type="text" name="address" class="form-control" value="{{ student.address or '' }}">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <input type="text" name="state" class="form-control" value="{{ student.state or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country</label>
+          <input type="text" name="country" class="form-control" value="{{ student.country or 'India' }}">
         </div>
       </div>
 

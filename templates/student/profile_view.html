@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}My Profile{% endblock %}
+{% block title %}Student Profile - {{ student.user.name if student.user else current_user.name }}{% endblock %}
 {% block page_title %}Student Profile{% endblock %}
 {% block content %}
 <style>
@@ -63,12 +63,15 @@
   }
   
   .erp-section-title {
-    font-size: 20px;
-    font-weight: 400;
-    color: #8392a5;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1c3249;
     margin-bottom: 25px;
     padding-bottom: 10px;
     border-bottom: 1px solid #edf1f5;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
   
   .erp-grid {
@@ -86,7 +89,7 @@
   }
   
   .erp-field-label {
-    flex: 0 0 140px;
+    flex: 0 0 160px;
     color: #7f8fa4;
   }
   
@@ -115,284 +118,278 @@
 
 <div class="page-header" style="max-width: 900px; margin: 0 auto 20px;">
   <div class="page-header-left">
-    <div class="breadcrumb"><a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Profile</div>
+    <div class="breadcrumb">
+      {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.users') }}">Users</a> / Student Profile
+      {% else %}
+        <a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Profile
+      {% endif %}
+    </div>
     <h1>Student Portal Profile</h1>
   </div>
+  {% if current_user.role == 'admin' %}
+  <a href="{{ url_for('admin.edit_user', uid=student.user_id) }}" class="btn btn-gold btn-sm"><i class="fas fa-edit"></i> Edit User & ERP Profile (Admin)</a>
+  {% endif %}
 </div>
 
 <div class="erp-profile-container">
   <!-- Top Banner -->
   <div class="erp-profile-header">
     <div class="erp-avatar-wrapper">
-      {{ current_user.name[0].upper() }}
+      {{ (student.user.name[0] if student.user else current_user.name[0]).upper() }}
     </div>
-    <h1 class="erp-student-name">{{ current_user.name }}</h1>
-    <div class="erp-student-semester">{{ student.section.full_name if student.section else 'Semester Data Unavailable' }}</div>
+    <h1 class="erp-student-name">{{ student.user.name if student.user else current_user.name }}</h1>
+    <div class="erp-student-semester">
+      {{ student.course_name }} {% if student.stream_name != 'N/A' %}({{ student.stream_name }}){% endif %}
+      — {{ student.section.full_name if student.section else 'Section Unassigned' }}
+    </div>
   </div>
   
   <!-- Profile Body Area -->
   <div class="erp-profile-body">
     
-    <!-- Personal Information Section -->
-    <h2 class="erp-section-title">Personal Information</h2>
+    <!-- Personal & Enrollment Information Section -->
+    <h2 class="erp-section-title"><i class="fas fa-user-graduate" style="color:var(--forest);"></i> Personal & Academic Tagging</h2>
     <div class="erp-grid">
-      <!-- Row 1 -->
       <div class="erp-field">
-        <span class="erp-field-label">Regn. No.</span>
+        <span class="erp-field-label">Regn. / Enrollment No.</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.enrollment_number or 'BZ20988' }}</span>
+        <span class="erp-field-value">{{ student.enrollment_number or 'N/A' }}</span>
       </div>
       <div class="erp-field">
-        <span class="erp-field-label">Roll</span>
+        <span class="erp-field-label">Roll Number</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ '22ESKCA089' }}</span>
+        <span class="erp-field-value">{{ student.roll_number or 'N/A' }}</span>
       </div>
       
-      <!-- Row 2 -->
       <div class="erp-field">
-        <span class="erp-field-label">University Enrollment Number</span>
+        <span class="erp-field-label">Semester Group</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.enrollment_number or '22E1SKCAM40P089' }}</span>
+        <span class="erp-field-value">{{ student.semester_group or 'N/A' }}</span>
       </div>
       <div class="erp-field">
-        <div style="display:flex; flex-direction:column; width: 100%; gap: 20px;">
-            <div class="erp-field">
-                <span class="erp-field-label">Semester Group</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.semester_group or '' }}</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">Alternate Semester Group</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.alternate_semester_group or '' }}</span>
-            </div>
-        </div>
+        <span class="erp-field-label">Alt. Semester Group</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.alternate_semester_group or 'N/A' }}</span>
       </div>
       
-      <!-- Row 3 -->
       <div class="erp-field">
         <span class="erp-field-label">Date of Birth</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.date_of_birth.strftime('%d %b %Y') if student.date_of_birth else '15 Sep 2004' }}</span>
+        <span class="erp-field-value">{{ student.date_of_birth.strftime('%d %b %Y') if student.date_of_birth else 'N/A' }}</span>
       </div>
       <div class="erp-field">
-          <div style="display:flex; flex-direction:column; width: 100%; gap: 20px;">
-            <div class="erp-field">
-                <span class="erp-field-label">Gender</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.gender | capitalize if student.gender else 'Male' }}</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">Blood Group</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.blood_group or '' }}</span>
-            </div>
-          </div>
+        <span class="erp-field-label">Gender</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.gender | capitalize if student.gender else 'N/A' }}</span>
       </div>
-      
-      <!-- Row 4 -->
+
+      <div class="erp-field">
+        <span class="erp-field-label">Blood Group</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.blood_group or 'N/A' }}</span>
+      </div>
       <div class="erp-field">
         <span class="erp-field-label">Religion</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.religion or '' }}</span>
+        <span class="erp-field-value">{{ student.religion or 'N/A' }}</span>
       </div>
+
       <div class="erp-field">
-        <span class="erp-field-label">Email</span>
+        <span class="erp-field-label">Caste / Category</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ current_user.email }}</span>
+        <span class="erp-field-value">{{ student.caste or 'N/A' }}</span>
       </div>
-      
-      <!-- Row 5 -->
       <div class="erp-field">
-        <span class="erp-field-label">Phone</span>
+        <span class="erp-field-label">Aadhar Number</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ current_user.phone or '7568472282' }}</span>
+        <span class="erp-field-value">{{ student.aadhar_number or 'N/A' }}</span>
       </div>
-      <div class="erp-field">
-          <div style="display:flex; flex-direction:column; width: 100%; gap: 20px;">
-            <div class="erp-field">
-                <span class="erp-field-label">Phone2</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.phone2 or '' }}</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">Landline</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.landline or '' }}</span>
-            </div>
-          </div>
-      </div>
-      
-      <!-- Row 6 Address Data -->
-      <div class="erp-field">
-        <span class="erp-field-label">Address</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value" style="padding-right: 20px;">{{ student.address or '30-B, Garden Residency, Sirsi Link Road, Kanwar Road, Govindpura, Jaipur - 302012' }}</span>
-      </div>
-      <div class="erp-field">
-          <div style="display:flex; flex-direction:column; width: 100%; gap: 20px;">
-            <div class="erp-field">
-                <span class="erp-field-label">State</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">Rajasthan</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">Country</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">India</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">Caste</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.caste or '' }}</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">Aadhar</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.aadhar_number or '' }}</span>
-            </div>
-          </div>
-      </div>
-      
-      <!-- Row Date of Admission & Cat -->
+
       <div class="erp-field">
         <span class="erp-field-label">Date of Admission</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.enrollment_date.strftime('%d %b %Y') if student.enrollment_date else '18 Jul 2022' }}</span>
+        <span class="erp-field-value">{{ student.enrollment_date.strftime('%d %b %Y') if student.enrollment_date else 'N/A' }}</span>
       </div>
       <div class="erp-field">
-        <span class="erp-field-label">Admission Category (SFS/TFWS/REAP etc)</span>
+        <span class="erp-field-label">Admission Category</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">SFS</span>
+        <span class="erp-field-value">{{ student.admission_category or 'N/A' }}</span>
       </div>
-      
-      <!-- Session -->
+
       <div class="erp-field">
         <span class="erp-field-label">Session</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.session or '' }}</span>
-      </div>
-      <div class="erp-field">
-        <!-- Spacer -->
-      </div>
-      
-      <!-- 10th Record -->
-      <div class="erp-field">
-        <span class="erp-field-label">10th Year</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.tenth_year or '' }}</span>
-      </div>
-      <div class="erp-field">
-          <div style="display:flex; flex-direction:column; width: 100%; gap: 20px;">
-            <div class="erp-field">
-                <span class="erp-field-label">10th Roll</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.tenth_roll or '' }}</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">10th Board</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.tenth_board or '' }}</span>
-            </div>
-          </div>
-      </div>
-      
-      <div class="erp-field">
-        <span class="erp-field-label">10th Obtained Marks</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.tenth_obtained or '' }}</span>
-      </div>
-      <div class="erp-field">
-        <span class="erp-field-label">10th Max Marks</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.tenth_max or '' }}</span>
-      </div>
-      
-      <div class="erp-field">
-        <span class="erp-field-label">10th Percent</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">
-          {% if student.tenth_max and student.tenth_obtained and student.tenth_max > 0 %}
-            {{ "%.2f"|format((student.tenth_obtained / student.tenth_max) * 100) }}
-          {% endif %}
-        </span>
-      </div>
-      <div class="erp-field">
-        <!-- Spacer -->
-      </div>
-      
-      <!-- 12th Record -->
-      <div class="erp-field">
-        <span class="erp-field-label">12th Year</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.twelfth_year or '' }}</span>
-      </div>
-      <div class="erp-field">
-          <div style="display:flex; flex-direction:column; width: 100%; gap: 20px;">
-            <div class="erp-field">
-                <span class="erp-field-label">12th Roll</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.twelfth_roll or '' }}</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">12th Board</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.twelfth_board or '' }}</span>
-            </div>
-          </div>
-      </div>
-      
-      <div class="erp-field">
-        <span class="erp-field-label">12th Obtained Marks</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.twelfth_obtained or '' }}</span>
-      </div>
-      <div class="erp-field">
-        <span class="erp-field-label">12th Max Marks</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.twelfth_max or '' }}</span>
-      </div>
-      
-      <div class="erp-field">
-        <span class="erp-field-label">12th Percent</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">
-          {% if student.twelfth_max and student.twelfth_obtained and student.twelfth_max > 0 %}
-            {{ "%.2f"|format((student.twelfth_obtained / student.twelfth_max) * 100) }}
-          {% endif %}
-        </span>
-      </div>
-      <div class="erp-field">
-          <div style="display:flex; flex-direction:column; width: 100%; gap: 20px;">
-            <div class="erp-field">
-                <span class="erp-field-label">Username</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.enrollment_number or '' }}</span>
-            </div>
-            <div class="erp-field">
-                <span class="erp-field-label">Date of TC</span>
-                <span class="erp-field-separator">:</span>
-                <span class="erp-field-value">{{ student.tc_date.strftime('%d %b %Y') if student.tc_date else '' }}</span>
-            </div>
-          </div>
-      </div>
-      
-      <!-- Miscellaneous Record -->
-      <div class="erp-field">
-        <span class="erp-field-label">Remark (Left)</span>
-        <span class="erp-field-separator">:</span>
-        <span class="erp-field-value"> </span>
+        <span class="erp-field-value">{{ student.session or 'N/A' }}</span>
       </div>
       <div class="erp-field">
         <span class="erp-field-label">Biometric Card No.</span>
         <span class="erp-field-separator">:</span>
-        <span class="erp-field-value">{{ student.biometric_card_no or '' }}</span>
+        <span class="erp-field-value">{{ student.biometric_card_no or 'N/A' }}</span>
+      </div>
+
+      <div class="erp-field">
+        <span class="erp-field-label">Date of TC</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.tc_date.strftime('%d %b %Y') if student.tc_date else 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <!-- Spacer -->
+      </div>
+    </div>
+
+    <!-- Contact & Address Section -->
+    <h2 class="erp-section-title"><i class="fas fa-map-marker-alt" style="color:var(--forest);"></i> Contact & Address Information</h2>
+    <div class="erp-grid">
+      <div class="erp-field">
+        <span class="erp-field-label">Email Address</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ (student.user.email if student.user else current_user.email) or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">Primary Phone</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ (student.user.phone if student.user and student.user.phone else current_user.phone) or 'N/A' }}</span>
+      </div>
+
+      <div class="erp-field">
+        <span class="erp-field-label">Secondary Phone</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.phone2 or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">Landline</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.landline or 'N/A' }}</span>
+      </div>
+
+      <div class="erp-field">
+        <span class="erp-field-label">Address</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.address or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <div style="display:flex; flex-direction:column; width: 100%; gap: 15px;">
+          <div class="erp-field">
+            <span class="erp-field-label">State</span>
+            <span class="erp-field-separator">:</span>
+            <span class="erp-field-value">{{ student.state or 'N/A' }}</span>
+          </div>
+          <div class="erp-field">
+            <span class="erp-field-label">Country</span>
+            <span class="erp-field-separator">:</span>
+            <span class="erp-field-value">{{ student.country or 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Academic History Section -->
+    <h2 class="erp-section-title"><i class="fas fa-book" style="color:var(--forest);"></i> Academic History (10th & 12th)</h2>
+    <div class="erp-grid">
+      <!-- 10th Standard -->
+      <div class="erp-field">
+        <span class="erp-field-label">10th Year / Roll</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.tenth_year or 'N/A' }} {% if student.tenth_roll %}(Roll: {{ student.tenth_roll }}){% endif %}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">10th Board</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.tenth_board or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">10th Marks</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">
+          {% if student.tenth_obtained is not none and student.tenth_max is not none %}
+            {{ student.tenth_obtained }} / {{ student.tenth_max }}
+            ({{"%.2f"|format((student.tenth_obtained / student.tenth_max) * 100)}}%)
+          {% else %}
+            N/A
+          {% endif %}
+        </span>
+      </div>
+      <div class="erp-field">
+        <!-- Spacer -->
+      </div>
+
+      <!-- 12th Standard -->
+      <div class="erp-field">
+        <span class="erp-field-label">12th Year / Roll</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.twelfth_year or 'N/A' }} {% if student.twelfth_roll %}(Roll: {{ student.twelfth_roll }}){% endif %}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">12th Board</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.twelfth_board or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">12th Marks</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">
+          {% if student.twelfth_obtained is not none and student.twelfth_max is not none %}
+            {{ student.twelfth_obtained }} / {{ student.twelfth_max }}
+            ({{"%.2f"|format((student.twelfth_obtained / student.twelfth_max) * 100)}}%)
+          {% else %}
+            N/A
+          {% endif %}
+        </span>
+      </div>
+      <div class="erp-field">
+        <!-- Spacer -->
+      </div>
+    </div>
+
+    <!-- Parent & Guardian Information Section -->
+    <h2 class="erp-section-title"><i class="fas fa-users" style="color:var(--forest);"></i> Parent & Guardian Information</h2>
+    <div class="erp-grid">
+      <div class="erp-field">
+        <span class="erp-field-label">Father's Name</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.father_name or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">Father's Occupation</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.father_occupation or 'N/A' }}</span>
+      </div>
+
+      <div class="erp-field">
+        <span class="erp-field-label">Father's Mobile</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.father_mobile or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">Mother's Name</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.mother_name or 'N/A' }}</span>
+      </div>
+
+      <div class="erp-field">
+        <span class="erp-field-label">Mother's Mobile</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.mother_mobile or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <span class="erp-field-label">Local Guardian</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.local_guardian_name or 'N/A' }} {% if student.local_guardian_mobile %}(Mob: {{ student.local_guardian_mobile }}){% endif %}</span>
+      </div>
+
+      <div class="erp-field">
+        <span class="erp-field-label">Guardian Address</span>
+        <span class="erp-field-separator">:</span>
+        <span class="erp-field-value">{{ student.local_guardian_address or 'N/A' }}</span>
+      </div>
+      <div class="erp-field">
+        <!-- Spacer -->
       </div>
     </div>
     
-    
     <!-- Infrastructure Information Section -->
-    <h2 class="erp-section-title">Campus Facilities & Transport</h2>
+    <h2 class="erp-section-title"><i class="fas fa-building" style="color:var(--forest);"></i> Campus Facilities & Transport</h2>
     <div class="erp-grid">
       <!-- Hostel Info -->
       <div class="erp-field">

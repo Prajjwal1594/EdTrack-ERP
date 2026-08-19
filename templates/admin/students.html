@@ -53,11 +53,13 @@
           </td>
           <td>
             <div style="display:flex; gap:6px;">
-              <a href="{{ url_for('admin.edit_erp_profile', uid=u.id) }}" class="btn btn-xs btn-outline" title="Edit ERP Detailed Profile">
-                <i class="fas fa-id-card"></i> Edit ERP
+              {% if u.student_profile %}
+              <a href="{{ url_for('student.profile_view', student_id=u.student_profile.id) }}" class="btn btn-xs btn-outline" title="View Profile">
+                <i class="fas fa-eye"></i> View Profile
               </a>
-              <a href="{{ url_for('admin.edit_user', uid=u.id) }}" class="btn btn-xs btn-ghost" title="Basics/Login Settings">
-                <i class="fas fa-cog"></i>
+              {% endif %}
+              <a href="{{ url_for('admin.edit_user', uid=u.id) }}" class="btn btn-xs btn-outline" title="Edit Student Profile & Basics">
+                <i class="fas fa-pen"></i> Edit
               </a>
             </div>
           </td>
