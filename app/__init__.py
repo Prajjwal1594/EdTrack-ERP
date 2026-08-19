@@ -207,6 +207,9 @@ def create_app(config_class=Config):
     from app.finance import bp as finance_bp
     app.register_blueprint(finance_bp, url_prefix='/finance')
 
+    from app.accountant import bp as accountant_bp
+    app.register_blueprint(accountant_bp, url_prefix='/accountant')
+
     @app.route('/health')
     def health_check():
         return jsonify({"status": "ok"}), 200

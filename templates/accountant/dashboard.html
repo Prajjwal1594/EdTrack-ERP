@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Accountant Dashboard — EdTrack ERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 24px;">
+  <!-- Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:24px;">
+    <div>
+      <h1 style="font-family:'Playfair Display', serif; font-size:26px; font-weight:700; color:var(--forest); margin:0;">
+        <i class="fas fa-calculator" style="color:var(--gold); margin-right:10px;"></i>Accountant Dashboard
+      </h1>
+      <p style="color:var(--ink-mid); margin-top:4px; font-size:14px;">
+        Welcome back, <strong>{{ current_user.name }}</strong>! Manage fee collections, buy/sell ledgers, and physical item room allocations.
+      </p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{{ url_for('fees.index') }}" class="btn btn-primary" style="background:var(--forest); border:none; border-radius:8px; padding:10px 18px; font-weight:600;">
+        <i class="fas fa-money-bill-wave" style="margin-right:6px;"></i> Manage Fees
+      </a>
+      <a href="{{ url_for('finance.assets') }}" class="btn btn-gold" style="border-radius:8px; padding:10px 18px; font-weight:600;">
+        <i class="fas fa-boxes-stacked" style="margin-right:6px;"></i> Asset & Location Tracker
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Stats Grid -->
+  <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:28px;">
+    <!-- Fee Collections -->
+    <div class="stat-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-left:4px solid #27ae60;">
+      <div style="font-size:12px; font-weight:600; color:var(--ink-mid); text-transform:uppercase;">Total Fee Collected</div>
+      <div style="font-size:26px; font-weight:700; color:#27ae60; margin-top:6px;">${{ "{:,.2f}".format(total_fee_collected) }}</div>
+      <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Received student tuition & fees</div>
+    </div>
+    <!-- Pending Dues -->
+    <div class="stat-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-left:4px solid #e74c3c;">
+      <div style="font-size:12px; font-weight:600; color:var(--ink-mid); text-transform:uppercase;">Pending Fee Dues</div>
+      <div style="font-size:26px; font-weight:700; color:#e74c3c; margin-top:6px;">${{ "{:,.2f}".format(total_fee_pending) }}</div>
+      <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Outstanding fee balance</div>
+    </div>
+    <!-- Buy/Sell Ledger Expenses -->
+    <div class="stat-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-left:4px solid var(--forest);">
+      <div style="font-size:12px; font-weight:600; color:var(--ink-mid); text-transform:uppercase;">General Ledger Expenses</div>
+      <div style="font-size:26px; font-weight:700; color:var(--forest); margin-top:6px;">${{ "{:,.2f}".format(total_ledger_expense) }}</div>
+      <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Vendor payments & campus operational costs</div>
+    </div>
+    <!-- Asset Investment Value -->
+    <div class="stat-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-left:4px solid var(--gold);">
+      <div style="font-size:12px; font-weight:600; color:var(--ink-mid); text-transform:uppercase;">Tracked Physical Assets</div>
+      <div style="font-size:26px; font-weight:700; color:var(--gold); margin-top:6px;">{{ total_assets_count }} Items</div>
+      <div style="font-size:12px; color:var(--ink-light); margin-top:4px;">Value: ${{ "{:,.2f}".format(total_assets_value) }}</div>
+    </div>
+  </div>
+
+  <!-- Quick Action Navigation Cards -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:28px;">
+    <a href="{{ url_for('fees.index') }}" style="text-decoration:none;">
+      <div class="card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border:1px solid #eee; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--forest)';" onmouseout="this.style.borderColor='#eee';">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:46px; height:46px; background:#e8f5e9; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#2e7d32; font-size:20px;">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+          <div>
+            <div style="font-weight:700; color:var(--forest); font-size:15px;">Fee Management</div>
+            <div style="font-size:12px; color:var(--ink-light); margin-top:2px;">Record & verify student fee payments</div>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('finance.ledger') }}" style="text-decoration:none;">
+      <div class="card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border:1px solid #eee; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--forest)';" onmouseout="this.style.borderColor='#eee';">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:46px; height:46px; background:#e3f2fd; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#1565c0; font-size:20px;">
+            <i class="fas fa-file-invoice-dollar"></i>
+          </div>
+          <div>
+            <div style="font-weight:700; color:var(--forest); font-size:15px;">Buy / Sell & Ledger</div>
+            <div style="font-size:12px; color:var(--ink-light); margin-top:2px;">Track general college income & expenses</div>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('finance.assets') }}" style="text-decoration:none;">
+      <div class="card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border:1px solid #eee; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--forest)';" onmouseout="this.style.borderColor='#eee';">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:46px; height:46px; background:#fff3e0; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#ef6c00; font-size:20px;">
+            <i class="fas fa-boxes-stacked"></i>
+          </div>
+          <div>
+            <div style="font-weight:700; color:var(--forest); font-size:15px;">Asset Location Tracker</div>
+            <div style="font-size:12px; color:var(--ink-light); margin-top:2px;">Track room, floor & block item allocations</div>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('finance.ledger_report') }}" style="text-decoration:none;">
+      <div class="card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border:1px solid #eee; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--forest)';" onmouseout="this.style.borderColor='#eee';">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:46px; height:46px; background:#f3e5f5; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#7b1fa2; font-size:20px;">
+            <i class="fas fa-file-pdf"></i>
+          </div>
+          <div>
+            <div style="font-weight:700; color:var(--forest); font-size:15px;">Financial PDF Reports</div>
+            <div style="font-size:12px; color:var(--ink-light); margin-top:2px;">Export complete financial audit reports</div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Tables Grid: Recent Fee Payments & Recent Purchased Assets -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(450px, 1fr)); gap:24px;">
+    <!-- Recent Fee Payments -->
+    <div class="card" style="background:white; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.05); overflow:hidden;">
+      <div style="padding:16px 20px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:#fcfcfc;">
+        <h3 style="font-size:16px; font-weight:700; margin:0; color:var(--forest);">
+          <i class="fas fa-history" style="color:var(--gold); margin-right:8px;"></i>Recent Fee Collections
+        </h3>
+        <a href="{{ url_for('fees.index') }}" style="font-size:12px; font-weight:600; color:var(--forest); text-decoration:none;">View All &rarr;</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table" style="margin:0; width:100%; border-collapse:collapse;">
+          <thead style="background:#f8f9fa; border-bottom:1px solid #e9ecef;">
+            <tr>
+              <th style="padding:10px 14px; font-size:12px; color:var(--ink-mid);">Student</th>
+              <th style="padding:10px 14px; font-size:12px; color:var(--ink-mid);">Fee Type</th>
+              <th style="padding:10px 14px; font-size:12px; color:var(--ink-mid);">Amount</th>
+              <th style="padding:10px 14px; font-size:12px; color:var(--ink-mid);">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if recent_fee_payments %}
+              {% for p in recent_fee_payments %}
+              <tr style="border-bottom:1px solid #f1f1f1;">
+                <td style="padding:12px 14px; font-size:13px; font-weight:600; color:var(--forest);">
+                  {{ p.student.user.name if p.student and p.student.user else 'Student' }}
+                </td>
+                <td style="padding:12px 14px; font-size:12px; color:var(--ink-mid);">
+                  {{ p.fee_type.name if p.fee_type else 'Tuition Fee' }}
+                </td>
+                <td style="padding:12px 14px; font-size:13px; font-weight:700;">
+                  ${{ "{:,.2f}".format(p.amount) }}
+                </td>
+                <td style="padding:12px 14px;">
+                  {% if p.status == 'paid' %}
+                  <span class="badge badge-success" style="background:#d4edda; color:#155724;">Paid</span>
+                  {% else %}
+                  <span class="badge badge-danger" style="background:#f8d7da; color:#721c24;">{{ p.status|title }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" style="text-align:center; padding:20px; color:var(--ink-light); font-size:13px;">No fee collection records yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Asset Location Allocations -->
+    <div class="card" style="background:white; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.05); overflow:hidden;">
+      <div style="padding:16px 20px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:#fcfcfc;">
+        <h3 style="font-size:16px; font-weight:700; margin:0; color:var(--forest);">
+          <i class="fas fa-building-circle-check" style="color:var(--gold); margin-right:8px;"></i>Recent Asset & Location Allocations
+        </h3>
+        <a href="{{ url_for('finance.assets') }}" style="font-size:12px; font-weight:600; color:var(--forest); text-decoration:none;">View All &rarr;</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table" style="margin:0; width:100%; border-collapse:collapse;">
+          <thead style="background:#f8f9fa; border-bottom:1px solid #e9ecef;">
+            <tr>
+              <th style="padding:10px 14px; font-size:12px; color:var(--ink-mid);">Item Name</th>
+              <th style="padding:10px 14px; font-size:12px; color:var(--ink-mid);">Physical Location</th>
+              <th style="padding:10px 14px; font-size:12px; color:var(--ink-mid);">Qty & Cost</th>
+              <th style="padding:10px 14px; font-size:12px; color:var(--ink-mid);">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if recent_assets %}
+              {% for a in recent_assets %}
+              <tr style="border-bottom:1px solid #f1f1f1;">
+                <td style="padding:12px 14px; font-size:13px; font-weight:600; color:var(--forest);">
+                  {{ a.item_name }}
+                  <div style="font-size:11px; color:var(--ink-light);">{{ a.category }}</div>
+                </td>
+                <td style="padding:12px 14px; font-size:12px; color:var(--ink-mid);">
+                  <strong>{{ a.block_name }}</strong>
+                  <div style="font-size:11px; color:var(--ink-light);">{{ a.room_number }} ({{ a.floor_level }})</div>
+                </td>
+                <td style="padding:12px 14px; font-size:13px; font-weight:600;">
+                  ${{ "{:,.2f}".format(a.total_cost) }}
+                  <div style="font-size:11px; color:var(--ink-light);">Qty: {{ a.quantity }}</div>
+                </td>
+                <td style="padding:12px 14px;">
+                  <span class="badge badge-info" style="background:#d1ecf1; color:#0c5460;">{{ a.status }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" style="text-align:center; padding:20px; color:var(--ink-light); font-size:13px;">No physical asset records logged yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -701,6 +701,8 @@
       <a href="{{ url_for('admin.college_settings') }}" class="nav-link {% if request.endpoint == 'admin.college_settings' %}active{% endif %}"><i class="fas fa-gear"></i> College Settings</a>
 
       {% elif current_user.role == 'accountant' %}
+      <span class="nav-section-label">Overview</span>
+      <a href="{{ url_for('accountant.dashboard') }}" class="nav-link {% if request.endpoint == 'accountant.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
       <span class="nav-section-label">Finance & Fees</span>
       <a href="{{ url_for('fees.index') }}" class="nav-link {% if request.blueprint == 'fees' %}active{% endif %}"><i class="fas fa-money-bill-wave"></i> Fee Management</a>
       <a href="{{ url_for('finance.ledger') }}" class="nav-link {% if request.blueprint == 'finance' and request.endpoint == 'finance.ledger' %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i> Buy / Sell & Ledger</a>
