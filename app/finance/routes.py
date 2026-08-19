@@ -124,7 +124,74 @@ def assets():
                            unique_categories=unique_categories)
 
 
-@bp.route('/assets/edit/<int:id>', methods=['POST'])
+@bp.route('/assets/add', methods=['GET', 'POST'])
+@finance_required
+def add_asset():
+    if request.method == 'POST':
+        item_name = request.form.get('item_name', '').strip()
+        category = request.form.get('category', 'Furniture & Fixtures')
+        quantity = int(request.form.get('quantity', 1))
+        unit_cost = float(request.form.get('unit_cost', 0))
+        total_cost = unit_cost * quantity
+        vendor_name = request.form.get('vendor_name', '').strip()
+        invoice_no = request.form.get('invoice_no', '').strip()
+        
+        purchase_date_str = request.form.get('purchase_date')
+        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date() if purchase_date_str else datetime.utcnow().date()
+        
+        warranty_str = request.form.get('warranty_expiry')
+        warranty_expiry = datetime.strptime(warranty_str, '%Y-%m-%d').date() if warranty_str else None
+        
+        block_name = request.form.get('block_name', '').strip()
+        floor_level = request.form.get('floor_level', '').strip()
+        corridor_wing = request.form.get('corridor_wing', '').strip()
+        room_number = request.form.get('room_number', '').strip()
+        department = request.form.get('department', '').strip()
+        status = request.form.get('status', 'In Use')
+        notes = request.form.get('notes', '').strip()
+
+        new_asset = AssetRecord(
+            college_id=current_user.college_id,
+            item_name=item_name,
+            category=category,
+            quantity=quantity,
+            unit_cost=unit_cost,
+            total_cost=total_cost,
+            purchase_date=purchase_date,
+            vendor_name=vendor_name,
+            invoice_no=invoice_no,
+            warranty_expiry=warranty_expiry,
+            block_name=block_name,
+            floor_level=floor_level,
+            corridor_wing=corridor_wing,
+            room_number=room_number,
+            department=department,
+            status=status,
+            notes=notes
+        )
+        db.session.add(new_asset)
+
+        if request.form.get('auto_ledger') == '1':
+            ledger_entry = FinancialLedger(
+                college_id=current_user.college_id,
+                transaction_type='EXPENSE',
+                amount=total_cost,
+                party_name=vendor_name or 'Asset Vendor',
+                category='Asset & Inventory Purchase',
+                description=f"Purchased {quantity}x {item_name} for {block_name} ({room_number})",
+                payment_method='Bank Transfer',
+                reference_no=invoice_no
+            )
+            db.session.add(ledger_entry)
+
+        db.session.commit()
+        flash(f'Asset "{item_name}" recorded & assigned to {block_name} - {room_number} successfully!', 'success')
+        return redirect(url_for('finance.assets'))
+
+    return render_template('finance/add_asset.html')
+
+
+@bp.route('/assets/edit/<int:id>', methods=['GET', 'POST'])
 @finance_required
 def edit_asset(id):
     asset = AssetRecord.query.get_or_404(id)
@@ -132,33 +199,36 @@ def edit_asset(id):
         flash('Access denied.', 'danger')
         return redirect(url_for('finance.assets'))
 
-    asset.item_name = request.form.get('item_name', asset.item_name).strip()
-    asset.category = request.form.get('category', asset.category)
-    asset.quantity = int(request.form.get('quantity', asset.quantity))
-    asset.unit_cost = float(request.form.get('unit_cost', asset.unit_cost))
-    asset.total_cost = asset.unit_cost * asset.quantity
-    asset.vendor_name = request.form.get('vendor_name', asset.vendor_name).strip()
-    asset.invoice_no = request.form.get('invoice_no', asset.invoice_no).strip()
+    if request.method == 'POST':
+        asset.item_name = request.form.get('item_name', asset.item_name).strip()
+        asset.category = request.form.get('category', asset.category)
+        asset.quantity = int(request.form.get('quantity', asset.quantity))
+        asset.unit_cost = float(request.form.get('unit_cost', asset.unit_cost))
+        asset.total_cost = asset.unit_cost * asset.quantity
+        asset.vendor_name = request.form.get('vendor_name', asset.vendor_name).strip()
+        asset.invoice_no = request.form.get('invoice_no', asset.invoice_no).strip()
 
-    purchase_date_str = request.form.get('purchase_date')
-    if purchase_date_str:
-        asset.purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+        purchase_date_str = request.form.get('purchase_date')
+        if purchase_date_str:
+            asset.purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
 
-    warranty_str = request.form.get('warranty_expiry')
-    if warranty_str:
-        asset.warranty_expiry = datetime.strptime(warranty_str, '%Y-%m-%d').date()
+        warranty_str = request.form.get('warranty_expiry')
+        if warranty_str:
+            asset.warranty_expiry = datetime.strptime(warranty_str, '%Y-%m-%d').date()
 
-    asset.block_name = request.form.get('block_name', asset.block_name).strip()
-    asset.floor_level = request.form.get('floor_level', asset.floor_level).strip()
-    asset.corridor_wing = request.form.get('corridor_wing', asset.corridor_wing).strip()
-    asset.room_number = request.form.get('room_number', asset.room_number).strip()
-    asset.department = request.form.get('department', asset.department).strip()
-    asset.status = request.form.get('status', asset.status)
-    asset.notes = request.form.get('notes', asset.notes).strip()
+        asset.block_name = request.form.get('block_name', asset.block_name).strip()
+        asset.floor_level = request.form.get('floor_level', asset.floor_level).strip()
+        asset.corridor_wing = request.form.get('corridor_wing', asset.corridor_wing).strip()
+        asset.room_number = request.form.get('room_number', asset.room_number).strip()
+        asset.department = request.form.get('department', asset.department).strip()
+        asset.status = request.form.get('status', asset.status)
+        asset.notes = request.form.get('notes', asset.notes).strip()
 
-    db.session.commit()
-    flash(f'Asset "{asset.item_name}" location & record updated successfully.', 'success')
-    return redirect(url_for('finance.assets'))
+        db.session.commit()
+        flash(f'Asset "{asset.item_name}" location & record updated successfully.', 'success')
+        return redirect(url_for('finance.assets'))
+
+    return render_template('finance/edit_asset.html', asset=asset)
 
 
 @bp.route('/assets/delete/<int:id>', methods=['POST', 'GET'])

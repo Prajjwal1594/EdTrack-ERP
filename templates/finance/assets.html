@@ -15,9 +15,9 @@
       </p>
     </div>
     <div style="display:flex; gap:10px;">
-      <button class="btn btn-primary" onclick="openModal('addAssetModal')" style="background:var(--forest); border:none; padding:10px 20px; font-weight:600; border-radius:8px;">
+      <a href="{{ url_for('finance.add_asset') }}" class="btn btn-primary" style="background:var(--forest); border:none; padding:10px 20px; font-weight:600; border-radius:8px; text-decoration:none;">
         <i class="fas fa-plus" style="margin-right:6px;"></i> Record New Asset & Location
-      </button>
+      </a>
     </div>
   </div>
 
@@ -153,9 +153,9 @@
               </td>
               <!-- Actions -->
               <td style="padding:14px 16px; text-align:right;">
-                <button class="btn btn-ghost btn-xs" onclick='editAsset({{ a.to_dict()|tojson|safe }})' title="Edit Location & Asset Details" style="margin-right:4px;">
+                <a href="{{ url_for('finance.edit_asset', id=a.id) }}" class="btn btn-ghost btn-xs" title="Edit Location & Asset Details" style="margin-right:4px;">
                   <i class="fas fa-pen" style="color:var(--forest);"></i>
-                </button>
+                </a>
                 <a href="{{ url_for('finance.delete_asset', id=a.id) }}" class="btn btn-ghost btn-xs" onclick="return confirm('Are you sure you want to delete this asset record?');" title="Delete Record">
                   <i class="fas fa-trash" style="color:#d9534f;"></i>
                 </a>
@@ -166,7 +166,7 @@
             <tr>
               <td colspan="6" style="text-align:center; padding:40px; color:var(--ink-light);">
                 <i class="fas fa-boxes-stacked fa-3x" style="color:#ddd; margin-bottom:12px; display:block;"></i>
-                No purchased asset records found. Click <strong>"Record New Asset & Location"</strong> to add items.
+                No purchased asset records found. Click <a href="{{ url_for('finance.add_asset') }}"><strong>"Record New Asset & Location"</strong></a> to add items.
               </td>
             </tr>
           {% endif %}

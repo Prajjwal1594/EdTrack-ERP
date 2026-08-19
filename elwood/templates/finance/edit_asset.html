@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Asset & Location — EdTrack ERP{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 24px; max-width: 900px; margin: 0 auto;">
+  <div style="margin-bottom: 24px;">
+    <a href="{{ url_for('finance.assets') }}" class="btn btn-outline" style="border-radius:8px; padding:6px 14px; font-size:13px; margin-bottom:12px;">
+      <i class="fas fa-arrow-left" style="margin-right:6px;"></i> Back to Asset List
+    </a>
+    <h1 style="font-family:'Playfair Display', serif; font-size:26px; font-weight:700; color:var(--forest); margin:0;">
+      <i class="fas fa-edit" style="color:var(--gold); margin-right:10px;"></i>Edit Asset & Location Allocation
+    </h1>
+    <p style="color:var(--ink-mid); margin-top:4px; font-size:14px;">
+      Update details for <strong>{{ asset.item_name }}</strong>.
+    </p>
+  </div>
+
+  <div class="card" style="background:white; border-radius:16px; padding:28px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+    <form method="POST" action="{{ url_for('finance.edit_asset', id=asset.id) }}">
+      <!-- Section 1: Item & Financial Details -->
+      <h3 style="font-size:15px; font-weight:700; color:var(--forest); border-bottom:2px solid var(--forest-light); padding-bottom:8px; margin-bottom:18px;">
+        <i class="fas fa-receipt" style="color:var(--gold); margin-right:8px;"></i>1. Item & Financial Details
+      </h3>
+
+      <div class="form-row" style="display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px;">
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Item / Equipment Name *</label>
+          <input type="text" name="item_name" class="form-control" value="{{ asset.item_name }}" required style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Category *</label>
+          <select name="category" class="form-control" required style="border-radius:8px; padding:10px 14px;">
+            {% for cat in ['Furniture & Fixtures', 'IT & Computers', 'Lab Equipment', 'Electrical & Lighting', 'Plumbing & Sanitation', 'Stationary & Office', 'Maintenance & Tools', 'Other'] %}
+            <option value="{{ cat }}" {% if asset.category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Quantity *</label>
+          <input type="number" name="quantity" class="form-control" value="{{ asset.quantity }}" min="1" required style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Unit Cost ($) *</label>
+          <input type="number" step="0.01" name="unit_cost" class="form-control" value="{{ asset.unit_cost }}" required style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Purchase Date</label>
+          <input type="date" name="purchase_date" class="form-control" value="{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else '' }}" style="border-radius:8px; padding:10px 14px;">
+        </div>
+      </div>
+
+      <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Vendor / Supplier Name</label>
+          <input type="text" name="vendor_name" class="form-control" value="{{ asset.vendor_name or '' }}" style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Invoice / Bill Ref #</label>
+          <input type="text" name="invoice_no" class="form-control" value="{{ asset.invoice_no or '' }}" style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Warranty Expiry Date</label>
+          <input type="date" name="warranty_expiry" class="form-control" value="{{ asset.warranty_expiry.strftime('%Y-%m-%d') if asset.warranty_expiry else '' }}" style="border-radius:8px; padding:10px 14px;">
+        </div>
+      </div>
+
+      <!-- Section 2: Physical Location Breakdown -->
+      <h3 style="font-size:15px; font-weight:700; color:var(--forest); border-bottom:2px solid var(--forest-light); padding-bottom:8px; margin-bottom:18px; margin-top:28px;">
+        <i class="fas fa-building" style="color:var(--gold); margin-right:8px;"></i>2. Physical Location & Department Allocation
+      </h3>
+
+      <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Block / Building Name *</label>
+          <input type="text" name="block_name" class="form-control" value="{{ asset.block_name or '' }}" required style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Floor Level *</label>
+          <input type="text" name="floor_level" class="form-control" value="{{ asset.floor_level or '' }}" required style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Corridor / Wing *</label>
+          <input type="text" name="corridor_wing" class="form-control" value="{{ asset.corridor_wing or '' }}" required style="border-radius:8px; padding:10px 14px;">
+        </div>
+      </div>
+
+      <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px;">
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Room / Lab / Facility # *</label>
+          <input type="text" name="room_number" class="form-control" value="{{ asset.room_number or '' }}" required style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Allocated Department</label>
+          <input type="text" name="department" class="form-control" value="{{ asset.department or '' }}" style="border-radius:8px; padding:10px 14px;">
+        </div>
+        <div>
+          <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Condition / Status</label>
+          <select name="status" class="form-control" style="border-radius:8px; padding:10px 14px;">
+            {% for st in ['In Use', 'In Storage', 'Under Repair', 'Disposed'] %}
+            <option value="{{ st }}" {% if asset.status == st %}selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label" style="font-weight:600; font-size:13px; color:var(--forest);">Usage Remarks / Notes</label>
+        <textarea name="notes" class="form-control" rows="3" style="border-radius:8px; padding:10px 14px;">{{ asset.notes or '' }}</textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px; border-top:1px solid #eee; padding-top:20px;">
+        <a href="{{ url_for('finance.assets') }}" class="btn btn-outline-secondary" style="border-radius:8px; padding:10px 20px;">Cancel</a>
+        <button type="submit" class="btn btn-primary" style="background:var(--forest); border:none; border-radius:8px; padding:10px 24px; font-weight:600; font-size:14px;">
+          <i class="fas fa-save" style="margin-right:8px;"></i> Update Asset Record
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
