@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from functools import wraps
 from app.accountant import bp
 from app.models import FeePayment, FinancialLedger, AssetRecord, Student, User
+from app.finance.routes import sync_all_fees_to_ledger
 from app import db
 
 
@@ -20,6 +21,9 @@ def accountant_required(f):
 @accountant_required
 def dashboard():
     college_id = current_user.college_id
+
+    # Automatically sync fee collections to general ledger income
+    sync_all_fees_to_ledger(college_id)
 
     # 1. Fee Payments Data
     fee_payments = (FeePayment.query.join(Student).join(User, Student.user_id == User.id)

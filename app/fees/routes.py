@@ -79,7 +79,11 @@ def mark_paid(pid):
     payment.payment_method = request.form.get('payment_method', 'cash')
     payment.transaction_ref = request.form.get('transaction_ref', '')
     db.session.commit()
-    flash('Payment recorded.', 'success')
+
+    from app.finance.routes import sync_all_fees_to_ledger
+    sync_all_fees_to_ledger(current_user.college_id)
+
+    flash('Payment recorded & added to Income Ledger.', 'success')
     return redirect(request.referrer or url_for('fees.index'))
 
 

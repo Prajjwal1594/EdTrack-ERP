@@ -6,6 +6,46 @@ from functools import wraps
 from app.finance import bp
 from app.models import FinancialLedger, AssetRecord
 
+def sync_all_fees_to_ledger(college_id):
+    """
+    Automatically record all paid student fee payments as INCOME transactions in the FinancialLedger.
+    """
+    from app.models import FeePayment, Student, User
+    paid_fees = (FeePayment.query.join(Student).join(User, Student.user_id == User.id)
+                 .filter(User.college_id == college_id, FeePayment.status == 'paid').all())
+
+    for payment in paid_fees:
+        if not payment.student or not payment.student.user:
+            continue
+        
+        ref_no = payment.transaction_ref or f"FEE-PAY-{payment.id}"
+        existing = FinancialLedger.query.filter_by(
+            college_id=college_id,
+            reference_no=ref_no
+        ).first()
+
+        if not existing:
+            fee_name = payment.fee_type.name if payment.fee_type else 'Tuition & Student Fees'
+            student_user = payment.student.user
+            enrollment = payment.student.enrollment_number or 'N/A'
+            description = f"Fee Collection: {student_user.name} ({enrollment}) - {fee_name}"
+            
+            entry = FinancialLedger(
+                college_id=college_id,
+                transaction_type='INCOME',
+                amount=payment.amount,
+                party_name=student_user.name,
+                category='Student Fee Collection',
+                description=description,
+                transaction_date=payment.paid_at or payment.created_at or datetime.utcnow(),
+                payment_method=payment.payment_method or 'Cash / Online',
+                reference_no=ref_no
+            )
+            db.session.add(entry)
+
+    db.session.commit()
+
+
 def finance_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -247,6 +287,7 @@ def delete_asset(id):
 @bp.route('/ledger', methods=['GET', 'POST'])
 @finance_required
 def ledger():
+    sync_all_fees_to_ledger(current_user.college_id)
     if request.method == 'POST':
         transaction_type = request.form.get('transaction_type')
         amount = float(request.form.get('amount', 0))
@@ -298,6 +339,7 @@ def delete_transaction(id):
 @bp.route('/ledger/report')
 @finance_required
 def ledger_report():
+    sync_all_fees_to_ledger(current_user.college_id)
     transactions = FinancialLedger.query.filter_by(college_id=current_user.college_id).order_by(FinancialLedger.transaction_date.desc()).all()
     total_income = sum(t.amount for t in transactions if t.transaction_type == 'INCOME')
     total_expense = sum(t.amount for t in transactions if t.transaction_type == 'EXPENSE')
