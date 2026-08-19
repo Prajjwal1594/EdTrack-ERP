@@ -142,6 +142,11 @@ def seed(app=None, auto=False):
         admin1.set_password("admin123")
         db.session.add(admin1)
 
+        accountant1 = User(name="Robert Vance", email="accountant@gmail.com",
+                           role="accountant", college_id=college1.id, phone="+1 555-0004")
+        accountant1.set_password("accountant123")
+        db.session.add(accountant1)
+
         faculty_data_1 = [
             ("Mr. James Harrison", "faculty@gmail.com", "faculty123"),
             ("Ms. Priya Sharma",   "priya@gmail.com",   "faculty123"),
@@ -266,6 +271,11 @@ def seed(app=None, auto=False):
         admin2.set_password("admin123")
         db.session.add(admin2)
 
+        accountant2 = User(name="Sarah Jenkins", email="accountant2@sunrise.edu",
+                           role="accountant", college_id=college2.id)
+        accountant2.set_password("accountant123")
+        db.session.add(accountant2)
+
         faculty_data_2 = [
             ("Mr. Ahmed Malik",    "faculty2@sunrise.edu", "faculty123"),
             ("Ms. Clara Hernandez","clara@sunrise.edu",    "faculty123"),
@@ -344,12 +354,14 @@ def seed(app=None, auto=False):
         print()
         print(f"  [College 1: {college1.name}]")
         print("  admin@gmail.com            / admin123")
+        print("  accountant@gmail.com       / accountant123")
         print("  faculty@gmail.com          / faculty123")
         print("  student@gmail.com          / student123")
         print("  parent@gmail.com           / parent123")
         print()
         print(f"  [College 2: {college2.name}]")
         print("  admin2@sunrise.edu         / admin123")
+        print("  accountant2@sunrise.edu    / accountant123")
         print("  faculty2@sunrise.edu       / faculty123")
         print("  student2@sunrise.edu       / student123")
         print("=" * 56 + "\n")

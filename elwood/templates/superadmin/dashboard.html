@@ -13,7 +13,7 @@
 </div>
 
 <!-- Aggregate stats -->
-<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+<div class="stats-grid" style="grid-template-columns:repeat(6,1fr)">
   <div class="stat-card">
     <div class="stat-icon" style="background:var(--forest-light)"><i class="fa-solid fa-university"></i></div>
     <div class="stat-value">{{ totals.colleges }}</div>
@@ -22,17 +22,27 @@
   <div class="stat-card">
     <div class="stat-icon" style="background:#2980b9"><i class="fa-solid fa-user-graduate"></i></div>
     <div class="stat-value">{{ totals.students }}</div>
-    <div class="stat-label">Total Students</div>
+    <div class="stat-label">Students</div>
   </div>
   <div class="stat-card">
     <div class="stat-icon" style="background:#8e44ad"><i class="fa-solid fa-chalkboard-user"></i></div>
     <div class="stat-value">{{ totals.faculty }}</div>
-    <div class="stat-label">Total Faculty</div>
+    <div class="stat-label">Faculty</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#e67e22"><i class="fa-solid fa-receipt"></i></div>
+    <div class="stat-value">{{ totals.accountants }}</div>
+    <div class="stat-label">Accountants</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:#16a085"><i class="fa-solid fa-id-badge"></i></div>
+    <div class="stat-value">{{ totals.hr }}</div>
+    <div class="stat-label">HR Staff</div>
   </div>
   <div class="stat-card">
     <div class="stat-icon" style="background:var(--warning)"><i class="fa-solid fa-user-shield"></i></div>
     <div class="stat-value">{{ totals.admins }}</div>
-    <div class="stat-label">College Admins</div>
+    <div class="stat-label">Admins</div>
   </div>
 </div>
 

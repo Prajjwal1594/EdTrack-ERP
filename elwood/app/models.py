@@ -37,7 +37,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
-    role = db.Column(db.String(20), nullable=False)  # admin, faculty, student, parent
+    role = db.Column(db.String(20), nullable=False)  # admin, accountant, hr, faculty, student, parent
     college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'))
     is_active = db.Column(db.Boolean, default=True)
     avatar = db.Column(db.String(300))
@@ -204,9 +204,12 @@ class Student(db.Model):
     batch_id = db.Column(db.Integer, db.ForeignKey('batches.id'), nullable=True)
     section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=True)
     enrollment_number = db.Column(db.String(30), unique=True)
+    roll_number = db.Column(db.String(30))
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.String(10))
     address = db.Column(db.Text)
+    state = db.Column(db.String(100))
+    country = db.Column(db.String(100))
     enrollment_date = db.Column(db.Date, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
 

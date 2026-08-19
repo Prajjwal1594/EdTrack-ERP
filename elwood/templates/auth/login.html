@@ -102,26 +102,6 @@
     .btn-login:active { transform: scale(.99); }
     .flash { padding: 11px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px;
              background: #fdf0ee; color: #8b1a1a; border: 1px solid #f5c0b8; }
-    .demo-accounts {
-      margin-top: 28px;
-      padding: 16px;
-      background: var(--cream);
-      border-radius: 10px;
-      border: 1px solid #e8e0d0;
-    }
-    .demo-accounts h4 { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #999; margin-bottom: 10px; }
-    .demo-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .demo-item {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      cursor: pointer;
-      transition: all .2s;
-    }
-    .demo-item:hover { border-color: var(--forest-light); background: #f0f7f3; }
-    .demo-item .role { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--forest-light); }
-    .demo-item .creds { font-size: 11px; color: #666; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -152,37 +132,10 @@
         </div>
         <button type="submit" class="btn-login">Sign In</button>
       </form>
- 
-      <div class="demo-accounts">
-        <h4>Demo Accounts</h4>
-        <div class="demo-list">
-          <div class="demo-item" onclick="fillLogin('admin@gmail.com','admin123')">
-            <div class="role">Admin</div>
-            <div class="creds">admin@gmail.com</div>
-          </div>
-          <div class="demo-item" onclick="fillLogin('faculty@gmail.com','faculty123')">
-            <div class="role">Faculty</div>
-            <div class="creds">faculty@gmail.com</div>
-          </div>
-          <div class="demo-item" onclick="fillLogin('student@gmail.com','student123')">
-            <div class="role">Student</div>
-            <div class="creds">student@gmail.com</div>
-          </div>
-          <div class="demo-item" onclick="fillLogin('parent@gmail.com','parent123')">
-            <div class="role">Parent</div>
-            <div class="creds">parent@gmail.com</div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </div>
 <script>
-function fillLogin(email, pass) {
-  document.querySelector('input[name="email"]').value = email;
-  document.querySelector('input[name="password"]').value = pass;
-}
-
 // Add trim on submit
 document.querySelector('form').addEventListener('submit', function(e) {
   const emailInput = this.querySelector('input[name="email"]');

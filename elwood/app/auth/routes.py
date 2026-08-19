@@ -57,6 +57,8 @@ def dashboard():
         return redirect(url_for('faculty.dashboard'))
     elif role == 'student':
         return redirect(url_for('student.dashboard'))
+    elif role == 'accountant':
+        return redirect(url_for('fees.index'))
     elif role == 'hr':
         return redirect(url_for('hr.dashboard'))
     elif role == 'parent':

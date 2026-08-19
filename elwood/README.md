@@ -99,12 +99,31 @@ Visit **http://localhost:5000**
 
 ## Demo Accounts
 
+Run `python seed.py` to seed the database with initial demo accounts for testing:
+
+### Platform Superadmin
+| Role | Email | Password |
+|---|---|---|
+| Superadmin | superadmin@edtrack.com | super123 |
+
+### College 1: El'Wood International University
 | Role | Email | Password |
 |---|---|---|
 | Admin | admin@gmail.com | admin123 |
+| HR | hr@gmail.com | hr123 |
+| Accountant | accountant@gmail.com | accountant123 |
 | Faculty | faculty@gmail.com | faculty123 |
 | Student | student@gmail.com | student123 |
 | Parent | parent@gmail.com | parent123 |
+
+### College 2: Sunrise Academy
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin2@sunrise.edu | admin123 |
+| HR | hr2@sunrise.edu | hr123 |
+| Accountant | accountant2@sunrise.edu | accountant123 |
+| Faculty | faculty2@sunrise.edu | faculty123 |
+| Student | student2@sunrise.edu | student123 |
 
 ---
 

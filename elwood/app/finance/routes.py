@@ -2,12 +2,21 @@ from flask import render_template, redirect, url_for, flash, request, make_respo
 from flask_login import login_required, current_user
 from datetime import datetime
 from app import db
+from functools import wraps
 from app.finance import bp
 from app.models import FinancialLedger
-from app.admin.routes import admin_required
+
+def finance_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role not in ('admin', 'accountant', 'superadmin'):
+            flash('Finance / Accountant access required.', 'danger')
+            return redirect(url_for('auth.dashboard'))
+        return f(*args, **kwargs)
+    return login_required(decorated)
 
 @bp.route('/ledger', methods=['GET', 'POST'])
-@admin_required
+@finance_required
 def ledger():
     if request.method == 'POST':
         transaction_type = request.form.get('transaction_type')
@@ -45,7 +54,7 @@ def ledger():
                            net_balance=net_balance)
 
 @bp.route('/ledger/delete/<int:id>')
-@admin_required
+@finance_required
 def delete_transaction(id):
     transaction = FinancialLedger.query.get_or_404(id)
     if transaction.college_id != current_user.college_id:
@@ -56,8 +65,9 @@ def delete_transaction(id):
     db.session.commit()
     flash('Transaction deleted.', 'success')
     return redirect(url_for('finance.ledger'))
+
 @bp.route('/ledger/report')
-@admin_required
+@finance_required
 def ledger_report():
     transactions = FinancialLedger.query.filter_by(college_id=current_user.college_id).order_by(FinancialLedger.transaction_date.desc()).all()
     total_income = sum(t.amount for t in transactions if t.transaction_type == 'INCOME')

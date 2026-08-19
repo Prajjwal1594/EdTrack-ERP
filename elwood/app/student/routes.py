@@ -100,14 +100,18 @@ def faculty():
 # ─── Profile View ──────────────────────────────────────────────────────────────
 
 @bp.route('/profile-view')
-@student_required
+@login_required
 def profile_view():
-    student = get_current_student()
+    student_id = request.args.get('student_id', type=int)
+    if student_id and current_user.role in ['admin', 'faculty', 'superadmin']:
+        student = Student.query.get_or_404(student_id)
+    else:
+        student = get_current_student()
+        
     if not student:
         flash('Student profile not found.', 'danger')
-        return redirect(url_for('student.dashboard'))
+        return redirect(url_for('student.dashboard') if current_user.role == 'student' else url_for('admin.users'))
     
-    # Phase 5: Fetch Infrastructure Data
     from app.models import TransportAllocation, HostelAllocation
     transport = TransportAllocation.query.filter_by(student_id=student.id).first()
     hostel = HostelAllocation.query.filter_by(student_id=student.id, status='Occupied').first()
