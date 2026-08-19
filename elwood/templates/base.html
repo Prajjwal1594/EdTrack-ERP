@@ -659,9 +659,10 @@
       <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
       <span class="nav-section-label">Management</span>
       <a href="{{ url_for('admin.users') }}" class="nav-link {% if 'admin.users' in (request.endpoint or '') or 'admin.add_user' in (request.endpoint or '') or 'admin.edit_user' in (request.endpoint or '') and not 'erp' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-users"></i> Users</a>
+      <a href="{{ url_for('admin.upload_users') }}" class="nav-link {% if request.endpoint == 'admin.upload_users' %}active{% endif %}"><i class="fas fa-file-excel"></i> Bulk Import (CSV/Excel)</a>
       <a href="{{ url_for('admin.students') }}" class="nav-link {% if 'admin.students' in (request.endpoint or '') or 'admin.edit_erp_profile' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-user-graduate"></i> ERP Students</a>
       <a href="{{ url_for('admin.courses_management') }}" class="nav-link {% if request.endpoint == 'admin.courses_management' %}active{% endif %}"><i class="fas fa-graduation-cap"></i> Courses & Streams</a>
-      <a href="{{ url_for('admin.counselor_assignments') }}" class="nav-link {% if request.endpoint == 'admin.counselor_assignments' %}active{% endif %}"><i class="fas fa-user-shield"></i> Counselor Roles</a>
+      <a href="{{ url_for('admin.counselor_assignments') }}" class="nav-link {% if request.endpoint == 'admin.counselor_assignments' %}active{% endif %}"><i class="fas fa-user-shield"></i> Counselors & HODs</a>
       <a href="{{ url_for('admin.semesters') }}" class="nav-link {% if request.endpoint == 'admin.semesters' %}active{% endif %}"><i class="fas fa-university"></i> Semesters</a>
       <a href="{{ url_for('admin.sections') }}" class="nav-link {% if request.endpoint == 'admin.sections' %}active{% endif %}"><i class="fas fa-door-open"></i> Sections</a>
       <a href="{{ url_for('admin.subjects') }}" class="nav-link {% if request.endpoint == 'admin.subjects' %}active{% endif %}"><i class="fas fa-book"></i> Subjects</a>
@@ -670,6 +671,7 @@
       <a href="{{ url_for('timetable.index') }}" class="nav-link {% if request.blueprint == 'timetable' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Timetables</a>
       <span class="nav-section-label">Academic</span>
       <a href="{{ url_for('admin.terms') }}" class="nav-link {% if request.endpoint == 'admin.terms' %}active{% endif %}"><i class="fas fa-calendar-days"></i> Academic Terms</a>
+      <a href="{{ url_for('admin.export_attendance_matrix_csv') }}" class="nav-link {% if request.endpoint == 'admin.export_attendance_matrix_csv' %}active{% endif %}"><i class="fas fa-file-csv"></i> Attendance Export (CSV)</a>
       <a href="{{ url_for('admin.fee_types') }}" class="nav-link {% if request.endpoint == 'admin.fee_types' %}active{% endif %}"><i class="fas fa-receipt"></i> Fee Types</a>
       <a href="{{ url_for('fees.index') }}" class="nav-link {% if request.blueprint == 'fees' %}active{% endif %}"><i class="fas fa-money-bill-wave"></i> Fee Management</a>
       <span class="nav-section-label">Communication</span>

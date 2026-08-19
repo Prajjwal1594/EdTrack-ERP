@@ -80,8 +80,8 @@ def dashboard():
     # 1. Subject Averages for this faculty
     subject_avg_data = db.session.query(
         Subject.name, func.avg(Grade.score)
-    ).join(Grade, Grade.subject_id == Subject.id).filter(Grade.created_by == current_user.id).group_by(Subject.id).all()
-    subject_averages = [{"subject": row[0], "avg": round(row[1], 1)} for row in subject_avg_data]
+    ).join(Grade, Grade.subject_id == Subject.id).filter(Grade.created_by == current_user.id).group_by(Subject.id, Subject.name).all()
+    subject_averages = [{"subject": row[0], "avg": round(row[1], 1) if row[1] is not None else 0.0} for row in subject_avg_data]
 
     # 2. At-Risk Students in faculty's sections
     at_risk_count = 0

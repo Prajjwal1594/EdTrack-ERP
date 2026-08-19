@@ -45,6 +45,8 @@ class Config:
         _db_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', '', ''))
         if has_ssl:
             ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
             _engine_options['connect_args'] = {'ssl_context': ctx}
 
     SQLALCHEMY_DATABASE_URI = _db_url

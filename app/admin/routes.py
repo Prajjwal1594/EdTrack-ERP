@@ -48,8 +48,8 @@ def dashboard():
     # 1. Subject Averages
     subject_avg_data = db.session.query(
         Subject.name, func.avg(Grade.score)
-    ).join(Grade, Grade.subject_id == Subject.id).filter(Subject.college_id == current_user.college_id).group_by(Subject.id).all()
-    subject_averages = [{"subject": row[0], "avg": round(row[1], 1)} for row in subject_avg_data]
+    ).join(Grade, Grade.subject_id == Subject.id).filter(Subject.college_id == current_user.college_id).group_by(Subject.id, Subject.name).all()
+    subject_averages = [{"subject": row[0], "avg": round(row[1], 1) if row[1] is not None else 0.0} for row in subject_avg_data]
 
     # 2. Performance Trend (Last 6 Months)
     date_group = func.strftime('%Y-%m', Grade.date) if db.engine.dialect.name == 'sqlite' else func.to_char(Grade.date, 'YYYY-MM')
@@ -58,7 +58,7 @@ def dashboard():
     ).join(Student, Grade.student_id == Student.id).join(User, Student.user_id == User.id)\
     .filter(User.college_id == current_user.college_id).group_by(date_group)\
     .order_by(date_group.desc()).limit(6).all()
-    performance_trend = [{"month": row[0], "avg": round(row[1], 1)} for row in reversed(trend_data)]
+    performance_trend = [{"month": row[0] or "", "avg": round(row[1], 1) if row[1] is not None else 0.0} for row in reversed(trend_data)]
 
     # 3. User Distribution
     user_dist = [

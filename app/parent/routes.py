@@ -57,7 +57,7 @@ def dashboard():
         subject_averages = []
         for sid, avg in subject_avg_data:
             subj = Subject.query.get(sid)
-            subject_averages.append({"subject": subj.name if subj else "Unknown", "avg": round(avg, 1)})
+            subject_averages.append({"subject": subj.name if subj else "Unknown", "avg": round(avg, 1) if avg is not None else 0.0})
 
         # Performance Trend
         trend_data = (Grade.query.filter_by(student_id=child.id)

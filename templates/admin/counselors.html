@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Counselor Assignments{% endblock %}
-{% block page_title %}Faculty Counselor Assignments{% endblock %}
+{% block title %}Counselors & HOD Assignments{% endblock %}
+{% block page_title %}Counselors & Head of Department (HOD) Assignments{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div class="page-header-left">
-    <div class="breadcrumb"><a href="{{ url_for('admin.dashboard') }}">Admin</a> / Counselor Assignments</div>
-    <h1>Counselor Assignments</h1>
-    <p>Assign faculty members to counselor leadership roles: Chief Batch Counselor (Course), Head Batch Counselor (Stream), and Batch Counselor (Section).</p>
+    <div class="breadcrumb"><a href="{{ url_for('admin.dashboard') }}">Admin</a> / Counselors & HOD Assignments</div>
+    <h1>Counselors & HOD Assignments</h1>
+    <p>Assign faculty members to departmental and counselor leadership roles: Course HOD / Chief Batch Counselor, Department/Stream HOD, and Section Batch Counselor.</p>
   </div>
 </div>
 
@@ -19,9 +19,9 @@
     <div class="card-header">
       <div>
         <span class="card-title" style="font-size:16px; font-weight:700; color:var(--forest);">
-          <i class="fas fa-user-shield" style="color:var(--gold);"></i> Chief Batch Counselors (By Course)
+          <i class="fas fa-user-shield" style="color:var(--gold);"></i> Course HOD & Chief Batch Counselors (By Course)
         </span>
-        <p class="text-muted text-small" style="margin-top:2px;">Chief counselors oversee all academic batches and operations for an entire Course.</p>
+        <p class="text-muted text-small" style="margin-top:2px;">Head of Department (HOD) / Chief Counselors who oversee all academic batches and operations for an entire Course.</p>
       </div>
     </div>
     <div class="table-wrap">
@@ -78,9 +78,9 @@
     <div class="card-header">
       <div>
         <span class="card-title" style="font-size:16px; font-weight:700; color:var(--forest);">
-          <i class="fas fa-user-tie" style="color:var(--info);"></i> Head Batch Counselors (By Stream)
+          <i class="fas fa-user-tie" style="color:var(--info);"></i> Stream HOD & Head Batch Counselors (By Stream / Branch)
         </span>
-        <p class="text-muted text-small" style="margin-top:2px;">Head counselors manage student batches within specific Academic Streams or Branches.</p>
+        <p class="text-muted text-small" style="margin-top:2px;">Head of Department (HOD) / Head counselors who manage student batches within specific Academic Streams or Branches.</p>
       </div>
     </div>
     <div class="table-wrap">
