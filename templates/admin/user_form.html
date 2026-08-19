@@ -34,20 +34,19 @@
           <input type="email" name="email" class="form-control" value="{{ user.email if user else '' }}" required placeholder="user@gmail.com" {% if user %}disabled{% endif %}>
         </div>
       </div>
-      {% if not user %}
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Role *</label>
           <select name="role" class="form-control" required id="roleSelect" onchange="toggleStudentFields(this.value)">
             <option value="">-- Select Role --</option>
-             {% for r in ['admin','hr','accountant','faculty','student','parent'] %}
-            <option value="{{ r }}">{{ r | title }}</option>
+            {% for r, label in [('admin', 'Admin'), ('accountant', 'Accountant'), ('hr', 'HR'), ('faculty', 'Faculty'), ('student', 'Student'), ('parent', 'Parent')] %}
+            <option value="{{ r }}" {% if user and user.role == r %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Initial Password</label>
-          <input type="text" name="password" class="form-control" value="ChangeMe123!" placeholder="Default password">
+          <label class="form-label">{% if user %}New Password (Optional){% else %}Initial Password{% endif %}</label>
+          <input type="text" name="{{ 'new_password' if user else 'password' }}" class="form-control" value="{{ '' if user else 'ChangeMe123!' }}" placeholder="{{ 'Leave blank to keep unchanged' if user else 'Default password' }}">
         </div>
       </div>
       <div id="studentFields" style="display: {{ 'block' if (user and user.role == 'student') else 'none' }};">

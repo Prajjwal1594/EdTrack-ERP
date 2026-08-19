@@ -289,6 +289,8 @@ def edit_user(uid):
     user = User.query.get_or_404(uid)
     if request.method == 'POST':
         user.name = request.form.get('name', user.name)
+        if request.form.get('role'):
+            user.role = request.form.get('role')
         user.phone = request.form.get('phone', user.phone)
         user.is_active = request.form.get('is_active') == 'on'
         new_pass = request.form.get('new_password', '').strip()
