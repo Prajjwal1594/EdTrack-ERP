@@ -42,23 +42,35 @@ def dashboard():
     active_term = AcademicTerm.query.filter_by(college_id=current_user.college_id, is_active=True).first()
     
     # Analytics Data
-    from sqlalchemy import func
+    from sqlalchemy import func, literal_column
     from app.models import Grade
     
     # 1. Subject Averages
-    subject_avg_data = db.session.query(
-        Subject.name, func.avg(Grade.score)
-    ).join(Grade, Grade.subject_id == Subject.id).filter(Subject.college_id == current_user.college_id).group_by(Subject.id, Subject.name).all()
-    subject_averages = [{"subject": row[0], "avg": round(row[1], 1) if row[1] is not None else 0.0} for row in subject_avg_data]
+    try:
+        subject_avg_data = db.session.query(
+            Subject.name, func.avg(Grade.score)
+        ).join(Grade, Grade.subject_id == Subject.id).filter(Subject.college_id == current_user.college_id).group_by(Subject.id, Subject.name).all()
+        subject_averages = [{"subject": row[0], "avg": round(row[1], 1) if row[1] is not None else 0.0} for row in subject_avg_data]
+    except Exception:
+        db.session.rollback()
+        subject_averages = []
 
     # 2. Performance Trend (Last 6 Months)
-    date_group = func.strftime('%Y-%m', Grade.date) if db.engine.dialect.name == 'sqlite' else func.to_char(Grade.date, 'YYYY-MM')
-    trend_data = db.session.query(
-        date_group, func.avg(Grade.score)
-    ).join(Student, Grade.student_id == Student.id).join(User, Student.user_id == User.id)\
-    .filter(User.college_id == current_user.college_id).group_by(date_group)\
-    .order_by(date_group.desc()).limit(6).all()
-    performance_trend = [{"month": row[0] or "", "avg": round(row[1], 1) if row[1] is not None else 0.0} for row in reversed(trend_data)]
+    try:
+        if db.engine.dialect.name == 'sqlite':
+            date_group = func.strftime('%Y-%m', Grade.date)
+        else:
+            date_group = func.to_char(Grade.date, literal_column("'YYYY-MM'"))
+
+        trend_data = db.session.query(
+            date_group, func.avg(Grade.score)
+        ).join(Student, Grade.student_id == Student.id).join(User, Student.user_id == User.id)\
+        .filter(User.college_id == current_user.college_id).group_by(date_group)\
+        .order_by(date_group.desc()).limit(6).all()
+        performance_trend = [{"month": str(row[0] or ""), "avg": round(row[1], 1) if row[1] is not None else 0.0} for row in reversed(trend_data)]
+    except Exception:
+        db.session.rollback()
+        performance_trend = []
 
     # 3. User Distribution
     user_dist = [
