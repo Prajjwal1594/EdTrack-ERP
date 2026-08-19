@@ -11,8 +11,8 @@ from datetime import datetime, date
 def staff_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role not in ('admin', 'faculty'):
-            flash('Staff access required.', 'danger')
+        if not current_user.is_authenticated or current_user.role not in ('admin', 'faculty', 'accountant', 'superadmin'):
+            flash('Staff/Accountant access required.', 'danger')
             return redirect(url_for('auth.dashboard'))
         return f(*args, **kwargs)
     return login_required(decorated)
@@ -118,7 +118,7 @@ def student_fees(student_id):
         if not student:
             flash('Access denied.', 'danger')
             return redirect(url_for('student.dashboard'))
-    elif current_user.role not in ('admin', 'faculty'):
+    elif current_user.role not in ('admin', 'faculty', 'accountant', 'superadmin'):
         flash('Access denied.', 'danger')
         return redirect(url_for('auth.dashboard'))
 

@@ -15,7 +15,7 @@
 </div>
 
 <div class="filter-bar">
-  {% for role in ['', 'admin', 'faculty', 'student', 'parent'] %}
+  {% for role in ['', 'admin', 'hr', 'accountant', 'faculty', 'student', 'parent'] %}
   <a href="{{ url_for('admin.users', role=role) }}"
      class="btn btn-sm {{ 'btn-primary' if role_filter == role else 'btn-ghost' }}">
     {{ role | title if role else 'All' }}
@@ -42,7 +42,7 @@
             </div>
           </td>
           <td class="text-muted text-small">{{ u.email }}</td>
-          <td><span class="badge badge-{{ 'gold' if u.role == 'admin' else 'info' if u.role == 'faculty' else 'success' if u.role == 'student' else 'neutral' }}">{{ u.role }}</span></td>
+          <td><span class="badge badge-{{ 'gold' if u.role == 'admin' else 'warning' if u.role == 'accountant' else 'info' if u.role == 'faculty' else 'success' if u.role == 'student' else 'neutral' }}">{{ u.role }}</span></td>
           <td class="text-muted text-small">
             {% if u.role == 'student' and u.student_profile %}
               {% set st = u.student_profile %}

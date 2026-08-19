@@ -40,7 +40,7 @@
           <label class="form-label">Role *</label>
           <select name="role" class="form-control" required id="roleSelect" onchange="toggleStudentFields(this.value)">
             <option value="">-- Select Role --</option>
-             {% for r in ['admin','hr','faculty','student','parent'] %}
+             {% for r in ['admin','hr','accountant','faculty','student','parent'] %}
             <option value="{{ r }}">{{ r | title }}</option>
             {% endfor %}
           </select>
