@@ -8,15 +8,11 @@ from datetime import datetime
 
 @bp.route('/')
 def index():
-    if current_user.is_authenticated:
-        return redirect(url_for('auth.dashboard'))
     return redirect(url_for('auth.login'))
 
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('auth.dashboard'))
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
