@@ -149,6 +149,27 @@ def create_app(config_class=Config):
                     print("[STARTUP] Auto-seeded demo accounts successfully.", flush=True)
                 except Exception as se:
                     print(f"[STARTUP] Auto-seed note: {se}", flush=True)
+            else:
+                # Ensure demo accountant accounts exist even on pre-existing Vercel databases
+                acc_user = User.query.filter_by(email='accountant@gmail.com').first()
+                if not acc_user:
+                    admin_user = User.query.filter_by(role='admin').first()
+                    cid = admin_user.college_id if admin_user else 1
+                    new_acc = User(name="Robert Vance", email="accountant@gmail.com", role="accountant", college_id=cid, phone="+1 555-0004")
+                    new_acc.set_password("accountant123")
+                    db.session.add(new_acc)
+                    db.session.commit()
+                    print("[STARTUP] Ensured demo accountant@gmail.com exists.", flush=True)
+
+                acc_user_2 = User.query.filter_by(email='accountant2@sunrise.edu').first()
+                if not acc_user_2:
+                    admin_user_2 = User.query.filter_by(email='admin2@sunrise.edu').first()
+                    cid2 = admin_user_2.college_id if admin_user_2 else 2
+                    new_acc2 = User(name="Sarah Jenkins", email="accountant2@sunrise.edu", role="accountant", college_id=cid2)
+                    new_acc2.set_password("accountant123")
+                    db.session.add(new_acc2)
+                    db.session.commit()
+                    print("[STARTUP] Ensured demo accountant2@sunrise.edu exists.", flush=True)
             # Sync any newly added columns to existing tables safely
             from sqlalchemy import inspect, text
             inspector = inspect(db.engine)
