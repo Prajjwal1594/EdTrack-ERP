@@ -12,6 +12,92 @@ login_manager = LoginManager()
 mail = Mail()
 socketio = SocketIO()
 
+def sync_database_schema(engine):
+    """Safely ensure all required columns exist in PostgreSQL and SQLite databases."""
+    columns_map = {
+        'students': [
+            ('course_id', 'INTEGER'),
+            ('stream_id', 'INTEGER'),
+            ('batch_id', 'INTEGER'),
+            ('section_id', 'INTEGER'),
+            ('roll_number', 'VARCHAR(50)'),
+            ('date_of_birth', 'DATE'),
+            ('gender', 'VARCHAR(10)'),
+            ('address', 'TEXT'),
+            ('state', 'VARCHAR(100)'),
+            ('country', 'VARCHAR(100)'),
+            ('enrollment_date', 'DATE'),
+            ('is_active', 'BOOLEAN DEFAULT TRUE'),
+            ('blood_group', 'VARCHAR(10)'),
+            ('religion', 'VARCHAR(50)'),
+            ('caste', 'VARCHAR(50)'),
+            ('aadhar_number', 'VARCHAR(20)'),
+            ('admission_category', 'VARCHAR(50)'),
+            ('session', 'VARCHAR(20)'),
+            ('tc_date', 'DATE'),
+            ('biometric_card_no', 'VARCHAR(50)'),
+            ('alternate_semester_group', 'VARCHAR(20)'),
+            ('semester_group', 'VARCHAR(20)'),
+            ('phone2', 'VARCHAR(30)'),
+            ('landline', 'VARCHAR(30)'),
+            ('tenth_year', 'INTEGER'),
+            ('tenth_roll', 'VARCHAR(50)'),
+            ('tenth_board', 'VARCHAR(100)'),
+            ('tenth_obtained', 'FLOAT'),
+            ('tenth_max', 'FLOAT'),
+            ('twelfth_year', 'INTEGER'),
+            ('twelfth_roll', 'VARCHAR(50)'),
+            ('twelfth_board', 'VARCHAR(100)'),
+            ('twelfth_obtained', 'FLOAT'),
+            ('twelfth_max', 'FLOAT'),
+            ('father_name', 'VARCHAR(100)'),
+            ('father_occupation', 'VARCHAR(100)'),
+            ('father_mobile', 'VARCHAR(30)'),
+            ('mother_name', 'VARCHAR(100)'),
+            ('mother_mobile', 'VARCHAR(30)'),
+            ('local_guardian_name', 'VARCHAR(100)'),
+            ('local_guardian_mobile', 'VARCHAR(30)'),
+            ('local_guardian_address', 'TEXT'),
+        ],
+        'sections': [
+            ('course_id', 'INTEGER'),
+            ('stream_id', 'INTEGER'),
+            ('batch_id', 'INTEGER'),
+            ('batch_counselor_id', 'INTEGER'),
+        ],
+        'users': [
+            ('phone', 'VARCHAR(30)'),
+            ('college_id', 'INTEGER'),
+            ('is_active', 'BOOLEAN DEFAULT TRUE'),
+            ('avatar_url', 'VARCHAR(255)'),
+        ]
+    }
+
+    from sqlalchemy import text, inspect
+    try:
+        inspector = inspect(engine)
+        tables = [t.lower() for t in inspector.get_table_names()]
+        with engine.begin() as conn:
+            for table_name, cols in columns_map.items():
+                if table_name in tables:
+                    try:
+                        existing_cols = [c['name'].lower() for c in inspector.get_columns(table_name)]
+                    except Exception:
+                        existing_cols = []
+                    for col_name, col_type in cols:
+                        if not existing_cols or col_name.lower() not in existing_cols:
+                            try:
+                                conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
+                                print(f"[SCHEMA SYNC] Added column {table_name}.{col_name}", flush=True)
+                            except Exception:
+                                try:
+                                    conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}"))
+                                    print(f"[SCHEMA SYNC] Added column {table_name}.{col_name} (fallback)", flush=True)
+                                except Exception as ex:
+                                    print(f"[SCHEMA SYNC] Note on {table_name}.{col_name}: {ex}", flush=True)
+    except Exception as e:
+        print(f"[SCHEMA SYNC] Global schema sync note: {e}", flush=True)
+
 def create_app(config_class=Config):
     print("[STARTUP] Creating Flask app...", flush=True)
     import os
@@ -111,12 +197,13 @@ def create_app(config_class=Config):
         """Helper endpoint to initialize database tables and seed demo data on demand."""
         try:
             db.create_all()
+            sync_database_schema(db.engine)
             from app.models import User
             if not User.query.first():
                 from seed import seed
                 seed(app, auto=True)
                 return jsonify({"status": "success", "message": "Database initialized and seeded successfully!"}), 200
-            return jsonify({"status": "success", "message": "Database tables already initialized and populated."}), 200
+            return jsonify({"status": "success", "message": "Database tables and schema synchronized successfully."}), 200
         except Exception as e:
             traceback.print_exc()
             return jsonify({"status": "error", "message": str(e)}), 500
@@ -140,7 +227,10 @@ def create_app(config_class=Config):
         try:
             print("[STARTUP] Running db.create_all()...", flush=True)
             db.create_all()
-            print("[STARTUP] db.create_all() completed successfully.", flush=True)
+            print("[STARTUP] Running sync_database_schema()...", flush=True)
+            sync_database_schema(db.engine)
+            print("[STARTUP] db.create_all() and schema sync completed.", flush=True)
+
             from app.models import User
             if not User.query.first():
                 try:
@@ -180,98 +270,6 @@ def create_app(config_class=Config):
                     db.session.add(new_hr)
                     db.session.commit()
                     print("[STARTUP] Ensured demo hr@gmail.com exists.", flush=True)
-            # Sync any newly added columns to existing tables safely
-            from sqlalchemy import inspect, text
-            inspector = inspect(db.engine)
-            with db.engine.connect() as conn:
-                if 'students' in inspector.get_table_names():
-                    st_cols = [c['name'] for c in inspector.get_columns('students')]
-                    student_columns_to_add = [
-                        ('course_id', 'INTEGER'),
-                        ('stream_id', 'INTEGER'),
-                        ('batch_id', 'INTEGER'),
-                        ('section_id', 'INTEGER'),
-                        ('roll_number', 'VARCHAR(50)'),
-                        ('date_of_birth', 'DATE'),
-                        ('gender', 'VARCHAR(10)'),
-                        ('address', 'TEXT'),
-                        ('state', 'VARCHAR(100)'),
-                        ('country', 'VARCHAR(100)'),
-                        ('enrollment_date', 'DATE'),
-                        ('is_active', 'BOOLEAN DEFAULT TRUE'),
-                        ('blood_group', 'VARCHAR(10)'),
-                        ('religion', 'VARCHAR(50)'),
-                        ('caste', 'VARCHAR(50)'),
-                        ('aadhar_number', 'VARCHAR(20)'),
-                        ('admission_category', 'VARCHAR(50)'),
-                        ('session', 'VARCHAR(20)'),
-                        ('tc_date', 'DATE'),
-                        ('biometric_card_no', 'VARCHAR(50)'),
-                        ('alternate_semester_group', 'VARCHAR(20)'),
-                        ('semester_group', 'VARCHAR(20)'),
-                        ('phone2', 'VARCHAR(30)'),
-                        ('landline', 'VARCHAR(30)'),
-                        ('tenth_year', 'INTEGER'),
-                        ('tenth_roll', 'VARCHAR(50)'),
-                        ('tenth_board', 'VARCHAR(100)'),
-                        ('tenth_obtained', 'FLOAT'),
-                        ('tenth_max', 'FLOAT'),
-                        ('twelfth_year', 'INTEGER'),
-                        ('twelfth_roll', 'VARCHAR(50)'),
-                        ('twelfth_board', 'VARCHAR(100)'),
-                        ('twelfth_obtained', 'FLOAT'),
-                        ('twelfth_max', 'FLOAT'),
-                        ('father_name', 'VARCHAR(100)'),
-                        ('father_occupation', 'VARCHAR(100)'),
-                        ('father_mobile', 'VARCHAR(30)'),
-                        ('mother_name', 'VARCHAR(100)'),
-                        ('mother_mobile', 'VARCHAR(30)'),
-                        ('local_guardian_name', 'VARCHAR(100)'),
-                        ('local_guardian_mobile', 'VARCHAR(30)'),
-                        ('local_guardian_address', 'TEXT'),
-                    ]
-                    for col_name, col_type in student_columns_to_add:
-                        if col_name not in st_cols:
-                            try:
-                                conn.execute(text(f"ALTER TABLE students ADD COLUMN {col_name} {col_type}"))
-                                conn.commit()
-                                print(f"[STARTUP] Added column students.{col_name}", flush=True)
-                            except Exception as ex:
-                                print(f"[STARTUP] Column sync note (students.{col_name}): {ex}", flush=True)
-
-                if 'sections' in inspector.get_table_names():
-                    s_cols = [c['name'] for c in inspector.get_columns('sections')]
-                    section_columns_to_add = [
-                        ('course_id', 'INTEGER'),
-                        ('stream_id', 'INTEGER'),
-                        ('batch_id', 'INTEGER'),
-                        ('batch_counselor_id', 'INTEGER'),
-                    ]
-                    for col_name, col_type in section_columns_to_add:
-                        if col_name not in s_cols:
-                            try:
-                                conn.execute(text(f"ALTER TABLE sections ADD COLUMN {col_name} {col_type}"))
-                                conn.commit()
-                                print(f"[STARTUP] Added column sections.{col_name}", flush=True)
-                            except Exception as ex:
-                                print(f"[STARTUP] Column sync note (sections.{col_name}): {ex}", flush=True)
-
-                if 'users' in inspector.get_table_names():
-                    u_cols = [c['name'] for c in inspector.get_columns('users')]
-                    user_columns_to_add = [
-                        ('phone', 'VARCHAR(30)'),
-                        ('college_id', 'INTEGER'),
-                        ('is_active', 'BOOLEAN DEFAULT TRUE'),
-                        ('avatar_url', 'VARCHAR(255)'),
-                    ]
-                    for col_name, col_type in user_columns_to_add:
-                        if col_name not in u_cols:
-                            try:
-                                conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
-                                conn.commit()
-                                print(f"[STARTUP] Added column users.{col_name}", flush=True)
-                            except Exception as ex:
-                                print(f"[STARTUP] Column sync note (users.{col_name}): {ex}", flush=True)
         except Exception as e:
             print(f"[STARTUP] ERROR during db.create_all()/sync: {e}", flush=True)
             traceback.print_exc()
