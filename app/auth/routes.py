@@ -13,6 +13,9 @@ def index():
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('auth.dashboard'))
+
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
@@ -25,8 +28,12 @@ def login():
                 db.session.commit()
             except Exception:
                 db.session.rollback()
+
+            if user.role == 'accountant':
+                return redirect(url_for('accountant.dashboard'))
+            
             next_page = request.args.get('next')
-            if next_page:
+            if next_page and next_page != '/fees/' and next_page != '/fees':
                 return redirect(next_page)
             return redirect(url_for('auth.dashboard'))
         flash('Invalid email or password.', 'danger')
