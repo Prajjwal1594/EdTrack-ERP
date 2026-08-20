@@ -3,10 +3,10 @@ from flask_login import login_required, current_user
 from app import db
 from app.infra import bp
 from app.models import LibraryBook, BookIssue, TransportRoute, TransportAllocation, HostelRoom, HostelAllocation, InventoryCategory, InventoryItem, PurchaseOrder, Student, User
-from app.admin.routes import admin_required
+from app.utils.permissions import role_required
 
 @bp.route('/library', methods=['GET', 'POST'])
-@admin_required
+@role_required('librarian', 'principal')
 def library():
     if request.method == 'POST':
         title = request.form.get('title')
@@ -32,7 +32,7 @@ def library():
     return render_template('infra/library.html', books=books, issues=issues)
 
 @bp.route('/transport', methods=['GET', 'POST'])
-@admin_required
+@role_required('transport_manager', 'principal')
 def transport():
     if request.method == 'POST':
         route_name = request.form.get('route_name')
@@ -58,45 +58,35 @@ def transport():
     return render_template('infra/transport.html', routes=routes, students=students)
 
 @bp.route('/transport/delete/<int:id>')
-@admin_required
+@role_required('transport_manager', 'principal')
 def delete_transport(id):
-    route = TransportRoute.query.get_or_404(id)
-    if route.college_id != current_user.college_id:
-        flash('Access denied.', 'danger')
-        return redirect(url_for('infra.transport'))
-    
-    # Remove allocations first
-    TransportAllocation.query.filter_by(route_id=id).delete()
-    db.session.delete(route)
+    tr = TransportRoute.query.get_or_404(id)
+    db.session.delete(tr)
     db.session.commit()
-    flash('Transport route deleted.', 'success')
+    flash('Transport route deleted.', 'info')
     return redirect(url_for('infra.transport'))
 
 @bp.route('/transport/allocate', methods=['POST'])
-@admin_required
+@role_required('transport_manager', 'principal')
 def allocate_transport():
-    route_id = request.form.get('route_id')
     student_id = request.form.get('student_id')
+    route_id = request.form.get('route_id')
     pickup_point = request.form.get('pickup_point')
     
-    # Check if existing
-    existing = TransportAllocation.query.filter_by(student_id=student_id).first()
-    if existing:
-        existing.route_id = route_id
-        existing.pickup_point = pickup_point
-    else:
-        new_alloc = TransportAllocation(
-            route_id=route_id, student_id=student_id,
-            college_id=current_user.college_id, pickup_point=pickup_point
+    if student_id and route_id:
+        alloc = TransportAllocation(
+            student_id=student_id,
+            route_id=route_id,
+            pickup_point=pickup_point,
+            status='active'
         )
-        db.session.add(new_alloc)
-    
-    db.session.commit()
-    flash('Student allocated to transport route.', 'success')
+        db.session.add(alloc)
+        db.session.commit()
+        flash('Transport allocated to student.', 'success')
     return redirect(url_for('infra.transport'))
 
 @bp.route('/hostel', methods=['GET', 'POST'])
-@admin_required
+@role_required('hostel_warden', 'principal', 'student_affairs')
 def hostel():
     if request.method == 'POST':
         hostel_name = request.form.get('hostel_name')
@@ -120,7 +110,7 @@ def hostel():
     return render_template('infra/hostel.html', rooms=rooms, students=students)
 
 @bp.route('/hostel/delete/<int:id>')
-@admin_required
+@role_required('hostel_warden', 'principal', 'student_affairs')
 def delete_hostel(id):
     room = HostelRoom.query.get_or_404(id)
     if room.college_id != current_user.college_id:
@@ -134,7 +124,7 @@ def delete_hostel(id):
     return redirect(url_for('infra.hostel'))
 
 @bp.route('/hostel/allocate', methods=['POST'])
-@admin_required
+@role_required('hostel_warden', 'principal', 'student_affairs')
 def allocate_hostel():
     room_id = request.form.get('room_id')
     student_id = request.form.get('student_id')
@@ -161,7 +151,7 @@ def allocate_hostel():
     return redirect(url_for('infra.hostel'))
 
 @bp.route('/inventory', methods=['GET', 'POST'])
-@admin_required
+@role_required('librarian', 'hostel_warden', 'transport_manager', 'accountant', 'principal')
 def inventory():
     if request.method == 'POST':
         action = request.form.get('action')
@@ -194,7 +184,7 @@ def inventory():
     return render_template('infra/inventory.html', items=items, categories=categories)
 
 @bp.route('/inventory/delete/<int:id>')
-@admin_required
+@role_required('librarian', 'hostel_warden', 'transport_manager', 'accountant', 'principal')
 def delete_inventory(id):
     item = InventoryItem.query.get_or_404(id)
     if item.college_id != current_user.college_id:
@@ -207,7 +197,7 @@ def delete_inventory(id):
     return redirect(url_for('infra.inventory'))
 
 @bp.route('/inventory/edit/<int:id>', methods=['POST'])
-@admin_required
+@role_required('librarian', 'hostel_warden', 'transport_manager', 'accountant', 'principal')
 def edit_inventory(id):
     item = InventoryItem.query.get_or_404(id)
     if item.college_id != current_user.college_id:

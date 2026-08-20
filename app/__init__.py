@@ -210,6 +210,26 @@ def create_app(config_class=Config):
     from app.accountant import bp as accountant_bp
     app.register_blueprint(accountant_bp, url_prefix='/accountant')
 
+    from app.it_admin import bp as it_admin_bp
+    app.register_blueprint(it_admin_bp, url_prefix='/it-admin')
+
+    @app.context_processor
+    def inject_feature_flags():
+        from app.models import FeatureFlag
+        from flask_login import current_user
+
+        def is_feature_enabled(feature_key):
+            try:
+                cid = current_user.college_id if current_user and current_user.is_authenticated else 1
+                flag = FeatureFlag.query.filter_by(college_id=cid or 1, feature_key=feature_key).first()
+                if flag:
+                    return flag.is_enabled
+            except Exception:
+                pass
+            return True
+
+        return dict(is_feature_enabled=is_feature_enabled)
+
     @app.route('/health')
     def health_check():
         return jsonify({"status": "ok"}), 200
@@ -262,36 +282,46 @@ def create_app(config_class=Config):
                 except Exception as se:
                     print(f"[STARTUP] Auto-seed note: {se}", flush=True)
             else:
-                # Ensure demo accountant accounts exist even on pre-existing Vercel databases
-                acc_user = User.query.filter_by(email='accountant@gmail.com').first()
-                if not acc_user:
-                    admin_user = User.query.filter_by(role='admin').first()
-                    cid = admin_user.college_id if admin_user else 1
-                    new_acc = User(name="Robert Vance", email="accountant@gmail.com", role="accountant", college_id=cid, phone="+1 555-0004")
-                    new_acc.set_password("accountant123")
-                    db.session.add(new_acc)
-                    db.session.commit()
-                    print("[STARTUP] Ensured demo accountant@gmail.com exists.", flush=True)
+                # Ensure all 22 CSV demo role accounts exist on startup
+                demo_accounts = [
+                    ("superadmin",          "System Administrator",  "superadmin@edtrack.com",     "super123"),
+                    ("admin",               "Dr. Margaret Wells",    "admin@gmail.com",            "admin123"),
+                    ("it_admin",            "Vikram Seth",           "itadmin@gmail.com",          "itadmin123"),
+                    ("principal",           "Dr. Arthur Pendelton",  "principal@gmail.com",        "principal123"),
+                    ("registrar",           "Eleanor Vance",         "registrar@gmail.com",        "registrar123"),
+                    ("hod",                 "Dr. S. Ranganathan",    "hod@gmail.com",              "hod123"),
+                    ("admission_officer",   "Marcus Thorne",         "admissions@gmail.com",       "admissions123"),
+                    ("accountant",          "Robert Vance",          "accountant@gmail.com",       "accountant123"),
+                    ("hr",                  "Amanda Miller",         "hr@gmail.com",               "hr123"),
+                    ("examination_officer", "Patricia Sterling",     "exam_officer@gmail.com",     "exam123"),
+                    ("faculty",             "Mr. James Harrison",    "faculty@gmail.com",          "faculty123"),
+                    ("course_coordinator",  "Dr. Evelyn Reed",       "coordinator@gmail.com",      "coordinator123"),
+                    ("academic_advisor",    "Prof. Jonathan Blake",  "advisor@gmail.com",          "advisor123"),
+                    ("librarian",           "Clara Oswald",          "librarian@gmail.com",        "librarian123"),
+                    ("hostel_warden",       "Captain Arthur Dent",   "warden@gmail.com",           "warden123"),
+                    ("transport_manager",   "George Miller",         "transport@gmail.com",        "transport123"),
+                    ("placement_officer",   "Rachel Green",          "placement@gmail.com",        "placement123"),
+                    ("student_affairs",     "Daniel Cho",            "affairs@gmail.com",          "affairs123"),
+                    ("student",             "Alex Johnson",          "student@gmail.com",          "student123"),
+                    ("parent",              "Robert Johnson",        "parent@gmail.com",           "parent123"),
+                    ("alumni",              "Samantha Wright",       "alumni@gmail.com",           "alumni123"),
+                    ("employer",            "TechCorp HR",           "employer@gmail.com",         "employer123"),
+                ]
 
-                acc_user_2 = User.query.filter_by(email='accountant2@sunrise.edu').first()
-                if not acc_user_2:
-                    admin_user_2 = User.query.filter_by(email='admin2@sunrise.edu').first()
-                    cid2 = admin_user_2.college_id if admin_user_2 else 2
-                    new_acc2 = User(name="Sarah Jenkins", email="accountant2@sunrise.edu", role="accountant", college_id=cid2)
-                    new_acc2.set_password("accountant123")
-                    db.session.add(new_acc2)
-                    db.session.commit()
-                    print("[STARTUP] Ensured demo accountant2@sunrise.edu exists.", flush=True)
+                admin_user = User.query.filter_by(role='admin').first()
+                cid = admin_user.college_id if admin_user else 1
 
-                hr_user = User.query.filter_by(email='hr@gmail.com').first()
-                if not hr_user:
-                    admin_user = User.query.filter_by(role='admin').first()
-                    cid = admin_user.college_id if admin_user else 1
-                    new_hr = User(name="Amanda Miller", email="hr@gmail.com", role="hr", college_id=cid, phone="+1 555-0005")
-                    new_hr.set_password("hr123")
-                    db.session.add(new_hr)
+                added_any = False
+                for r_role, r_name, r_email, r_pwd in demo_accounts:
+                    if not User.query.filter_by(email=r_email).first():
+                        u = User(name=r_name, email=r_email, role=r_role, college_id=cid if r_role != 'superadmin' else None)
+                        u.set_password(r_pwd)
+                        db.session.add(u)
+                        added_any = True
+
+                if added_any:
                     db.session.commit()
-                    print("[STARTUP] Ensured demo hr@gmail.com exists.", flush=True)
+                    print("[STARTUP] Synchronized missing CSV demo role accounts.", flush=True)
         except Exception as e:
             print(f"[STARTUP] ERROR during db.create_all()/sync: {e}", flush=True)
             traceback.print_exc()

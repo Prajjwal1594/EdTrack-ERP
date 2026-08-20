@@ -17,7 +17,7 @@ def index():
             flash('No students linked to your account.', 'warning')
             return redirect(url_for('auth.dashboard'))
         return redirect(url_for('timetable.view_section', section_id=link.student.section_id))
-    elif current_user.role in ['admin', 'faculty']:
+    elif current_user.role in ['admin', 'superadmin', 'it_admin', 'faculty', 'principal', 'registrar', 'hod', 'examination_officer', 'course_coordinator', 'academic_advisor', 'student_affairs', 'placement_officer', 'librarian', 'hostel_warden', 'transport_manager']:
         sections = Section.query.join(Semester).filter(Semester.college_id == current_user.college_id).all()
         return render_template('timetable/index.html', sections=sections)
     return abort(403)

@@ -111,7 +111,9 @@
     <div class="card">
       <div class="card-header"><span class="card-title">Quick Actions</span></div>
       <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        {% if is_feature_enabled('early_warning') %}
         <a href="{{ url_for('admin.at_risk_dashboard') }}" class="btn btn-danger"><i class="fas fa-exclamation-triangle"></i> At-Risk Monitoring</a>
+        {% endif %}
         <a href="{{ url_for('admin.upload_users') }}" class="btn btn-gold"><i class="fas fa-file-excel"></i> Bulk Upload Users (CSV/Excel)</a>
         <a href="{{ url_for('admin.counselor_assignments') }}" class="btn btn-primary"><i class="fas fa-user-shield"></i> Counselors & HODs Assigning</a>
         <a href="{{ url_for('admin.export_attendance_matrix_csv') }}" class="btn btn-outline"><i class="fas fa-file-csv"></i> Export Attendance Matrix (CSV)</a>

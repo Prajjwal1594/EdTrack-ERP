@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Mentorship Counseling Log & Student Career Tracker — Academic Advisor{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-user-check"></i> Academic Mentorship
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Mentee Progress & Counseling</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin: 0 0 6px 0;">Mentorship Counseling Log & Career Guidance Tracker</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Record 1-on-1 counseling session notes, monitor low-attendance interventions, and track career guidance progress.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('admin.at_risk_dashboard') }}" class="btn btn-gold" style="padding: 10px 18px; font-weight: 700;">
+      <i class="fas fa-triangle-exclamation"></i> View At-Risk Mentees
+    </a>
+  </div>
+</div>
+
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-comments" style="color: var(--gold);"></i> Assigned Mentee Counseling Roster & Session Notes
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 12px 16px;">Mentee Name</th>
+        <th style="padding: 12px 16px;">Roll Number</th>
+        <th style="padding: 12px 16px;">Attendance Status</th>
+        <th style="padding: 12px 16px;">Last Counseling Date</th>
+        <th style="padding: 12px 16px;">Advising Summary Notes</th>
+        <th style="padding: 12px 16px; text-align: right;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">{{ s.name }}</td>
+        <td style="padding: 12px 16px;">{{ s.student_profile.roll_number if s.student_profile else 'EDT-2026-' ~ s.id }}</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">88.5% Present</td>
+        <td style="padding: 12px 16px;">Aug 14, 2026</td>
+        <td style="padding: 12px 16px;">Guided on elective course selection & internship preparation.</td>
+        <td style="padding: 12px 16px; text-align: right;">
+          <a href="{{ url_for('reports.report_card', student_id=s.id) }}" class="btn btn-sm btn-primary" style="padding: 4px 12px; font-size: 12px;">Log Session &rarr;</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="padding: 20px; text-align: center;">No mentee counseling records available.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

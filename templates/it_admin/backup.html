@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Database Backup & Snapshot — IT Admin Console{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: var(--forest); padding: 28px 32px; border-radius: 16px; color: var(--white); margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+  <div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; margin: 0 0 4px 0;">Database Backup & Disaster Recovery</h1>
+    <p style="margin: 0; opacity: 0.8; font-size: 14px;">Generate real-time database snapshots and export system data for offline archiving.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('it_admin.download_snapshot') }}" class="btn" style="background: var(--gold); color: var(--forest); border-radius: 8px; padding: 12px 20px; font-weight: 700; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 10px;">
+      <i class="fas fa-download"></i> Download Database Snapshot (JSON)
+    </a>
+  </div>
+</div>
+
+<!-- Database Table Statistics -->
+<div class="card" style="background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-table" style="color: var(--gold);"></i> Database Record Inventory
+  </h3>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+    {% for table, count in table_stats.items() %}
+    <div style="padding: 16px; border-radius: 10px; background: var(--cream); border: 1px solid var(--border);">
+      <div style="font-size: 12px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase;">{{ table }}</div>
+      <div style="font-size: 24px; font-weight: 700; color: var(--forest); font-family: 'Playfair Display', serif; margin-top: 4px;">{{ count }}</div>
+      <div style="font-size: 11px; color: #10b981; margin-top: 2px;"><i class="fas fa-circle-check"></i> Synchronized</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Alumni Job Referral & Alma Mater Endowment Board — Alumni Portal{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: #eab308; color: #000; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-graduation-cap"></i> Alumni Network
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Career Referrals & Endowment</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin: 0 0 6px 0;">Alumni Job Referral & Endowment Fund Board</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Post job referral openings for graduating seniors, mentor student projects, and support campus development funds.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('messages.inbox') }}" class="btn btn-gold" style="padding: 10px 18px; font-weight: 700;">
+      <i class="fas fa-envelope"></i> Post Job Referral Message
+    </a>
+  </div>
+</div>
+
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-briefcase" style="color: var(--gold);"></i> Active Alumni Career Referrals Board
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 12px 16px;">Alumnus Name & Batch</th>
+        <th style="padding: 12px 16px;">Company / Designation</th>
+        <th style="padding: 12px 16px;">Referral Job Role</th>
+        <th style="padding: 12px 16px;">Target Branch</th>
+        <th style="padding: 12px 16px;">Posted Date</th>
+        <th style="padding: 12px 16px; text-align: right;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Rohan Malhotra (Batch '21)</td>
+        <td style="padding: 12px 16px;">Microsoft (Senior SDE)</td>
+        <td style="padding: 12px 16px; font-weight: 700;">Cloud Software Intern / FTE</td>
+        <td style="padding: 12px 16px;">CSE / ECE Final Year</td>
+        <td style="padding: 12px 16px;">Aug 12, 2026</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Referrals Open</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

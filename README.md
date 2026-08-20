@@ -99,31 +99,55 @@ Visit **http://localhost:5000**
 
 ## Demo Accounts
 
-Run `python seed.py` to seed the database with initial demo accounts for testing:
+Run `python seed.py` to seed the database with demo accounts for all **22 CSV Roles** across 6 system categories:
 
-### Platform Superadmin
+### 1. Platform
 | Role | Email | Password |
 |---|---|---|
-| Superadmin | superadmin@edtrack.com | super123 |
+| Super Admin | superadmin@edtrack.com | super123 |
+| Institution Admin | admin@gmail.com | admin123 |
+| IT Administrator | itadmin@gmail.com | itadmin123 |
 
-### College 1: El'Wood International University
+### 2. Leadership
 | Role | Email | Password |
 |---|---|---|
-| Admin | admin@gmail.com | admin123 |
-| HR | hr@gmail.com | hr123 |
+| Principal | principal@gmail.com | principal123 |
+| Registrar | registrar@gmail.com | registrar123 |
+| Head of Department (HOD) | hod@gmail.com | hod123 |
+
+### 3. Operations
+| Role | Email | Password |
+|---|---|---|
+| Admission Officer | admissions@gmail.com | admissions123 |
 | Accountant | accountant@gmail.com | accountant123 |
+| HR Manager | hr@gmail.com | hr123 |
+| Examination Officer | exam_officer@gmail.com | exam123 |
+
+### 4. Academic
+| Role | Email | Password |
+|---|---|---|
 | Faculty | faculty@gmail.com | faculty123 |
+| Course Coordinator | coordinator@gmail.com | coordinator123 |
+| Academic Advisor | advisor@gmail.com | advisor123 |
+
+### 5. Services
+| Role | Email | Password |
+|---|---|---|
+| Librarian | librarian@gmail.com | librarian123 |
+| Hostel Warden | warden@gmail.com | warden123 |
+| Transport Manager | transport@gmail.com | transport123 |
+| Placement Officer | placement@gmail.com | placement123 |
+| Student Affairs Officer | affairs@gmail.com | affairs123 |
+
+### 6. Users
+| Role | Email | Password |
+|---|---|---|
 | Student | student@gmail.com | student123 |
 | Parent | parent@gmail.com | parent123 |
+| Alumni | alumni@gmail.com | alumni123 |
+| Employer | employer@gmail.com | employer123 |
 
-### College 2: Sunrise Academy
-| Role | Email | Password |
-|---|---|---|
-| Admin | admin2@sunrise.edu | admin123 |
-| HR | hr2@sunrise.edu | hr123 |
-| Accountant | accountant2@sunrise.edu | accountant123 |
-| Faculty | faculty2@sunrise.edu | faculty123 |
-| Student | student2@sunrise.edu | student123 |
+> **Single-Click Login**: All 22 demo roles are accessible with 1-click on the login page!
 
 ---
 

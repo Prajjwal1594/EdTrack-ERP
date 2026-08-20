@@ -643,7 +643,7 @@
     {% else %}
       <div class="college-crest">{{ (current_user.college.code[:2] if current_user.college else 'ET') }}</div>
       <h2>{{ current_user.college.name if current_user.college else 'EdTrack' }}</h2>
-      <span>{% if current_user.role == 'admin' %}Admin Portal{% elif current_user.role == 'accountant' %}Accountant Portal{% elif current_user.role == 'hr' %}HR Portal{% elif current_user.role == 'faculty' %}Faculty Portal{% elif current_user.role == 'student' %}Student Portal{% else %}Parent Portal{% endif %}</span>
+      <span>{{ current_user.role_display_name }} Portal</span>
     {% endif %}
   </div>
   <nav class="sidebar-nav">
@@ -697,7 +697,9 @@
       <span class="nav-section-label">Ledger</span>
       <a href="{{ url_for('finance.ledger') }}" class="nav-link {% if request.blueprint == 'finance' and 'ledger' in request.endpoint %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i> Finance Ledger</a>
       <span class="nav-section-label">Settings</span>
+      {% if is_feature_enabled('lms_sync') %}
       <a href="{{ url_for('admin.lms_integration') }}" class="nav-link {% if request.endpoint == 'admin.lms_integration' %}active{% endif %}"><i class="fas fa-network-wired"></i> LMS Integration</a>
+      {% endif %}
       <a href="{{ url_for('admin.college_settings') }}" class="nav-link {% if request.endpoint == 'admin.college_settings' %}active{% endif %}"><i class="fas fa-gear"></i> College Settings</a>
 
       {% elif current_user.role == 'accountant' %}
@@ -721,6 +723,20 @@
       <a href="{{ url_for('hr.directory') }}" class="nav-link {% if 'hr.directory' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-id-badge"></i> Staff Directory</a>
       <a href="{{ url_for('hr.attendance') }}" class="nav-link {% if 'hr.attendance' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-clipboard-user"></i> Faculty Attendance</a>
       <a href="{{ url_for('hr.payroll') }}" class="nav-link {% if 'hr.payroll' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-money-check"></i> Payroll Center</a>
+      <span class="nav-section-label">Communication</span>
+      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
+        <i class="fas fa-envelope"></i> Messages
+        {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
+      </a>
+
+    {% elif current_user.role == 'it_admin' %}
+      <span class="nav-section-label">IT Console</span>
+      <a href="{{ url_for('it_admin.dashboard') }}" class="nav-link {% if request.endpoint == 'it_admin.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Operations Dashboard</a>
+      <span class="nav-section-label">System Security</span>
+      <a href="{{ url_for('it_admin.audit_logs') }}" class="nav-link {% if request.endpoint == 'it_admin.audit_logs' %}active{% endif %}"><i class="fas fa-shield-halved"></i> Audit Logs</a>
+      <a href="{{ url_for('it_admin.sessions') }}" class="nav-link {% if request.endpoint == 'it_admin.sessions' %}active{% endif %}"><i class="fas fa-user-lock"></i> User Access & Sessions</a>
+      <span class="nav-section-label">Database & Backup</span>
+      <a href="{{ url_for('it_admin.backup') }}" class="nav-link {% if request.endpoint == 'it_admin.backup' %}active{% endif %}"><i class="fas fa-database"></i> Database Backup</a>
       <span class="nav-section-label">Communication</span>
       <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
         <i class="fas fa-envelope"></i> Messages
@@ -813,7 +829,7 @@
         <a href="{{ url_for('student.mid_term_marks') }}" class="nav-link"><i class="fas fa-list-ol"></i> Mid Term Marks</a>
         <a href="{{ url_for('student.moocs_certificates') }}" class="nav-link"><i class="fas fa-graduation-cap"></i> MOOCs Certificates</a>
         <a href="{{ url_for('student.exam_scheme') }}" class="nav-link"><i class="fas fa-table-list"></i> Examination Scheme</a>
-        <a href="{{ url_for('student.academic_calendar') }}" class="nav-link"><i class="fas fa-calendar-days"></i> Academic Calendars</a>
+        <a href="{{ url_for('auth.academic_calendar') }}" class="nav-link"><i class="fas fa-calendar-days"></i> Academic Calendar</a>
       </div>
 
       <a href="{{ url_for('student.documents') }}" class="nav-link {% if request.endpoint == 'student.documents' %}active{% endif %}"><i class="fas fa-folder-open"></i> View My Documents</a>
@@ -826,8 +842,19 @@
       <span class="nav-section-label">Communication</span>
       <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
         <i class="fas fa-envelope"></i> Messages
+    {% else %}
+      <span class="nav-section-label">Overview</span>
+      <a href="{{ url_for('auth.dashboard') }}" class="nav-link {% if request.endpoint == 'auth.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <span class="nav-section-label">Academic & Services</span>
+      <a href="{{ url_for('auth.academic_calendar') }}" class="nav-link {% if request.endpoint == 'auth.academic_calendar' %}active{% endif %}"><i class="fas fa-calendar-days"></i> Academic Calendar</a>
+      <a href="{{ url_for('timetable.index') }}" class="nav-link {% if request.blueprint == 'timetable' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Class Timetables</a>
+      <span class="nav-section-label">Communication</span>
+      <a href="{{ url_for('messages.inbox') }}" class="nav-link {% if request.blueprint == 'messages' %}active{% endif %}">
+        <i class="fas fa-envelope"></i> Messages
         {% if current_user.unread_message_count > 0 %}<span class="nav-badge">{{ current_user.unread_message_count }}</span>{% endif %}
       </a>
+      <span class="nav-section-label">Account</span>
+      <a href="{{ url_for('auth.profile') }}" class="nav-link {% if request.endpoint == 'auth.profile' %}active{% endif %}"><i class="fas fa-user-cog"></i> Profile Settings</a>
     {% endif %}
   </nav>
   {% if current_user.role != 'student' %}
@@ -836,7 +863,7 @@
       <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
       <div class="user-info">
         <div class="name">{{ current_user.name }}</div>
-        <div class="role">{{ current_user.role }}</div>
+        <div class="role">{{ current_user.role_display_name }}</div>
       </div>
     </a>
     <a href="{{ url_for('auth.logout') }}" class="nav-link mt-16" style="margin-top:8px;"><i class="fas fa-right-from-bracket"></i> Log Out</a>
@@ -864,7 +891,7 @@
         <div class="avatar-dropdown" id="avatar-dropdown">
           <div class="avatar-dropdown-header">
             <div class="av-name">{{ current_user.name }}</div>
-            <div class="av-role">{{ current_user.role }}</div>
+            <div class="av-role">{{ current_user.role_display_name }}</div>
           </div>
           <div class="avatar-dropdown-body">
             {% if current_user.role == 'student' %}
@@ -906,7 +933,7 @@
   </div>
 {% endif %}
 
-{% if current_user.is_authenticated and current_user.role != 'superadmin' %}
+{% if current_user.is_authenticated and current_user.role != 'superadmin' and is_feature_enabled('ai_assistant') %}
   <!-- Floating AI Assistant -->
   <div class="ai-fab" id="ai-fab" title="{% if current_user.college %}{{ current_user.college.name }} Assistant{% else %}AI Assistant{% endif %}">
     <i class="fas fa-robot"></i>

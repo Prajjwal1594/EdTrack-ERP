@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — EdTrack</title>
+  <title>Login — EdTrack Enterprise ERP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
       --forest: #1a3a2a; --forest-mid: #2d5a42; --forest-light: #3d7a5a;
@@ -20,32 +21,44 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 24px;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
     }
-    /* Background pattern */
     body::before {
       content: '';
       position: absolute; inset: 0;
       background-image:
-        radial-gradient(circle at 20% 20%, rgba(201,168,76,.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(61,122,90,.2) 0%, transparent 50%);
+        radial-gradient(circle at 15% 15%, rgba(201,168,76,.12) 0%, transparent 50%),
+        radial-gradient(circle at 85% 85%, rgba(61,122,90,.22) 0%, transparent 50%);
       pointer-events: none;
     }
-    .login-wrap {
-      width: 100%; max-width: 460px;
-      padding: 16px;
-      position: relative; z-index: 1;
+    .login-container {
+      width: 100%;
+      max-width: 1080px;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 24px;
+      position: relative;
+      z-index: 1;
+    }
+    @media (max-width: 900px) {
+      .login-container {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+      }
     }
     .login-card {
       background: var(--white);
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0,0,0,.35);
+      box-shadow: 0 30px 80px rgba(0,0,0,.4);
+      display: flex;
+      flex-direction: column;
     }
     .login-header {
       background: var(--forest);
-      padding: 40px 40px 32px;
+      padding: 32px 32px 28px;
       text-align: center;
       position: relative;
     }
@@ -53,64 +66,173 @@
       content: '';
       position: absolute;
       bottom: -1px; left: 0; right: 0;
-      height: 30px;
+      height: 24px;
       background: var(--white);
       border-radius: 50% 50% 0 0 / 100% 100% 0 0;
     }
     .crest {
-      width: 64px; height: 64px;
+      width: 56px; height: 56px;
       background: var(--gold);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-family: 'Playfair Display', serif;
-      font-size: 26px; font-weight: 700;
+      font-size: 22px; font-weight: 700;
       color: var(--forest);
-      margin: 0 auto 18px;
+      margin: 0 auto 14px;
       box-shadow: 0 4px 20px rgba(201,168,76,.4);
     }
     .login-header h1 {
       font-family: 'Playfair Display', serif;
       font-size: 22px;
       color: var(--white);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
-    .login-header p { font-size: 13px; color: rgba(255,255,255,.55); }
-    .login-body { padding: 36px 40px 40px; }
-    .form-group { margin-bottom: 18px; }
-    .form-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #777; margin-bottom: 7px; }
+    .login-header p { font-size: 12px; color: rgba(255,255,255,.65); }
+    .login-body { padding: 28px 32px 32px; flex: 1; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mid); margin-bottom: 6px; }
     .form-control {
-      width: 100%; padding: 12px 16px;
-      border: 1.5px solid var(--border); border-radius: 10px;
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--border); border-radius: 9px;
       font-size: 14px; font-family: 'DM Sans', sans-serif;
       color: var(--ink); outline: none;
       transition: border-color .2s, box-shadow .2s;
     }
     .form-control:focus { border-color: var(--forest-light); box-shadow: 0 0 0 3px rgba(45,90,66,.12); }
-    .remember-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--ink-mid); }
-    .remember-row label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+    .remember-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-mid); }
+    .remember-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
     .btn-login {
-      width: 100%; padding: 14px;
+      width: 100%; padding: 13px;
       background: var(--forest);
       color: var(--white);
       font-family: 'DM Sans', sans-serif;
-      font-size: 15px; font-weight: 600;
-      border: none; border-radius: 10px;
-      cursor: pointer; margin-top: 24px;
+      font-size: 15px; font-weight: 700;
+      border: none; border-radius: 9px;
+      cursor: pointer; margin-top: 18px;
       transition: background .2s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .btn-login:hover { background: var(--forest-mid); }
     .btn-login:active { transform: scale(.99); }
-    .flash { padding: 11px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px;
+    .flash { padding: 10px 14px; border-radius: 8px; font-size: 12px; margin-bottom: 14px;
              background: #fdf0ee; color: #8b1a1a; border: 1px solid #f5c0b8; }
+
+    /* Single-Click Demo Panel */
+    .demo-panel {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.3);
+      border: 1px solid rgba(255,255,255,0.3);
+      max-height: 640px;
+      overflow-y: auto;
+    }
+    .demo-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--cream);
+    }
+    .demo-panel-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--forest);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .demo-panel-header span {
+      background: var(--gold);
+      color: var(--forest);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+    .category-group {
+      margin-bottom: 18px;
+    }
+    .category-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--forest-mid);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+    }
+    .role-chip {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+    .role-chip:hover {
+      background: var(--forest);
+      color: var(--white);
+      border-color: var(--forest);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(26,58,42,0.2);
+    }
+    .role-chip:hover .role-title { color: var(--gold-light); }
+    .role-chip:hover .role-email { color: rgba(255,255,255,0.8); }
+    .role-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--forest);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .role-email {
+      font-size: 10px;
+      color: var(--ink-mid);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .one-click-badge {
+      font-size: 9px;
+      background: rgba(201,168,76,0.2);
+      color: var(--forest);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .role-chip:hover .one-click-badge {
+      background: var(--gold);
+      color: var(--forest);
+    }
   </style>
 </head>
 <body>
-<div class="login-wrap">
+
+<div class="login-container">
+  <!-- Left Column: Login Form -->
   <div class="login-card">
     <div class="login-header">
       <div class="crest">EW</div>
-      <h1>EdTrack</h1>
-      <p>Student Progress &amp; Management System</p>
+      <h1>EdTrack ERP</h1>
+      <p>Select any demo role to sign in instantly</p>
     </div>
     <div class="login-body">
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -118,27 +240,179 @@
           <div class="flash">{{ msg }}</div>
         {% endfor %}
       {% endwith %}
-      <form method="POST" action="{{ url_for('auth.login') }}">
+      <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
         <div class="form-group">
           <label class="form-label">Email Address</label>
-          <input type="email" name="email" class="form-control" placeholder="you@gmail.com" required autofocus>
+          <input type="email" name="email" id="email-input" class="form-control" placeholder="you@gmail.com" required autofocus>
         </div>
         <div class="form-group">
           <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+          <input type="password" name="password" id="password-input" class="form-control" placeholder="••••••••" required>
         </div>
         <div class="remember-row">
-          <label><input type="checkbox" name="remember"> Remember me</label>
+          <label><input type="checkbox" name="remember" checked> Remember session</label>
         </div>
-        <button type="submit" class="btn-login">Sign In</button>
+        <button type="submit" class="btn-login" id="submit-btn">
+          <i class="fas fa-right-to-bracket"></i> Sign In to Portal
+        </button>
       </form>
     </div>
   </div>
+
+  <!-- Right Column: Interactive Single-Click Demo Login Selector -->
+  <div class="demo-panel">
+    <div class="demo-panel-header">
+      <h2><i class="fas fa-bolt" style="color: var(--gold);"></i> Single-Click Demo Login</h2>
+      <span>22 CSV Roles</span>
+    </div>
+
+    <!-- Category 1: Platform -->
+    <div class="category-group">
+      <div class="category-title"><i class="fas fa-globe"></i> 1. Platform</div>
+      <div class="chips-grid">
+        <button type="button" class="role-chip" onclick="quickLogin('superadmin@edtrack.com', 'super123')">
+          <div class="role-title">Super Admin <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">superadmin@edtrack.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('admin@gmail.com', 'admin123')">
+          <div class="role-title">Institution Admin <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">admin@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('itadmin@gmail.com', 'itadmin123')">
+          <div class="role-title">IT Administrator <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">itadmin@gmail.com</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category 2: Leadership -->
+    <div class="category-group">
+      <div class="category-title"><i class="fas fa-user-tie"></i> 2. Leadership</div>
+      <div class="chips-grid">
+        <button type="button" class="role-chip" onclick="quickLogin('principal@gmail.com', 'principal123')">
+          <div class="role-title">Principal <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">principal@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('registrar@gmail.com', 'registrar123')">
+          <div class="role-title">Registrar <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">registrar@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('hod@gmail.com', 'hod123')">
+          <div class="role-title">HOD <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">hod@gmail.com</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category 3: Operations -->
+    <div class="category-group">
+      <div class="category-title"><i class="fas fa-gears"></i> 3. Operations</div>
+      <div class="chips-grid">
+        <button type="button" class="role-chip" onclick="quickLogin('admissions@gmail.com', 'admissions123')">
+          <div class="role-title">Admission Officer <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">admissions@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('accountant@gmail.com', 'accountant123')">
+          <div class="role-title">Accountant <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">accountant@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('hr@gmail.com', 'hr123')">
+          <div class="role-title">HR Manager <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">hr@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('exam_officer@gmail.com', 'exam123')">
+          <div class="role-title">Examination Officer <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">exam_officer@gmail.com</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category 4: Academic -->
+    <div class="category-group">
+      <div class="category-title"><i class="fas fa-graduation-cap"></i> 4. Academic</div>
+      <div class="chips-grid">
+        <button type="button" class="role-chip" onclick="quickLogin('faculty@gmail.com', 'faculty123')">
+          <div class="role-title">Faculty <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">faculty@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('coordinator@gmail.com', 'coordinator123')">
+          <div class="role-title">Course Coordinator <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">coordinator@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('advisor@gmail.com', 'advisor123')">
+          <div class="role-title">Academic Advisor <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">advisor@gmail.com</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category 5: Services -->
+    <div class="category-group">
+      <div class="category-title"><i class="fas fa-concierge-bell"></i> 5. Services</div>
+      <div class="chips-grid">
+        <button type="button" class="role-chip" onclick="quickLogin('librarian@gmail.com', 'librarian123')">
+          <div class="role-title">Librarian <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">librarian@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('warden@gmail.com', 'warden123')">
+          <div class="role-title">Hostel Warden <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">warden@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('transport@gmail.com', 'transport123')">
+          <div class="role-title">Transport Manager <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">transport@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('placement@gmail.com', 'placement123')">
+          <div class="role-title">Placement Officer <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">placement@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('affairs@gmail.com', 'affairs123')">
+          <div class="role-title">Student Affairs Officer <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">affairs@gmail.com</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category 6: Users -->
+    <div class="category-group">
+      <div class="category-title"><i class="fas fa-users"></i> 6. Users</div>
+      <div class="chips-grid">
+        <button type="button" class="role-chip" onclick="quickLogin('student@gmail.com', 'student123')">
+          <div class="role-title">Student <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">student@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('parent@gmail.com', 'parent123')">
+          <div class="role-title">Parent <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">parent@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('alumni@gmail.com', 'alumni123')">
+          <div class="role-title">Alumni <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">alumni@gmail.com</div>
+        </button>
+        <button type="button" class="role-chip" onclick="quickLogin('employer@gmail.com', 'employer123')">
+          <div class="role-title">Employer <span class="one-click-badge">1-Click</span></div>
+          <div class="role-email">employer@gmail.com</div>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
+
 <script>
-// Add trim on submit
-document.querySelector('form').addEventListener('submit', function(e) {
-  const emailInput = this.querySelector('input[name="email"]');
+function quickLogin(email, password) {
+  const emailInput = document.getElementById('email-input');
+  const passwordInput = document.getElementById('password-input');
+  const form = document.getElementById('login-form');
+  const btn = document.getElementById('submit-btn');
+
+  emailInput.value = email;
+  passwordInput.value = password;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in as ' + email + '...';
+  form.submit();
+}
+
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  const emailInput = document.getElementById('email-input');
   emailInput.value = emailInput.value.trim().toLowerCase();
 });
 </script>

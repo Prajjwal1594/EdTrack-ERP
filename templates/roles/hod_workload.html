@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Departmental Workload & Syllabus Progress — HOD Console{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #4338ca 0%, #312e81 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-sitemap"></i> Departmental Operations
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Faculty Workload Allocation</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin: 0 0 6px 0;">Departmental Teaching Workload & Syllabus Matrix</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Monitor faculty teaching lecture hours, lab supervision distribution, and subject syllabus completion percentages.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('admin.faculty_assignments') }}" class="btn btn-gold" style="padding: 10px 18px; font-weight: 700;">
+      <i class="fas fa-user-plus"></i> Allocate New Subject
+    </a>
+  </div>
+</div>
+
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-chalkboard-user" style="color: var(--gold);"></i> Faculty Teaching Hours & Syllabus Status
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 12px 16px;">Faculty Name</th>
+        <th style="padding: 12px 16px;">Designation</th>
+        <th style="padding: 12px 16px;">Assigned Subject & Section</th>
+        <th style="padding: 12px 16px;">Weekly Hours</th>
+        <th style="padding: 12px 16px;">Syllabus Coverage</th>
+        <th style="padding: 12px 16px; text-align: right;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in faculty %}
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">{{ f.name }}</td>
+        <td style="padding: 12px 16px;">Assistant Professor</td>
+        <td style="padding: 12px 16px;">Data Structures & Algorithms (Sec A)</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #3b82f6;">16 Hours/Wk</td>
+        <td style="padding: 12px 16px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="progress" style="width:100px; height:8px;"><div class="progress-bar green" style="width:92%;"></div></div>
+            <span style="font-weight:700;">92%</span>
+          </div>
+        </td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">On Schedule</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="padding: 20px; text-align: center;">No faculty workload records available.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

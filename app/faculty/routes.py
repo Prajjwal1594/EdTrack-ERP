@@ -16,11 +16,16 @@ from datetime import datetime, date, timedelta
 import json
 
 
+ALLOWED_FACULTY_ROLES = (
+    'faculty', 'admin', 'superadmin', 'it_admin', 'principal', 'registrar', 'hod',
+    'examination_officer', 'course_coordinator', 'academic_advisor'
+)
+
 def faculty_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role not in ('faculty', 'admin'):
-            flash('Faculty access required.', 'danger')
+        if not current_user.is_authenticated or current_user.role not in ALLOWED_FACULTY_ROLES:
+            flash('Faculty or Academic access required.', 'danger')
             return redirect(url_for('auth.dashboard'))
         return f(*args, **kwargs)
     return login_required(decorated)

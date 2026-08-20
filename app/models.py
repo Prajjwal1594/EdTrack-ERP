@@ -37,7 +37,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
-    role = db.Column(db.String(20), nullable=False)  # admin, accountant, hr, faculty, student, parent
+    role = db.Column(db.String(50), nullable=False)
     college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'))
     is_active = db.Column(db.Boolean, default=True)
     avatar = db.Column(db.String(300))
@@ -54,11 +54,40 @@ class User(UserMixin, db.Model):
     notifications = db.relationship('Notification', backref='user', lazy='dynamic')
     student_links = db.relationship('ParentStudentLink', foreign_keys='ParentStudentLink.parent_id', backref='parent', lazy='dynamic')
 
+    ROLE_TITLES = {
+        'superadmin': 'Super Admin',
+        'admin': 'Institution Admin',
+        'it_admin': 'IT Administrator',
+        'principal': 'Principal',
+        'registrar': 'Registrar',
+        'hod': 'Head of Department (HOD)',
+        'admission_officer': 'Admission Officer',
+        'accountant': 'Accountant',
+        'hr': 'HR Manager',
+        'examination_officer': 'Examination Officer',
+        'faculty': 'Faculty',
+        'course_coordinator': 'Course Coordinator',
+        'academic_advisor': 'Academic Advisor',
+        'librarian': 'Librarian',
+        'hostel_warden': 'Hostel Warden',
+        'transport_manager': 'Transport Manager',
+        'placement_officer': 'Placement Officer',
+        'student_affairs': 'Student Affairs Officer',
+        'student': 'Student',
+        'parent': 'Parent',
+        'alumni': 'Alumni',
+        'employer': 'Employer',
+    }
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    @property
+    def role_display_name(self):
+        return self.ROLE_TITLES.get(self.role, self.role.replace('_', ' ').title() if self.role else 'User')
 
     @property
     def unread_message_count(self):
@@ -1116,5 +1145,41 @@ class AssetRecord(db.Model):
             'status': self.status or 'In Use',
             'notes': self.notes or ''
         }
+
+
+# ==============================================================================
+# IT ADMINISTRATOR & OPERATIONS
+# ==============================================================================
+
+class AuditLog(db.Model):
+    """Centralized security & system audit log for tracking access and modifications."""
+    __tablename__ = 'audit_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    action = db.Column(db.String(100), nullable=False) # e.g. LOGIN_SUCCESS, USER_CREATED, ROLE_UPDATED, FEATURE_FLAG_TOGGLED
+    module = db.Column(db.String(50), default='System') # Security, Auth, Finance, Academics, Admin
+    ip_address = db.Column(db.String(45))
+    details = db.Column(db.Text)
+    severity = db.Column(db.String(20), default='info') # info, warning, danger
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    college = db.relationship('College')
+    user = db.relationship('User', foreign_keys=[user_id])
+
+
+class FeatureFlag(db.Model):
+    """Configuration-driven feature toggles per institution/college."""
+    __tablename__ = 'feature_flags'
+    id = db.Column(db.Integer, primary_key=True)
+    college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'), nullable=False)
+    feature_key = db.Column(db.String(100), nullable=False) # e.g. ai_assistant, digital_wallet, lms_sync, early_warning, pwa_offline
+    name = db.Column(db.String(150), nullable=False)
+    is_enabled = db.Column(db.Boolean, default=True)
+    description = db.Column(db.Text)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    college = db.relationship('College')
+
 
 

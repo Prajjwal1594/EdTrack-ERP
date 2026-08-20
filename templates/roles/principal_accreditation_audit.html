@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Research & NAAC / NIRF Accreditation Audit — Principal Console{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: #fbbf24; color: #000; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-award"></i> Quality Assurance & Compliance
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">NAAC Grade A++ & NIRF Benchmarking</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin: 0 0 6px 0;">Research & Accreditation Governance Audit</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Evaluate NAAC 7-Criteria compliance scores, NIRF ranking indicators, Course Outcome (CO-PO) attainment, and research publication metrics.</p>
+  </div>
+  <div style="display: flex; gap: 12px;">
+    <button class="btn btn-gold" onclick="window.print()" style="padding: 10px 18px; font-weight: 700;">
+      <i class="fas fa-file-contract"></i> Generate NAAC SSR Dossier
+    </button>
+  </div>
+</div>
+
+<!-- NAAC & NIRF Scores Overview Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 28px;">
+  <div class="card" style="padding: 20px; border-radius: 14px; background: var(--white); border: 2px solid var(--gold);">
+    <div style="font-size: 12px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase;">Projected NAAC CGPA Score</div>
+    <div style="font-size: 32px; font-weight: 700; color: var(--forest); font-family: 'Playfair Display', serif; margin-top: 4px;">3.68 / 4.00</div>
+    <div style="font-size: 12px; color: #10b981; margin-top: 4px;"><i class="fas fa-certificate"></i> Grade A++ Readiness Certified</div>
+  </div>
+
+  <div class="card" style="padding: 20px; border-radius: 14px; background: var(--white); border: 1px solid var(--border);">
+    <div style="font-size: 12px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase;">NIRF Institutional Rank Band</div>
+    <div style="font-size: 32px; font-weight: 700; color: var(--forest); font-family: 'Playfair Display', serif; margin-top: 4px;">Rank #42</div>
+    <div style="font-size: 12px; color: #3b82f6; margin-top: 4px;"><i class="fas fa-arrow-up"></i> Top 50 Engineering Colleges</div>
+  </div>
+
+  <div class="card" style="padding: 20px; border-radius: 14px; background: var(--white); border: 1px solid var(--border);">
+    <div style="font-size: 12px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase;">CO-PO Outcome Attainment</div>
+    <div style="font-size: 32px; font-weight: 700; color: var(--forest); font-family: 'Playfair Display', serif; margin-top: 4px;">88.6%</div>
+    <div style="font-size: 12px; color: #10b981; margin-top: 4px;"><i class="fas fa-chart-line"></i> Program Outcomes Verified</div>
+  </div>
+
+  <div class="card" style="padding: 20px; border-radius: 14px; background: var(--white); border: 1px solid var(--border);">
+    <div style="font-size: 12px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase;">Scopus / Web of Science Papers</div>
+    <div style="font-size: 32px; font-weight: 700; color: var(--forest); font-family: 'Playfair Display', serif; margin-top: 4px;">142 Papers</div>
+    <div style="font-size: 12px; color: #10b981; margin-top: 4px;"><i class="fas fa-book"></i> H-Index: 18 | 4 Patents Filed</div>
+  </div>
+</div>
+
+<!-- NAAC 7-Criteria Breakdown Table -->
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-list-check" style="color: var(--gold);"></i> NAAC 7-Criteria Compliance Audit Matrix
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 12px 16px;">NAAC Criterion</th>
+        <th style="padding: 12px 16px;">Weightage</th>
+        <th style="padding: 12px 16px;">Audited Benchmark Indicator</th>
+        <th style="padding: 12px 16px;">Score / Grade</th>
+        <th style="padding: 12px 16px; text-align: right;">Compliance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Criterion 1: Curricular Aspects</td>
+        <td style="padding: 12px 16px;">100 Points</td>
+        <td style="padding: 12px 16px;">CO-PO Mapping, Elective Offerings & Curriculum Revision</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">3.80 / 4.00</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Grade A++</span></td>
+      </tr>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Criterion 2: Teaching-Learning & Evaluation</td>
+        <td style="padding: 12px 16px;">350 Points</td>
+        <td style="padding: 12px 16px;">Student-Faculty Ratio (1:15), Student Pass %, CIE Mechanism</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">3.75 / 4.00</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Grade A++</span></td>
+      </tr>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Criterion 3: Research, Innovations & Extension</td>
+        <td style="padding: 12px 16px;">120 Points</td>
+        <td style="padding: 12px 16px;">Scopus/WOS Papers, Research Grants, Patents & Consultancy</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #3b82f6;">3.55 / 4.00</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#dbeafe;color:#1e40af;font-weight:700;padding:4px 10px;border-radius:12px;">Grade A+</span></td>
+      </tr>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Criterion 4: Infrastructure & Learning Resources</td>
+        <td style="padding: 12px 16px;">100 Points</td>
+        <td style="padding: 12px 16px;">Library Automation, Smart Classrooms, Hostel & Fleet Capacity</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">3.70 / 4.00</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Grade A++</span></td>
+      </tr>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Criterion 5: Student Support & Progression</td>
+        <td style="padding: 12px 16px;">130 Points</td>
+        <td style="padding: 12px 16px;">Campus Placement CTC, Alumni Network, Grievance Cell</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">3.65 / 4.00</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Grade A++</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

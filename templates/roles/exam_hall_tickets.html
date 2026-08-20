@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Hall Ticket & Result Publishing Center — Exam Cell{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #be185d 0%, #881337 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-file-pen"></i> Examination Control Cell
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Admit Cards & Result Publishing</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin: 0 0 6px 0;">Hall Ticket & Result Publishing Center</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Generate bulk examination hall tickets, release digital admit passes with QR verification, and process re-evaluation requests.</p>
+  </div>
+  <div>
+    <button class="btn btn-gold" onclick="window.print()" style="padding: 10px 18px; font-weight: 700;">
+      <i class="fas fa-ticket"></i> Bulk Release Hall Tickets
+    </button>
+  </div>
+</div>
+
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-clipboard-check" style="color: var(--gold);"></i> Examination Admit Pass & Hall Ticket Roster
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 12px 16px;">Student Name</th>
+        <th style="padding: 12px 16px;">Roll Number</th>
+        <th style="padding: 12px 16px;">Exam Center Venue</th>
+        <th style="padding: 12px 16px;">Attendance Eligibility</th>
+        <th style="padding: 12px 16px;">Hall Ticket Status</th>
+        <th style="padding: 12px 16px; text-align: right;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">{{ s.name }}</td>
+        <td style="padding: 12px 16px;">{{ s.student_profile.roll_number if s.student_profile else 'EDT-2026-' ~ s.id }}</td>
+        <td style="padding: 12px 16px;">Exam Block A - Hall 102</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">89.2% (Eligible)</td>
+        <td style="padding: 12px 16px;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Digitally Released</span></td>
+        <td style="padding: 12px 16px; text-align: right;">
+          <a href="{{ url_for('faculty.grades') }}" class="btn btn-sm btn-primary" style="padding: 4px 12px; font-size: 12px;">Verify Marks &rarr;</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="padding: 20px; text-align: center;">No hall ticket records available.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Institutional Academic Calendar — EdTrack ERP{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: #3b82f6; color: #fff; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-calendar-days"></i> Institutional Calendar
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Academic Session 2026 – 2027</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; margin: 0 0 6px 0;">Official Academic Calendar</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Institutional term dates, examination schedules, registration deadlines, and gazetted holidays.</p>
+  </div>
+  <div style="display: flex; gap: 12px;">
+    {% if current_user.role in ['admin', 'superadmin', 'registrar', 'principal'] %}
+    <button class="btn btn-gold" onclick="document.getElementById('addEventModal').style.display='flex'" style="padding: 10px 18px; font-size: 13px; font-weight: 700;">
+      <i class="fas fa-plus-circle"></i> Add Calendar Event
+    </button>
+    {% endif %}
+    <button class="btn btn-outline" onclick="window.print()" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: #fff; padding: 10px 18px; font-size: 13px;">
+      <i class="fas fa-print"></i> Print Calendar
+    </button>
+  </div>
+</div>
+
+<!-- Active Academic Terms Banner -->
+<div style="margin-bottom: 28px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px;">
+    <i class="fas fa-graduation-cap" style="color: var(--gold);"></i> Academic Terms Roster
+  </h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+    {% for term in terms %}
+    <div class="card" style="padding: 20px; border-radius: 14px; background: var(--white); border: 2px solid {{ 'var(--gold)' if term.is_active else 'var(--border)' }}; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      {% if term.is_active %}
+      <span class="badge" style="position: absolute; top: 16px; right: 16px; background: #d1fae5; color: #065f46; font-weight: 700; padding: 4px 10px; border-radius: 12px; font-size: 11px;">
+        <i class="fas fa-circle-play"></i> Active Current Term
+      </span>
+      {% endif %}
+      <div style="font-size: 18px; font-weight: 700; color: var(--forest); font-family: 'Playfair Display', serif;">{{ term.name }}</div>
+      <div style="font-size: 13px; color: var(--ink-mid); margin-top: 4px;">Academic Year: <strong>{{ term.academic_year or '2026-2027' }}</strong></div>
+      
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 13px;">
+        <div>
+          <span style="color: var(--ink-mid); font-size: 11px; text-transform: uppercase; display: block; font-weight: 600;">Start Date</span>
+          <span style="font-weight: 700; color: #10b981;"><i class="fas fa-calendar-check"></i> {{ term.start_date.strftime('%b %d, %Y') if term.start_date else 'Aug 01, 2026' }}</span>
+        </div>
+        <div style="text-align: right;">
+          <span style="color: var(--ink-mid); font-size: 11px; text-transform: uppercase; display: block; font-weight: 600;">End Date</span>
+          <span style="font-weight: 700; color: #ef4444;"><i class="fas fa-calendar-xmark"></i> {{ term.end_date.strftime('%b %d, %Y') if term.end_date else 'Dec 20, 2026' }}</span>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card" style="padding: 20px; border-radius: 14px; background: var(--white); border: 1px solid var(--border); grid-column: 1 / -1;">
+      <div style="font-weight: 700; color: var(--forest);">Fall Semester 2026 - 2027 (Active)</div>
+      <div style="font-size: 13px; color: var(--ink-mid); margin-top: 4px;">Aug 01, 2026 – Dec 20, 2026</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Calendar Filters & Category Legend -->
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <button class="btn btn-primary filter-btn active" onclick="filterCalendar('all', this)" style="padding: 6px 14px; font-size: 12px; border-radius: 20px;">All Milestones</button>
+    <button class="btn btn-outline filter-btn" onclick="filterCalendar('academic', this)" style="padding: 6px 14px; font-size: 12px; border-radius: 20px;"><i class="fas fa-book-open" style="color: #3b82f6;"></i> Academic</button>
+    <button class="btn btn-outline filter-btn" onclick="filterCalendar('exam', this)" style="padding: 6px 14px; font-size: 12px; border-radius: 20px;"><i class="fas fa-file-pen" style="color: #ef4444;"></i> Examinations</button>
+    <button class="btn btn-outline filter-btn" onclick="filterCalendar('holiday', this)" style="padding: 6px 14px; font-size: 12px; border-radius: 20px;"><i class="fas fa-umbrella-beach" style="color: #10b981;"></i> Holidays & Breaks</button>
+    <button class="btn btn-outline filter-btn" onclick="filterCalendar('event', this)" style="padding: 6px 14px; font-size: 12px; border-radius: 20px;"><i class="fas fa-award" style="color: #f59e0b;"></i> Events & Fests</button>
+  </div>
+  <div style="font-size: 13px; color: var(--ink-mid);">
+    Total Milestones Listed: <strong>{{ events|length }}</strong>
+  </div>
+</div>
+
+<!-- Institutional Events Timeline & List -->
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+  <div style="display: flex; flex-direction: column; gap: 16px;" id="calendarEventList">
+    {% for ev in events %}
+    <div class="calendar-item event-card-{{ ev.category or 'academic' }}" style="padding: 18px; border-radius: 12px; border: 1px solid var(--border); border-left: 5px solid {% if ev.category == 'exam' %}#ef4444{% elif ev.category == 'holiday' %}#10b981{% elif ev.category == 'academic' %}#3b82f6{% else %}#f59e0b{% endif %}; background: var(--white); transition: all 0.2s ease;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <span class="badge" style="background: {% if ev.category == 'exam' %}#fee2e2;color:#991b1b{% elif ev.category == 'holiday' %}#d1fae5;color:#065f46{% elif ev.category == 'academic' %}#dbeafe;color:#1e40af{% else %}#fef3c7;color:#92400e{% endif %}; font-weight: 700; padding: 4px 10px; border-radius: 12px; font-size: 11px; text-transform: uppercase;">
+              {% if ev.category == 'exam' %}<i class="fas fa-file-pen"></i> Examination{% elif ev.category == 'holiday' %}<i class="fas fa-sun"></i> Holiday / Break{% elif ev.category == 'academic' %}<i class="fas fa-graduation-cap"></i> Academic Milestone{% else %}<i class="fas fa-star"></i> Campus Event{% endif %}
+            </span>
+            {% if ev.location %}
+            <span style="font-size: 12px; color: var(--ink-mid);"><i class="fas fa-location-dot"></i> {{ ev.location }}</span>
+            {% endif %}
+          </div>
+          <h4 style="font-family: 'Playfair Display', serif; font-size: 18px; color: var(--forest); margin: 0 0 6px 0;">{{ ev.title }}</h4>
+          <p style="margin: 0; font-size: 13px; color: var(--ink-mid); line-height: 1.5;">{{ ev.description or 'No additional remarks provided.' }}</p>
+        </div>
+
+        <div style="text-align: right; min-width: 160px;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--forest);">
+            <i class="fas fa-calendar-day" style="color: var(--gold);"></i> 
+            {{ ev.event_date.strftime('%b %d, %Y') if ev.event_date else 'Schedule Set' }}
+          </div>
+          {% if ev.end_date %}
+          <div style="font-size: 12px; color: var(--ink-mid); margin-top: 2px;">
+            To {{ ev.end_date.strftime('%b %d, %Y') }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal: Add Calendar Event (for Registrar / Admin) -->
+{% if current_user.role in ['admin', 'superadmin', 'registrar', 'principal'] %}
+<div id="addEventModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: var(--white); border-radius: 16px; max-width: 500px; width: 100%; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin: 0;">Add Academic Calendar Event</h3>
+      <button onclick="document.getElementById('addEventModal').style.display='none'" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink-mid);">&times;</button>
+    </div>
+    <form action="{{ url_for('admin.add_event') }}" method="POST">
+      <div style="margin-bottom: 14px;">
+        <label style="font-size: 12px; font-weight: 700; color: var(--forest); text-transform: uppercase; display: block; margin-bottom: 4px;">Milestone Title</label>
+        <input type="text" name="title" required placeholder="e.g. End-Term Examination Window" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <label style="font-size: 12px; font-weight: 700; color: var(--forest); text-transform: uppercase; display: block; margin-bottom: 4px;">Start Date</label>
+          <input type="datetime-local" name="event_date" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 700; color: var(--forest); text-transform: uppercase; display: block; margin-bottom: 4px;">End Date</label>
+          <input type="datetime-local" name="end_date" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+        </div>
+      </div>
+      <div style="margin-bottom: 14px;">
+        <label style="font-size: 12px; font-weight: 700; color: var(--forest); text-transform: uppercase; display: block; margin-bottom: 4px;">Location / Campus Venue</label>
+        <input type="text" name="location" placeholder="e.g. Examination Halls / All Campus" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 12px; font-weight: 700; color: var(--forest); text-transform: uppercase; display: block; margin-bottom: 4px;">Description / Instructions</label>
+        <textarea name="description" rows="3" placeholder="Provide guidelines or additional information..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"></textarea>
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button type="button" onclick="document.getElementById('addEventModal').style.display='none'" class="btn btn-outline" style="padding: 10px 18px;">Cancel</button>
+        <button type="submit" class="btn btn-gold" style="padding: 10px 18px; font-weight: 700;">Save Calendar Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function filterCalendar(category, btnElement) {
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('btn-primary', 'active');
+    btn.classList.add('btn-outline');
+  });
+  btnElement.classList.remove('btn-outline');
+  btnElement.classList.add('btn-primary', 'active');
+
+  const items = document.querySelectorAll('.calendar-item');
+  items.forEach(item => {
+    if (category === 'all' || item.classList.contains('event-card-' + category)) {
+      item.style.display = 'block';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+</script>
+{% endblock %}

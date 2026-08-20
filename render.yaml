@@ -11,7 +11,7 @@ services:
         fromDatabase:
           name: edtrack-db
           property: connectionString
-      - key: GEMINI_API_KEY
+      - key: OPENAI_API_KEY
         sync: false
       - key: RAZORPAY_KEY_ID
         sync: false
