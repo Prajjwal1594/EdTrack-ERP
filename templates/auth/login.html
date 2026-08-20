@@ -243,11 +243,11 @@
       <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
         <div class="form-group">
           <label class="form-label">Email Address</label>
-          <input type="email" name="email" id="email-input" class="form-control" placeholder="you@gmail.com" required autofocus>
+          <input type="email" name="email" id="email-input" class="form-control" placeholder="you@gmail.com" value="admin@gmail.com" required autofocus>
         </div>
         <div class="form-group">
           <label class="form-label">Password</label>
-          <input type="password" name="password" id="password-input" class="form-control" placeholder="••••••••" required>
+          <input type="password" name="password" id="password-input" class="form-control" placeholder="••••••••" value="admin123" required>
         </div>
         <div class="remember-row">
           <label><input type="checkbox" name="remember" checked> Remember session</label>
@@ -255,6 +255,30 @@
         <button type="submit" class="btn-login" id="submit-btn">
           <i class="fas fa-right-to-bracket"></i> Sign In to Portal
         </button>
+
+        <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <span><i class="fas fa-bolt" style="color: var(--gold);"></i> Quick Preset Roles:</span>
+            <span style="font-size: 10px; color: var(--forest-light);">Click to Login</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <button type="button" class="badge" onclick="quickLogin('admin@gmail.com', 'admin123')" style="background:#e0e7ff; color:#3730a3; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
+              <i class="fas fa-shield"></i> Admin
+            </button>
+            <button type="button" class="badge" onclick="quickLogin('principal@gmail.com', 'principal123')" style="background:#fef3c7; color:#92400e; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
+              <i class="fas fa-user-tie"></i> Principal
+            </button>
+            <button type="button" class="badge" onclick="quickLogin('faculty@gmail.com', 'faculty123')" style="background:#dcfce7; color:#166534; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
+              <i class="fas fa-chalkboard-user"></i> Faculty
+            </button>
+            <button type="button" class="badge" onclick="quickLogin('student@gmail.com', 'student123')" style="background:#dbeafe; color:#1e40af; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
+              <i class="fas fa-user-graduate"></i> Student
+            </button>
+            <button type="button" class="badge" onclick="quickLogin('superadmin@edtrack.com', 'super123')" style="background:#f3e8ff; color:#6b21a8; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
+              <i class="fas fa-crown"></i> Superadmin
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   </div>
@@ -405,15 +429,23 @@ function quickLogin(email, password) {
   const form = document.getElementById('login-form');
   const btn = document.getElementById('submit-btn');
 
-  emailInput.value = email;
+  emailInput.value = email.trim().toLowerCase();
   passwordInput.value = password;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in as ' + email + '...';
-  form.submit();
+  if (btn) {
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+  }
+  if (typeof form.requestSubmit === 'function') {
+    form.requestSubmit();
+  } else {
+    form.submit();
+  }
 }
 
 document.getElementById('login-form').addEventListener('submit', function(e) {
   const emailInput = document.getElementById('email-input');
-  emailInput.value = emailInput.value.trim().toLowerCase();
+  if (emailInput) {
+    emailInput.value = emailInput.value.trim().toLowerCase();
+  }
 });
 </script>
 </body>

@@ -50,7 +50,15 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256))
     role = db.Column(db.String(50), nullable=False)
     college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'))
-    is_active = db.Column(db.Boolean, default=True)
+    _is_active = db.Column('is_active', db.Boolean, default=True)
+
+    @property
+    def is_active(self):
+        return True if self._is_active is None else bool(self._is_active)
+
+    @is_active.setter
+    def is_active(self, value):
+        self._is_active = value
     avatar = db.Column(db.String(300))
     phone = db.Column(db.String(30))
     wallet_balance = db.Column(db.Float, default=0.0)
