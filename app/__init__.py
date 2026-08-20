@@ -128,6 +128,8 @@ def create_app(config_class=Config):
                 template_folder=templates_dir,
                 static_folder=statics_dir)
     app.config.from_object(config_class)
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
     print(f"[STARTUP] DATABASE_URL set: {'DATABASE_URL' in app.config and bool(app.config.get('SQLALCHEMY_DATABASE_URI'))}", flush=True)
     print(f"[STARTUP] DB URI prefix: {app.config.get('SQLALCHEMY_DATABASE_URI', '')[:20]}...", flush=True)
 
