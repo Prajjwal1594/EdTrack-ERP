@@ -114,14 +114,23 @@ def seed(app=None, auto=False):
         # ══════════════════════════════════════════════════════════════════════
         # SUPER ADMIN  (belongs to no college, college_id=None)
         # ══════════════════════════════════════════════════════════════════════
-        superadmin = User(
+        superadmin1 = User(
+            name="Platform Super Admin",
+            email="prajjwalrajoria2004@gmail.com",
+            role="superadmin",
+            college_id=None,
+        )
+        superadmin1.set_password("Pra@1594")
+        db.session.add(superadmin1)
+
+        superadmin2 = User(
             name="EdTrack Platform Admin",
             email="superadmin@edtrack.com",
             role="superadmin",
             college_id=None,
         )
-        superadmin.set_password("super123")
-        db.session.add(superadmin)
+        superadmin2.set_password("super123")
+        db.session.add(superadmin2)
         db.session.flush()
 
         # ══════════════════════════════════════════════════════════════════════
@@ -198,6 +207,30 @@ def seed(app=None, auto=False):
             db.session.add(s)
             extra_students1.append(s)
         db.session.flush()
+
+        # Additional Demo Users for all CSV Roles (College 1)
+        additional_roles = [
+            ("it_admin",           "Vikram Seth",          "itadmin@gmail.com",      "itadmin123"),
+            ("principal",          "Dr. Arthur Pendelton", "principal@gmail.com",    "principal123"),
+            ("registrar",          "Eleanor Vance",        "registrar@gmail.com",    "registrar123"),
+            ("hod",                "Dr. S. Ranganathan",   "hod@gmail.com",          "hod123"),
+            ("admission_officer",  "Marcus Thorne",        "admissions@gmail.com",   "admissions123"),
+            ("examination_officer","Patricia Sterling",    "exam_officer@gmail.com", "exam123"),
+            ("course_coordinator", "Dr. Evelyn Reed",      "coordinator@gmail.com",  "coordinator123"),
+            ("academic_advisor",   "Prof. Jonathan Blake", "advisor@gmail.com",      "advisor123"),
+            ("librarian",          "Clara Oswald",         "librarian@gmail.com",    "librarian123"),
+            ("hostel_warden",      "Captain Arthur Dent",  "warden@gmail.com",       "warden123"),
+            ("transport_manager",  "George Miller",        "transport@gmail.com",    "transport123"),
+            ("placement_officer",  "Rachel Green",         "placement@gmail.com",    "placement123"),
+            ("student_affairs",    "Daniel Cho",           "affairs@gmail.com",      "affairs123"),
+            ("alumni",             "Samantha Wright",      "alumni@gmail.com",       "alumni123"),
+            ("employer",           "TechCorp HR",          "employer@gmail.com",     "employer123"),
+        ]
+
+        for role_key, name, email, pwd in additional_roles:
+            u = User(name=name, email=email, role=role_key, college_id=college1.id)
+            u.set_password(pwd)
+            db.session.add(u)
 
         # Parent (College 1)
         parent1 = User(name="Robert Johnson", email="parent@gmail.com",
@@ -363,25 +396,43 @@ def seed(app=None, auto=False):
 
         db.session.commit()
         print("\nDatabase seeded successfully!\n")
-        print("=" * 56)
-        print("  DEMO LOGIN CREDENTIALS")
-        print("=" * 56)
-        print("  [Platform Super Admin]")
-        print("  superadmin@edtrack.com     / super123")
+        print("=" * 64)
+        print("  DEMO LOGIN CREDENTIALS (ALL 22 CSV ROLES AVAILABLE)")
+        print("=" * 64)
+        print("  [1. Platform]")
+        print("  Super Admin            : superadmin@edtrack.com     / super123")
+        print("  Institution Admin      : admin@gmail.com            / admin123")
+        print("  IT Administrator       : itadmin@gmail.com          / itadmin123")
         print()
-        print(f"  [College 1: {college1.name}]")
-        print("  admin@gmail.com            / admin123")
-        print("  accountant@gmail.com       / accountant123")
-        print("  faculty@gmail.com          / faculty123")
-        print("  student@gmail.com          / student123")
-        print("  parent@gmail.com           / parent123")
+        print("  [2. Leadership]")
+        print("  Principal              : principal@gmail.com        / principal123")
+        print("  Registrar              : registrar@gmail.com        / registrar123")
+        print("  Head of Dept (HOD)     : hod@gmail.com              / hod123")
         print()
-        print(f"  [College 2: {college2.name}]")
-        print("  admin2@sunrise.edu         / admin123")
-        print("  accountant2@sunrise.edu    / accountant123")
-        print("  faculty2@sunrise.edu       / faculty123")
-        print("  student2@sunrise.edu       / student123")
-        print("=" * 56 + "\n")
+        print("  [3. Operations]")
+        print("  Admission Officer      : admissions@gmail.com       / admissions123")
+        print("  Accountant             : accountant@gmail.com       / accountant123")
+        print("  HR Manager             : hr@gmail.com               / hr123")
+        print("  Examination Officer    : exam_officer@gmail.com     / exam123")
+        print()
+        print("  [4. Academic]")
+        print("  Faculty                : faculty@gmail.com          / faculty123")
+        print("  Course Coordinator     : coordinator@gmail.com      / coordinator123")
+        print("  Academic Advisor       : advisor@gmail.com          / advisor123")
+        print()
+        print("  [5. Services]")
+        print("  Librarian              : librarian@gmail.com        / librarian123")
+        print("  Hostel Warden          : warden@gmail.com           / warden123")
+        print("  Transport Manager      : transport@gmail.com        / transport123")
+        print("  Placement Officer      : placement@gmail.com        / placement123")
+        print("  Student Affairs Officer: affairs@gmail.com          / affairs123")
+        print()
+        print("  [6. Users]")
+        print("  Student                : student@gmail.com          / student123")
+        print("  Parent                 : parent@gmail.com           / parent123")
+        print("  Alumni                 : alumni@gmail.com           / alumni123")
+        print("  Employer               : employer@gmail.com         / employer123")
+        print("=" * 64 + "\n")
         db.session.commit()
         print("Seeding completed successfully!")
 

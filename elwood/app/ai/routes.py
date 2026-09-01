@@ -2,10 +2,21 @@ from flask import Blueprint, jsonify, request, abort
 from flask_login import login_required, current_user
 import os
 import json
-from google import genai
+from openai import OpenAI
 from app.models import db, Student, Grade, Attendance, SoftSkillMetric, MicroCredential, ParentStudentLink, User, College, Semester, Section, Subject
 
 bp = Blueprint('ai', __name__)
+
+@bp.before_request
+def check_ai_feature_flag():
+    from app.models import FeatureFlag
+    cid = current_user.college_id if current_user and current_user.is_authenticated else 1
+    flag = FeatureFlag.query.filter_by(college_id=cid, feature_key='ai_assistant').first()
+    if flag and not flag.is_enabled:
+        return jsonify({
+            "error": "OpenAI GPT AI Academic Tutor has been disabled by your IT Administrator.",
+            "disabled": True
+        }), 403
 
 @bp.route('/chat', methods=['POST'])
 @login_required
@@ -53,22 +64,22 @@ def chat():
             else:
                 context = {"role": current_user.role, "user_name": current_user.name}
 
-    # Real AI call (Gemini)
-    api_key = os.getenv("GEMINI_API_KEY")
+    # Real AI call (OpenAI GPT)
+    api_key = os.getenv("OPENAI_API_KEY")
     if api_key:
         api_key = api_key.strip()
         
-    if not api_key or api_key == 'your-gemini-key-here':
+    if not api_key or api_key == 'your-openai-key-here':
         return jsonify({
-            "response": f"Hello {current_user.name}! I am currently in simulation mode (No GEMINI_API_KEY). I see you are a {current_user.role}.",
+            "response": f"Hello {current_user.name}! I am currently in simulation mode (No OPENAI_API_KEY). I see you are a {current_user.role}.",
             "context": context
         })
 
     try:
-        client = genai.Client(api_key=api_key)
+        client = OpenAI(api_key=api_key)
         
         system_prompt = f"""
-        You are 'El'Wood Academic Assistant', the college-wide AI companion for El'Wood International University.
+        You are 'El'Wood Academic Assistant', the college-wide AI companion for El'Wood International University powered by OpenAI GPT.
         You are helping: {current_user.name} (Role: {current_user.role}).
         
         CURRENT CONTEXT:
@@ -84,12 +95,16 @@ def chat():
         7. Maintain the premium El'Wood brand voice.
         """
         
-        response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=[system_prompt, f"User says: {message}"]
+        response = client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": message}
+            ],
+            max_tokens=300
         )
         
-        ai_text = response.text if response and response.text else "I'm sorry, I couldn't generate a response."
+        ai_text = response.choices[0].message.content.strip() if response and response.choices else "I'm sorry, I couldn't generate a response."
         
         return jsonify({
             "response": ai_text,
@@ -97,7 +112,7 @@ def chat():
         })
     except Exception as e:
         error_msg = str(e)
-        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+        if "429" in error_msg or "rate_limit" in error_msg.lower() or "quota" in error_msg.lower():
             return jsonify({
                 "error": "Quota Exceeded", 
                 "response": "I'm currently busy with many requests. Please wait a minute and try again!"

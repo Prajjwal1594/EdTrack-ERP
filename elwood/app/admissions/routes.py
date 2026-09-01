@@ -3,17 +3,17 @@ from flask_login import login_required, current_user
 from app import db
 from app.admissions import bp
 from app.models import Enquiry, AdmissionApplication, Student, User
-from app.admin.routes import admin_required
+from app.utils.permissions import role_required
 from datetime import datetime
 
 @bp.route('/enquiries')
-@admin_required
+@role_required('admission_officer', 'principal', 'registrar')
 def enquiries():
     all_enquiries = Enquiry.query.filter_by(college_id=current_user.college_id).order_by(Enquiry.created_at.desc()).all()
     return render_template('admissions/enquiries.html', enquiries=all_enquiries)
 
 @bp.route('/applications')
-@admin_required
+@role_required('admission_officer', 'principal', 'registrar')
 def applications():
     apps = AdmissionApplication.query.filter_by(college_id=current_user.college_id).order_by(AdmissionApplication.submitted_at.desc()).all()
     return render_template('admissions/applications.html', applications=apps)
@@ -44,7 +44,7 @@ def public_inquire(college_id):
     return render_template('admissions/public_inquire.html', college=college)
 
 @bp.route('/enquiries/<int:eid>/status', methods=['POST'])
-@admin_required
+@role_required('admission_officer', 'principal', 'registrar')
 def update_enquiry_status(eid):
     enq = Enquiry.query.get_or_404(eid)
     if enq.college_id != current_user.college_id:

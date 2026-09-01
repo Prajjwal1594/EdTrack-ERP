@@ -173,6 +173,11 @@ def download_receipt(pid):
 @bp.route('/wallet/topup', methods=['POST'])
 @login_required
 def wallet_topup():
+    from app.models import FeatureFlag
+    flag = FeatureFlag.query.filter_by(college_id=current_user.college_id or 1, feature_key='digital_wallet').first()
+    if flag and not flag.is_enabled:
+        return jsonify({'error': 'Razorpay Parent Digital Wallet feature has been disabled by your IT Administrator.', 'disabled': True}), 403
+
     if current_user.role != 'parent':
         return jsonify({'error': 'Only parents can top-up.'}), 403
     

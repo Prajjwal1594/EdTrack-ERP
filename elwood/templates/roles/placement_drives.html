@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Corporate Placement Drive & Offer Manager — Placement Officer{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #4d7c0f 0%, #3f6212 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-briefcase"></i> Training & Placements Cell
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Corporate Drives & Placement Offers</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin: 0 0 6px 0;">Corporate Placement Drive & Job Offer Manager</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Schedule campus recruitment drives, review partner company CTC salary packages, track interview rounds, and upload job offers.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('admin.events') }}" class="btn btn-gold" style="padding: 10px 18px; font-weight: 700;">
+      <i class="fas fa-calendar-star"></i> Schedule New Campus Drive
+    </a>
+  </div>
+</div>
+
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-handshake" style="color: var(--gold);"></i> Onboarded Corporate Recruitment Partners & Active Drives
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 12px 16px;">Partner Company</th>
+        <th style="padding: 12px 16px;">Job Role Offered</th>
+        <th style="padding: 12px 16px;">Offered CTC Package</th>
+        <th style="padding: 12px 16px;">CGPA Cutoff</th>
+        <th style="padding: 12px 16px;">Drive Date</th>
+        <th style="padding: 12px 16px; text-align: right;">Offers Extended</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ev in events %}
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Google / Tech Partner</td>
+        <td style="padding: 12px 16px;">Software Development Engineer (SDE-1)</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">₹18.5 LPA</td>
+        <td style="padding: 12px 16px;">7.5+ CGPA</td>
+        <td style="padding: 12px 16px;">{{ ev.event_date.strftime('%b %d, %Y') if ev.event_date else 'Sep 15, 2026' }}</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">14 Offers Issued</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="padding: 20px; text-align: center;">No active placement drives scheduled.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Merit List & Seat Quota Allocation — Admissions Console{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-headset"></i> Admissions CRM
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Merit Ranking & Quota Allocation</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin: 0 0 6px 0;">Merit List & Seat Quota Allocation Console</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Rank applicant entrance exam scores, allocate category quotas (General, OBC, SC/ST, Management), and issue admission offer letters.</p>
+  </div>
+  <div>
+    <button class="btn btn-gold" onclick="window.print()" style="padding: 10px 18px; font-weight: 700;">
+      <i class="fas fa-file-invoice"></i> Publish Official Merit List
+    </button>
+  </div>
+</div>
+
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-list-ol" style="color: var(--gold);"></i> Applicant Merit Ranking & Quota Seat Matrix
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 12px 16px;">Merit Rank</th>
+        <th style="padding: 12px 16px;">Applicant Name</th>
+        <th style="padding: 12px 16px;">Target Course</th>
+        <th style="padding: 12px 16px;">Entrance Score / 12th %</th>
+        <th style="padding: 12px 16px;">Category Quota</th>
+        <th style="padding: 12px 16px; text-align: right;">Seat Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app in applications %}
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Rank #{{ loop.index }}</td>
+        <td style="padding: 12px 16px; font-weight: 700;">{{ app.student_name }}</td>
+        <td style="padding: 12px 16px;">{{ app.target_class or 'B.Tech CSE' }}</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">94.5%</td>
+        <td style="padding: 12px 16px;"><span class="badge" style="background:#dbeafe;color:#1e40af;font-weight:700;padding:4px 10px;border-radius:12px;">General Merit</span></td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Provisionally Allocated</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="padding: 20px; text-align: center;">No merit list applications available.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

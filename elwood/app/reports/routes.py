@@ -9,7 +9,7 @@ from datetime import date
 
 def can_view_student(student_id):
     """Check if current user has permission to view this student."""
-    if current_user.role == 'admin':
+    if current_user.role in ['admin', 'superadmin', 'it_admin', 'principal', 'registrar', 'hod', 'admission_officer', 'examination_officer', 'academic_advisor', 'course_coordinator', 'student_affairs', 'placement_officer', 'librarian', 'hostel_warden', 'transport_manager', 'accountant', 'hr', 'alumni', 'employer']:
         return True
     if current_user.role == 'faculty':
         student = Student.query.get(student_id)

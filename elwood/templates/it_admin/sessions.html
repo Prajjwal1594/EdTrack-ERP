@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}User Sessions & Access Management — IT Admin Console{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: var(--forest); padding: 28px 32px; border-radius: 16px; color: var(--white); margin-bottom: 24px;">
+  <h1 style="font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; margin: 0 0 4px 0;">User Access & Session Management</h1>
+  <p style="margin: 0; opacity: 0.8; font-size: 14px;">Monitor active user accounts, trigger security suspensions, and enforce password policies.</p>
+</div>
+
+<div class="card" style="background: var(--white); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 14px 16px;">User Name</th>
+        <th style="padding: 14px 16px;">Email</th>
+        <th style="padding: 14px 16px;">Role</th>
+        <th style="padding: 14px 16px;">Last Login</th>
+        <th style="padding: 14px 16px;">Account Status</th>
+        <th style="padding: 14px 16px; text-align: right;">Security Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">{{ u.name }}</td>
+        <td style="padding: 12px 16px; color: var(--ink-mid);">{{ u.email }}</td>
+        <td style="padding: 12px 16px;"><span class="badge" style="background: var(--cream); color: var(--forest); font-weight: 700; padding: 4px 10px; border-radius: 12px; font-size: 11px;">{{ u.role_display_name }}</span></td>
+        <td style="padding: 12px 16px; color: var(--ink-mid);">{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else 'Never' }}</td>
+        <td style="padding: 12px 16px;">
+          <span class="badge" style="background: {% if u.is_active %}#d1fae5;color:#065f46{% else %}#fee2e2;color:#991b1b{% endif %}; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 700;">
+            {% if u.is_active %}Active{% else %}Suspended{% endif %}
+          </span>
+        </td>
+        <td style="padding: 12px 16px; text-align: right;">
+          <form method="POST" action="{{ url_for('it_admin.toggle_user_status', user_id=u.id) }}" style="display: inline;">
+            <button type="submit" class="btn" style="padding: 5px 12px; font-size: 11px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; background: {% if u.is_active %}#ef4444{% else %}#10b981{% endif %}; color: white;">
+              {% if u.is_active %}Suspend Access{% else %}Activate Access{% endif %}
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

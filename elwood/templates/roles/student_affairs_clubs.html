@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Student Clubs & Anti-Ragging Committee — Student Affairs Console{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #7e22ce 0%, #581c87 100%); padding: 32px; border-radius: 16px; color: var(--white); margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span class="badge" style="background: rgba(255,255,255,0.2); color: #fff; font-weight: 700; padding: 6px 14px; border-radius: 20px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <i class="fas fa-icons"></i> Student Life & Safety
+      </span>
+      <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Clubs & Anti-Ragging Cell</span>
+    </div>
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin: 0 0 6px 0;">Student Clubs & Anti-Ragging Committee Center</h1>
+    <p style="margin: 0; opacity: 0.85; font-size: 15px;">Approve student cultural & technical clubs, audit anti-ragging undertakings, and coordinate campus welfare.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('admin.events') }}" class="btn btn-gold" style="padding: 10px 18px; font-weight: 700;">
+      <i class="fas fa-calendar-star"></i> Approve Campus Event
+    </a>
+  </div>
+</div>
+
+<div class="card" style="background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 24px;">
+  <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--forest); margin-bottom: 16px; border-bottom: 2px solid var(--cream); padding-bottom: 10px;">
+    <i class="fas fa-users-line" style="color: var(--gold);"></i> Recognized Campus Clubs & Anti-Ragging Compliance Audit
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+    <thead>
+      <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
+        <th style="padding: 12px 16px;">Club / Committee Name</th>
+        <th style="padding: 12px 16px;">Category</th>
+        <th style="padding: 12px 16px;">Student Lead / President</th>
+        <th style="padding: 12px 16px;">Faculty Advisor</th>
+        <th style="padding: 12px 16px;">Anti-Ragging Compliance</th>
+        <th style="padding: 12px 16px; text-align: right;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Robotics & AI Innovation Club</td>
+        <td style="padding: 12px 16px;">Technical</td>
+        <td style="padding: 12px 16px; font-weight: 700;">Aarav Sharma</td>
+        <td style="padding: 12px 16px;">Dr. Sunita Rao</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">100% Undertakings Filed</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Active & Funded</span></td>
+      </tr>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px 16px; font-weight: 700; color: var(--forest);">Music & Dramatic Society</td>
+        <td style="padding: 12px 16px;">Cultural</td>
+        <td style="padding: 12px 16px; font-weight: 700;">Priya Verma</td>
+        <td style="padding: 12px 16px;">Prof. Vikram Seth</td>
+        <td style="padding: 12px 16px; font-weight: 700; color: #10b981;">100% Undertakings Filed</td>
+        <td style="padding: 12px 16px; text-align: right;"><span class="badge" style="background:#d1fae5;color:#065f46;font-weight:700;padding:4px 10px;border-radius:12px;">Active & Funded</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

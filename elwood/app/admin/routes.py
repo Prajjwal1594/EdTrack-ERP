@@ -18,10 +18,12 @@ from sqlalchemy import func
 from app.models import Grade, Attendance, StaffAttendance
 
 
+from app.utils.permissions import role_required
+
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'admin':
+        if not current_user.is_authenticated or current_user.role not in ('admin', 'superadmin', 'it_admin'):
             flash('Admin access required.', 'danger')
             return redirect(url_for('auth.dashboard'))
         return f(*args, **kwargs)
@@ -316,10 +318,44 @@ def edit_user(uid):
 
 
 @bp.route('/students')
-@admin_required
+@role_required('principal', 'registrar', 'admission_officer', 'academic_advisor', 'placement_officer', 'employer')
 def students():
     student_users = User.query.filter_by(college_id=current_user.college_id, role='student').join(Student).order_by(User.name).all()
-    return render_template('admin/students.html', students=student_users)
+    courses = Course.query.filter_by(college_id=current_user.college_id).all() if current_user.college_id else Course.query.all()
+    return render_template('admin/students.html', students=student_users, courses=courses)
+
+
+@bp.route('/students/export-csv')
+@login_required
+def export_students_csv():
+    import csv
+    from io import StringIO
+    from flask import Response
+
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerow(['Student ID', 'Roll Number', 'Enrollment Number', 'Full Name', 'Email', 'Phone', 'Course / Section', 'Status'])
+
+    students = User.query.filter_by(college_id=current_user.college_id, role='student').join(Student).order_by(User.name).all()
+    for u in students:
+        sp = u.student_profile
+        cw.writerow([
+            u.id,
+            sp.roll_number if sp else '',
+            sp.enrollment_number if sp else '',
+            u.name,
+            u.email,
+            u.phone or '',
+            sp.section.full_name if (sp and sp.section) else (sp.target_class if sp else ''),
+            'Active' if u.is_active else 'Inactive'
+        ])
+
+    output = si.getvalue()
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=student_roster_export.csv"}
+    )
 
 
 @bp.route('/users/<int:uid>/edit-erp', methods=['GET', 'POST'])
@@ -422,7 +458,7 @@ def delete_section(sid):
 
 # ─── Subjects ────────────────────────────────────────────────────────────────
 @bp.route('/subjects')
-@admin_required
+@role_required('principal', 'hod', 'course_coordinator')
 def subjects():
     subjects = Subject.query.filter_by(college_id=current_user.college_id).order_by(Subject.name).all()
     return render_template('admin/subjects.html', subjects=subjects)
@@ -454,7 +490,7 @@ def delete_subject(sid):
 
 # ─── Faculty Assignments ─────────────────────────────────────────────────────
 @bp.route('/assignments')
-@admin_required
+@role_required('principal', 'hod')
 def faculty_assignments():
     assignments = FacultyAssignment.query.join(User, FacultyAssignment.faculty_id == User.id)\
         .filter(User.college_id == current_user.college_id).all()
@@ -467,7 +503,7 @@ def faculty_assignments():
 
 
 @bp.route('/assignments/add', methods=['POST'])
-@admin_required
+@role_required('principal', 'hod')
 def add_faculty_assignment():
     ta = FacultyAssignment(
         faculty_id=request.form.get('faculty_id'),
@@ -651,6 +687,11 @@ def delete_parent_link(lid):
 @bp.route('/lms')
 @admin_required
 def lms_integration():
+    from app.models import FeatureFlag
+    flag = FeatureFlag.query.filter_by(college_id=current_user.college_id or 1, feature_key='lms_sync').first()
+    if flag and not flag.is_enabled:
+        flash('External LMS Integration API feature has been disabled by your IT Administrator.', 'warning')
+        return redirect(url_for('admin.dashboard'))
     return render_template('admin/lms_integration.html')
 
 
@@ -750,7 +791,7 @@ def toggle_announcement(aid):
 # ─── Events Management ──────────────────────────────────────────────────────
 
 @bp.route('/events')
-@admin_required
+@role_required('principal', 'student_affairs', 'placement_officer', 'alumni')
 def events():
     events_list = (Event.query.filter_by(college_id=current_user.college_id)
                   .order_by(Event.event_date.desc()).all())
@@ -758,7 +799,7 @@ def events():
 
 
 @bp.route('/events/add', methods=['POST'])
-@admin_required
+@role_required('principal', 'student_affairs', 'placement_officer', 'alumni')
 def add_event():
     event_date_str = request.form.get('event_date')
     end_date_str = request.form.get('end_date')
@@ -774,7 +815,7 @@ def add_event():
         location=request.form.get('location', ''),
         max_capacity=request.form.get('max_capacity', type=int),
         requires_registration=request.form.get('requires_registration') == 'on',
-        created_by=current_user.id,
+        created_by=current_user.id
     )
     db.session.add(event)
     db.session.commit()
@@ -783,7 +824,7 @@ def add_event():
 
 
 @bp.route('/events/<int:eid>/delete', methods=['POST'])
-@admin_required
+@role_required('principal', 'student_affairs', 'placement_officer')
 def delete_event(eid):
     event = Event.query.get_or_404(eid)
     db.session.delete(event)
@@ -792,57 +833,48 @@ def delete_event(eid):
     return redirect(url_for('admin.events'))
 
 
-# ─── Feedback Management ────────────────────────────────────────────────────
-
+# ─── Feedback & Grievance & Leave Systems ─────────────────────────────────────
 @bp.route('/feedback')
-@admin_required
+@role_required('principal', 'student_affairs')
 def feedback_list():
-    status_filter = request.args.get('status', '')
-    query = (Feedback.query.filter_by(college_id=current_user.college_id)
-            .order_by(Feedback.created_at.desc()))
-    if status_filter:
-        query = query.filter_by(status=status_filter)
-    feedbacks = query.all()
-    return render_template('admin/feedback.html', feedbacks=feedbacks, status_filter=status_filter)
+    feedbacks = Feedback.query.filter_by(college_id=current_user.college_id).order_by(Feedback.created_at.desc()).all()
+    return render_template('admin/feedback.html', feedbacks=feedbacks)
 
 
 @bp.route('/feedback/<int:fid>/respond', methods=['POST'])
-@admin_required
+@role_required('principal', 'student_affairs')
 def respond_feedback(fid):
     fb = Feedback.query.get_or_404(fid)
-    fb.admin_response = request.form.get('response', '')
-    fb.responded_by = current_user.id
-    fb.responded_at = datetime.utcnow()
-    fb.status = request.form.get('status', 'reviewed')
-    db.session.commit()
-    flash('Feedback response saved.', 'success')
+    response = request.form.get('admin_response')
+    status = request.form.get('status', 'reviewed')
+    if response:
+        fb.admin_response = response
+        fb.status = status
+        db.session.commit()
+        flash('Response saved.', 'success')
     return redirect(url_for('admin.feedback_list'))
 
 
-# ─── Grievance Management ───────────────────────────────────────────────────
-
 @bp.route('/grievances')
-@admin_required
+@role_required('principal', 'student_affairs', 'hostel_warden')
 def grievance_list():
-    status_filter = request.args.get('status', '')
-    query = (Grievance.query.filter_by(college_id=current_user.college_id)
-            .order_by(Grievance.created_at.desc()))
-    if status_filter:
-        query = query.filter_by(status=status_filter)
-    grievances = query.all()
-    return render_template('admin/grievances.html', grievances=grievances, status_filter=status_filter)
+    grievances = Grievance.query.filter_by(college_id=current_user.college_id).order_by(Grievance.created_at.desc()).all()
+    return render_template('admin/grievances.html', grievances=grievances)
 
 
 @bp.route('/grievances/<int:gid>/resolve', methods=['POST'])
-@admin_required
+@role_required('principal', 'student_affairs', 'hostel_warden')
 def resolve_grievance(gid):
-    gr = Grievance.query.get_or_404(gid)
-    gr.resolution = request.form.get('resolution', '')
-    gr.resolved_by = current_user.id
-    gr.resolved_at = datetime.utcnow()
-    gr.status = request.form.get('status', 'resolved')
-    db.session.commit()
-    flash('Grievance updated.', 'success')
+    g = Grievance.query.get_or_404(gid)
+    action_taken = request.form.get('action_taken')
+    status = request.form.get('status', 'resolved')
+    if action_taken:
+        g.action_taken = action_taken
+        g.status = status
+        g.resolved_by_id = current_user.id
+        g.resolved_at = datetime.utcnow()
+        db.session.commit()
+        flash('Grievance updated.', 'success')
     return redirect(url_for('admin.grievance_list'))
 
 
@@ -880,6 +912,12 @@ def leave_action(lid):
 @bp.route('/at-risk')
 @admin_required
 def at_risk_dashboard():
+    from app.models import FeatureFlag
+    flag = FeatureFlag.query.filter_by(college_id=current_user.college_id or 1, feature_key='early_warning').first()
+    if flag and not flag.is_enabled:
+        flash('Predictive Early Warning System feature has been disabled by your IT Administrator.', 'warning')
+        return redirect(url_for('admin.dashboard'))
+
     # Identify students at risk: Attendance < 75% or Avg Grade < 40%
     all_students = Student.query.join(User).filter(User.college_id == current_user.college_id).all()
     at_risk_students = []
