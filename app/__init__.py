@@ -313,6 +313,12 @@ def create_app(config_class=Config):
                 admin_user = User.query.filter_by(role='admin').first()
                 cid = admin_user.college_id if admin_user else 1
 
+                from app.models import College
+                if cid and not College.query.get(cid):
+                    c = College(id=cid, name="EdTrack International University", code=f"EDTRACK{cid}", address="Main Campus")
+                    db.session.add(c)
+                    db.session.flush()
+
                 added_any = False
                 for r_role, r_name, r_email, r_pwd in demo_accounts:
                     if not User.query.filter_by(email=r_email).first():

@@ -56,13 +56,21 @@ def login():
         if not user and email in DEMO_MAP:
             try:
                 role_k, name_k, pwd_k, cid_k = DEMO_MAP[email]
+                if cid_k:
+                    from app.models import College
+                    c = College.query.get(cid_k)
+                    if not c:
+                        c = College(id=cid_k, name="EdTrack International University", code=f"EDTRACK{cid_k}", address="Main Campus")
+                        db.session.add(c)
+                        db.session.flush()
                 user = User(name=name_k, email=email, role=role_k, college_id=cid_k)
                 user.set_password(pwd_k)
                 user.is_active = True
                 db.session.add(user)
                 db.session.commit()
-            except Exception:
+            except Exception as e:
                 db.session.rollback()
+                print(f"[AUTH ERROR] Failed auto-creating user {email}: {e}", flush=True)
                 user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password) and (user.is_active is not False):
