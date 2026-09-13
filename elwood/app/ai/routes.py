@@ -64,7 +64,10 @@ def chat():
             context = {"role": current_user.role, "user_name": current_user.name}
 
     # ── Gemini REST API call (no SDK needed) ────────────────────────────────────
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    api_key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    # Treat placeholder values as missing
+    if api_key in ('your-gemini-key-here', 'your_gemini_key', 'REPLACE_ME', ''):
+        api_key = ''
 
     if not api_key:
         return jsonify({
@@ -123,9 +126,14 @@ def chat():
                 "response": "I'm receiving a high volume of requests right now. Please try again in a moment! 🙏"
             }), 429
 
-        if resp.status_code in (400, 403):
+        if resp.status_code in (400, 401, 403):
             return jsonify({
-                "response": "The AI service key is invalid or not authorized. Please ask your IT Admin to check the GEMINI_API_KEY in Vercel settings."
+                "response": "The GEMINI_API_KEY is missing or invalid. Please ask your IT Admin to add a valid key in Vercel Environment Variables (Settings → Environment Variables → GEMINI_API_KEY). Get a free key at aistudio.google.com."
+            }), 503
+
+        if resp.status_code == 404:
+            return jsonify({
+                "response": "The AI model could not be found. Please contact your IT Admin."
             }), 503
 
         if resp.status_code != 200:
