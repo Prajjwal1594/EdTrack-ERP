@@ -21,7 +21,7 @@ def parent_required(f):
 @bp.route('/children')
 @parent_required
 def children_list():
-    return redirect(url_for('parent.dashboard'))
+    return dashboard()
 
 
 @bp.route('/dashboard')
@@ -129,3 +129,28 @@ def child_detail(student_id):
                            terms=terms, active_term=active_term,
                            selected_term_id=term_id, fee_payments=fee_payments,
                            transport=transport, hostel=hostel, overdue_books=overdue_books)
+
+
+@bp.route('/pay-fee/<int:payment_id>', methods=['POST'])
+@parent_required
+def pay_child_fee(payment_id):
+    payment = FeePayment.query.get_or_404(payment_id)
+    # Verify child belongs to parent
+    link = ParentStudentLink.query.filter_by(parent_id=current_user.id, student_id=payment.student_id).first()
+    if not link:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('parent.dashboard'))
+        
+    current_user.wallet_balance = current_user.wallet_balance or 0.0
+    if current_user.wallet_balance < payment.amount:
+        flash(f'Insufficient wallet balance (Current: ₹{current_user.wallet_balance:.2f}). Please top up first.', 'danger')
+        return redirect(request.referrer or url_for('parent.dashboard'))
+        
+    current_user.wallet_balance -= payment.amount
+    payment.status = 'paid'
+    from datetime import datetime
+    payment.paid_at = datetime.utcnow()
+    payment.payment_method = 'wallet'
+    db.session.commit()
+    flash(f'Fee of ₹{payment.amount:.2f} successfully paid via Digital Wallet.', 'success')
+    return redirect(request.referrer or url_for('parent.dashboard'))

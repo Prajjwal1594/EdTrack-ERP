@@ -165,3 +165,14 @@ def salary_slip(tid):
     except Exception as e:
         flash(f'PDF generation failed: {e}. Showing HTML version.', 'warning')
         return html
+
+
+@bp.route('/staff')
+@hr_required
+def staff_list():
+    return redirect(url_for('hr.directory'))
+
+@bp.route('/leave-requests')
+@hr_required
+def leave_requests():
+    return redirect(url_for('admin.leave_applications'))

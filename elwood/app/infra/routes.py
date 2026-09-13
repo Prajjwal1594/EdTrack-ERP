@@ -214,3 +214,63 @@ def edit_inventory(id):
     flash('Inventory item updated.', 'success')
     return redirect(url_for('infra.inventory'))
 
+
+
+@bp.route('/library/issue', methods=['POST'])
+@role_required('librarian', 'principal')
+def issue_book():
+    book_id = request.form.get('book_id', type=int)
+    user_id = request.form.get('user_id', type=int)
+    due_days = request.form.get('due_days', default=14, type=int)
+    book = LibraryBook.query.get_or_404(book_id)
+    if book.available_copies <= 0:
+        flash(f'No available copies of "{book.title}" remaining.', 'danger')
+        return redirect(url_for('infra.library'))
+    
+    from datetime import date, timedelta
+    due_date = date.today() + timedelta(days=due_days)
+    issue = BookIssue(
+        book_id=book.id,
+        user_id=user_id,
+        college_id=current_user.college_id,
+        issue_date=date.today(),
+        due_date=due_date,
+        status='Issued'
+    )
+    book.available_copies = max(0, book.available_copies - 1)
+    db.session.add(issue)
+    db.session.commit()
+    flash(f'Book "{book.title}" successfully issued.', 'success')
+    return redirect(url_for('infra.library'))
+
+
+@bp.route('/library/return/<int:issue_id>', methods=['POST'])
+@role_required('librarian', 'principal')
+def return_book(issue_id):
+    issue = BookIssue.query.get_or_404(issue_id)
+    from datetime import date
+    issue.return_date = date.today()
+    issue.status = 'Returned'
+    if issue.book:
+        issue.book.available_copies = min(issue.book.total_copies, issue.book.available_copies + 1)
+    if issue.due_date and date.today() > issue.due_date:
+        overdue_days = (date.today() - issue.due_date).days
+        issue.fine_amount = float(overdue_days * 5.0)
+    db.session.commit()
+    fine_str = f" Fine: ₹{issue.fine_amount:.2f}" if getattr(issue, 'fine_amount', 0) else ""
+    flash(f'Book returned successfully.{fine_str}', 'success')
+    return redirect(url_for('infra.library'))
+
+
+@bp.route('/library/delete/<int:id>', methods=['POST', 'GET'])
+@role_required('librarian', 'principal')
+def delete_book(id):
+    book = LibraryBook.query.get_or_404(id)
+    active_issues = BookIssue.query.filter_by(book_id=id, status='Issued').count()
+    if active_issues > 0:
+        flash(f'Cannot delete book "{book.title}" because {active_issues} copy is currently checked out.', 'danger')
+        return redirect(url_for('infra.library'))
+    db.session.delete(book)
+    db.session.commit()
+    flash(f'Book "{book.title}" removed from catalog.', 'info')
+    return redirect(url_for('infra.library'))

@@ -691,3 +691,28 @@ def download_credential(cid):
     except Exception as e:
         flash(f'PDF generation failed: {e}. Showing HTML version instead.', 'warning')
         return html
+
+
+@bp.route('/timetable')
+@student_required
+def timetable():
+    student = get_current_student()
+    from app.models import TimetableEntry
+    entries = TimetableEntry.query.filter_by(section_id=student.section_id).all() if student and student.section_id else []
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    timetable_grid = {day: [] for day in days}
+    for e in entries:
+        if e.day_of_week in timetable_grid:
+            timetable_grid[e.day_of_week].append(e)
+    for day in days:
+        timetable_grid[day].sort(key=lambda x: str(x.start_time))
+    return render_template('student/timetable.html', student=student, timetable_grid=timetable_grid, days=days)
+
+@bp.route('/library')
+@student_required
+def library():
+    student = get_current_student()
+    from app.models import LibraryBook, BookIssue
+    books = LibraryBook.query.filter_by(college_id=current_user.college_id).all()
+    my_issues = BookIssue.query.filter_by(user_id=current_user.id).order_by(BookIssue.issue_date.desc()).all()
+    return render_template('student/library.html', student=student, books=books, my_issues=my_issues)

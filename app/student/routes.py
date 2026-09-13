@@ -28,209 +28,9 @@ def get_current_student():
     return Student.query.filter_by(user_id=current_user.id).first()
 
 
-def get_student_portal_context(student):
-    """Compile comprehensive context for the unified Digital Campus ERP student portal."""
-    # 1. Course & Session Header Label
-    course_name = "B.Tech. (Computer Science & Engineering)"
-    if student.course_id and hasattr(student, 'course') and student.course:
-        course_name = student.course.name
-    elif student.section and hasattr(student.section, 'course') and student.section.course:
-        course_name = student.section.course.name
-    session_str = student.session or "FCE2026-2027"
-    sem_name = student.section.semester_.name if (student.section and student.section.semester_) else "Semester 1"
-    course_label = f"{session_str}{course_name}No Shift ({sem_name})"
-
-    # 2. Subject-wise Attendance & Circular Gauge Statistics
-    db_total = Attendance.query.filter_by(student_id=student.id).count()
-    if db_total > 0:
-        db_present = Attendance.query.filter_by(student_id=student.id).filter(Attendance.status.in_(['present', 'late'])).count()
-        db_absent = Attendance.query.filter_by(student_id=student.id, status='absent').count()
-        total_lectures = db_total
-        total_present = db_present
-        total_absent = db_absent
-        overall_pct = round((db_present / db_total) * 100, 1)
-    else:
-        total_lectures = 78
-        total_present = 76
-        total_absent = 2
-        overall_pct = 97.4
-
-    # Populate subjects from real section faculty assignments if available
-    subjects_data = []
-    if student.section_id:
-        fa_list = FacultyAssignment.query.filter_by(section_id=student.section_id).all()
-        if fa_list:
-            for fa in fa_list:
-                subj = fa.subject
-                if not subj:
-                    continue
-                s_tot = max(1, total_lectures // len(fa_list))
-                s_pres = max(0, min(s_tot, total_present // len(fa_list)))
-                s_abs = s_tot - s_pres
-                pct = round((s_pres / s_tot * 100), 1) if s_tot > 0 else 100.0
-                subjects_data.append({
-                    "name": subj.name,
-                    "code": subj.code,
-                    "percent": pct,
-                    "total": s_tot,
-                    "present": s_pres,
-                    "absent": s_abs,
-                    "activity_type": "Theory",
-                    "activity_pct": int(pct),
-                    "status": "P" if pct >= 75 else "A"
-                })
-    if not subjects_data:
-        subjects_data = [
-            {"name": "Communication Skills-I", "code": "26BULCHM1202", "percent": 66.67, "total": 6, "present": 4, "absent": 2, "activity_type": "Practical", "activity_pct": 67, "status": "P"},
-            {"name": "Exploratory Project", "code": "26BUVCVD1202", "percent": 100.0, "total": 2, "present": 2, "absent": 0, "activity_type": "Practical", "activity_pct": 100, "status": "P"},
-            {"name": "Programming in C", "code": "26BTXCCE1103", "percent": 100.0, "total": 8, "present": 8, "absent": 0, "activity_type": "Theory", "activity_pct": 100, "status": "P"},
-            {"name": "Basics of Civil Engineering", "code": "26BTXCCV1104", "percent": 100.0, "total": 10, "present": 10, "absent": 0, "activity_type": "Theory", "activity_pct": 100, "status": "P"},
-            {"name": "Engineering Physics", "code": "26BTXCSA1101", "percent": 100.0, "total": 12, "present": 12, "absent": 0, "activity_type": "Theory", "activity_pct": 100, "status": "P"},
-            {"name": "Engineering Mathematics", "code": "26BTXCSA1106", "percent": 100.0, "total": 14, "present": 14, "absent": 0, "activity_type": "Theory", "activity_pct": 100, "status": "P"}
-        ]
-
-    academics = {
-        "course_label": course_label,
-        "total_lectures": total_lectures,
-        "total_present": total_present,
-        "total_absent": total_absent,
-        "overall_pct": overall_pct,
-        "subjects_data": subjects_data
-    }
-
-    # 3. Weekly Timetable Matrix with Attendance Overlay
-    days = [
-        {"index": 0, "date_num": 31, "day_name": "Mon", "is_active": True},
-        {"index": 1, "date_num": 1, "day_name": "Tue", "is_active": False},
-        {"index": 2, "date_num": 2, "day_name": "Wed", "is_active": False},
-        {"index": 3, "date_num": 3, "day_name": "Thu", "is_active": False},
-        {"index": 4, "date_num": 4, "day_name": "Fri", "is_active": False},
-        {"index": 5, "date_num": 5, "day_name": "Sat", "is_active": False},
-        {"index": 6, "date_num": 6, "day_name": "Sun", "is_active": False}
-    ]
-
-    periods = [
-        {"index": 1, "name": "Period 1", "time": "09:00-09:55"},
-        {"index": 2, "name": "Period 2", "time": "10:00-10:55"},
-        {"index": 3, "name": "Period 3", "time": "11:10-12:05"},
-        {"index": 4, "name": "Period 4", "time": "12:10-13:05"},
-        {"index": 5, "name": "Period 5", "time": "14:00-14:55"},
-        {"index": 6, "name": "Period 6", "time": "15:00-15:55"}
-    ]
-
-    grid = {}
-    if student.section_id:
-        from app.models import TimetableSlot
-        slots = TimetableSlot.query.filter_by(section_id=student.section_id).all()
-        day_indices = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
-        for slot in slots:
-            d_i = day_indices.get(slot.day_of_week)
-            if d_i is not None and slot.subject:
-                # Map hour to period
-                h = slot.start_time.hour
-                p_i = 1
-                if h == 9: p_i = 1
-                elif h == 10: p_i = 2
-                elif h == 11: p_i = 3
-                elif h == 12: p_i = 4
-                elif h == 14: p_i = 5
-                elif h >= 15: p_i = 6
-                grid[(p_i, d_i)] = {
-                    "subject_code": slot.subject.code or slot.subject.name[:10],
-                    "activity_type": "Theory",
-                    "faculty_name": slot.faculty.name if slot.faculty else "Faculty",
-                    "time_str": f"{slot.start_time.strftime('%H:%M')}-{slot.end_time.strftime('%H:%M')}",
-                    "attendance_status": "P"
-                }
-
-    # Fallback to demo timetable if grid is empty
-    if not grid:
-        grid = {
-            (1, 0): {"subject_code": "26BULCHM1202", "activity_type": "Practical", "faculty_name": "PU FACE TRAINER VII", "time_str": "09:00-09:55", "attendance_status": "P"},
-            (1, 1): {"subject_code": "26BTXCME1206", "activity_type": "Practical", "faculty_name": "DEVESH KUMAR", "time_str": "09:00-09:55", "attendance_status": "P"},
-            (1, 2): {"subject_code": "26BTXCCV1104", "activity_type": "Theory", "faculty_name": "VEDATRAYEE ACHARYA", "time_str": "09:00-09:55", "attendance_status": "P"},
-            (1, 3): {"subject_code": "26BULCHM1201", "activity_type": "Practical", "faculty_name": "PU FACE TRAINER VIII", "time_str": "09:00-09:55", "attendance_status": "P"},
-            (1, 4): {"subject_code": "26BTXCME1206", "activity_type": "Practical", "faculty_name": "DEVESH KUMAR", "time_str": "09:00-09:55", "attendance_status": "P"},
-            (2, 0): {"subject_code": "26BULCHM1202", "activity_type": "Practical", "faculty_name": "PU FACE TRAINER VII", "time_str": "10:00-10:55", "attendance_status": "P"},
-            (2, 1): {"subject_code": "26BTXCCE1103", "activity_type": "Theory", "faculty_name": "DESHRAJ BAIRWA", "time_str": "10:00-10:55", "attendance_status": "P"},
-            (2, 2): {"subject_code": "26BTXCSA1101", "activity_type": "Theory", "faculty_name": "SHIVA SONI", "time_str": "10:00-10:55", "attendance_status": "P"},
-            (3, 0): {"subject_code": "26BTXCSA1106", "activity_type": "Theory", "faculty_name": "RAKESH AGGARWAL", "time_str": "11:10-12:05", "attendance_status": "P"},
-            (3, 1): {"subject_code": "26BTXCSA1106", "activity_type": "Theory", "faculty_name": "RAKESH AGGARWAL", "time_str": "11:10-12:05", "attendance_status": "P"},
-            (5, 0): {"subject_code": "26BTXCCE1103", "activity_type": "Theory", "faculty_name": "DESHRAJ BAIRWA", "time_str": "14:00-14:55", "attendance_status": "P"},
-            (6, 0): {"subject_code": "26BTXCSA1108", "activity_type": "Theory", "faculty_name": "SONAL JAIN", "time_str": "15:00-15:55", "attendance_status": "P"},
-        }
-
-    timetable_data = {
-        "week_range_str": "Current Week",
-        "days": days,
-        "periods": periods,
-        "grid": grid
-    }
-
-    # 4. Fee Overview & Transaction History
-    payments = FeePayment.query.filter_by(student_id=student.id).order_by(FeePayment.created_at.desc()).all()
-    if payments:
-        transactions = []
-        for p in payments:
-            paid_amt = p.amount if p.status == 'paid' else 0
-            receipt = p.transaction_ref or f"PU/{p.created_at.strftime('%d-%m-%y')}/{p.payment_method or 'Online'}/{p.id:06d}"
-            transactions.append({
-                "id": p.id,
-                "receipt_no": receipt,
-                "due_amount": int(p.amount),
-                "arrear": 0,
-                "late_fee": 0,
-                "paid_amount": int(paid_amt),
-                "currency": "INR",
-                "date": (p.paid_at or p.created_at).strftime('%dth %b, %y'),
-                "instrument_no": (p.payment_method or 'Online').capitalize(),
-                "type": "Payment" if p.status == 'paid' else p.status.capitalize()
-            })
-        total_sched = sum(p.amount for p in payments)
-        total_p = sum(p.amount for p in payments if p.status == 'paid')
-        total_d = sum(p.amount for p in payments if p.status in ('pending', 'overdue'))
-        sem_name = student.section.semester_.name if (student.section and student.section.semester_) else "Semester 1"
-        fee_data = {
-            "scheduled_amount": float(total_sched),
-            "paid_amount": float(total_p),
-            "scholarship_amount": 0.0,
-            "due_amount": float(total_d),
-            "semesters": [
-                {"name": sem_name.upper(), "scheduled": int(total_sched), "paid": int(total_p), "scholarship": 0, "due": int(total_d), "active": True},
-            ],
-            "transactions": transactions
-        }
-    else:
-        transactions = [
-            {"id": 1, "receipt_no": "PU/26-08-26/Online/159426", "due_amount": 35625, "arrear": 0, "late_fee": 0, "paid_amount": 35625, "currency": "INR", "date": "26th Aug, 26", "instrument_no": "Online", "type": "Payment"},
-        ]
-        fee_data = {
-            "scheduled_amount": 226500.0,
-            "paid_amount": 97125.0,
-            "scholarship_amount": 15000.0,
-            "due_amount": 114375.0,
-            "semesters": [
-                {"name": "SEMESTER 1", "scheduled": 226500, "paid": 97125, "scholarship": 15000, "due": 114375, "active": True},
-            ],
-            "transactions": transactions
-        }
-
-    # 5. Leaves
-    leaves = LeaveApplication.query.filter_by(student_id=student.id).order_by(LeaveApplication.created_at.desc()).limit(10).all()
-
-    return {
-        "student": student,
-        "academics": academics,
-        "timetable_data": timetable_data,
-        "fee_data": fee_data,
-        "leaves": leaves
-    }
-
-
-# ─── Dashboard & Digital Campus Portal ──────────────────────────────────────────
+# ─── Dashboard ─────────────────────────────────────────────────────────────────
 
 @bp.route('/dashboard')
-@bp.route('/portal')
 @student_required
 def dashboard():
     student = get_current_student()
@@ -238,41 +38,45 @@ def dashboard():
         flash('Student profile not found.', 'danger')
         return redirect(url_for('auth.login'))
 
-    # Support ?view=classic if desired
-    if request.args.get('view') == 'classic':
-        active_term = AcademicTerm.query.filter_by(college_id=current_user.college_id, is_active=True).first()
-        recent_grades = (Grade.query.filter_by(student_id=student.id)
-                         .order_by(Grade.date.desc()).limit(6).all())
-        thirty_ago = date.today() - timedelta(days=30)
-        total_att = Attendance.query.filter_by(student_id=student.id).filter(Attendance.date >= thirty_ago).count()
-        present_att = Attendance.query.filter_by(student_id=student.id, status='present').filter(Attendance.date >= thirty_ago).count()
-        att_pct = round((present_att / total_att * 100), 1) if total_att > 0 else 100
-        if student.section_id:
-            assignments = (Assignment.query.filter_by(section_id=student.section_id, is_active=True)
-                           .filter(Assignment.due_date >= datetime.utcnow()).all())
-            submitted_ids = {s.assignment_id for s in AssignmentSubmission.query.filter_by(student_id=student.id).all()}
-            pending_assignments = [a for a in assignments if a.id not in submitted_ids]
-        else:
-            pending_assignments = []
-        upcoming_exams = (Exam.query.filter_by(section_id=student.section_id, is_published=True)
-                          .filter(Exam.end_time >= datetime.utcnow()).order_by(Exam.start_time).limit(3).all()
-                          if student.section_id else [])
-        notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).order_by(Notification.created_at.desc()).limit(5).all()
-        from app.models import BookIssue
-        overdue_books = BookIssue.query.filter_by(user_id=current_user.id, status='Issued').filter(BookIssue.due_date < date.today()).all()
+    active_term = AcademicTerm.query.filter_by(college_id=current_user.college_id, is_active=True).first()
 
-        return render_template('student/dashboard.html', student=student,
-                               recent_grades=recent_grades, att_pct=att_pct,
-                               pending_assignments=pending_assignments,
-                               upcoming_exams=upcoming_exams,
-                               notifications=notifications,
-                               active_term=active_term,
-                               overdue_books=overdue_books)
+    # Recent grades
+    recent_grades = (Grade.query.filter_by(student_id=student.id)
+                     .order_by(Grade.date.desc()).limit(6).all())
 
-    # Render Unified University ERP Portal
-    ctx = get_student_portal_context(student)
-    return render_template('student/unified_portal.html', **ctx)
+    # Attendance summary (last 30 days)
+    thirty_ago = date.today() - timedelta(days=30)
+    total_att = Attendance.query.filter_by(student_id=student.id).filter(Attendance.date >= thirty_ago).count()
+    present_att = Attendance.query.filter_by(student_id=student.id, status='present').filter(Attendance.date >= thirty_ago).count()
+    att_pct = round((present_att / total_att * 100), 1) if total_att > 0 else 100
 
+    # Pending assignments
+    if student.section_id:
+        assignments = (Assignment.query.filter_by(section_id=student.section_id, is_active=True)
+                       .filter(Assignment.due_date >= datetime.utcnow()).all())
+        submitted_ids = {s.assignment_id for s in AssignmentSubmission.query.filter_by(student_id=student.id).all()}
+        pending_assignments = [a for a in assignments if a.id not in submitted_ids]
+    else:
+        pending_assignments = []
+
+    # Upcoming exams
+    upcoming_exams = (Exam.query.filter_by(section_id=student.section_id, is_published=True)
+                      .filter(Exam.end_time >= datetime.utcnow()).order_by(Exam.start_time).limit(3).all()
+                      if student.section_id else [])
+
+    notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).order_by(Notification.created_at.desc()).limit(5).all()
+
+    # Phase 5: Library Overdue Check
+    from app.models import BookIssue
+    overdue_books = BookIssue.query.filter_by(user_id=current_user.id, status='Issued').filter(BookIssue.due_date < date.today()).all()
+
+    return render_template('student/dashboard.html', student=student,
+                           recent_grades=recent_grades, att_pct=att_pct,
+                           pending_assignments=pending_assignments,
+                           upcoming_exams=upcoming_exams,
+                           notifications=notifications,
+                           active_term=active_term,
+                           overdue_books=overdue_books)
 
 
 # ─── Faculty Directory ─────────────────────────────────────────────────────────
@@ -878,7 +682,7 @@ def download_credential(cid):
     html = render_template('credentials/certificate_pdf.html', credential=c, today=date.today())
 
     try:
-        from weasyprint import HTML  # type: ignore
+        from weasyprint import HTML
         pdf = HTML(string=html).write_pdf()
         response = make_response(pdf)
         response.headers['Content-Type'] = 'application/pdf'
@@ -892,81 +696,23 @@ def download_credential(cid):
 @bp.route('/timetable')
 @student_required
 def timetable():
-    """Show the student's section timetable from TimetableSlot model."""
-    from app.models import TimetableSlot
     student = get_current_student()
-    if not student:
-        flash('Student profile not found.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
-    section = student.section
-    slots = []
-    if section:
-        slots = (TimetableSlot.query
-                 .filter_by(section_id=section.id)
-                 .order_by(TimetableSlot.day_of_week, TimetableSlot.start_time)
-                 .all())
-
-    # Organise by day
-    days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    timetable_by_day = {day: [] for day in days_order}
-    for slot in slots:
-        if slot.day_of_week in timetable_by_day:
-            timetable_by_day[slot.day_of_week].append(slot)
-
-    return render_template('student/timetable.html',
-                           student=student,
-                           section=section,
-                           timetable_by_day=timetable_by_day,
-                           days_order=days_order,
-                           total_slots=len(slots))
-
+    from app.models import TimetableEntry
+    entries = TimetableEntry.query.filter_by(section_id=student.section_id).all() if student and student.section_id else []
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    timetable_grid = {day: [] for day in days}
+    for e in entries:
+        if e.day_of_week in timetable_grid:
+            timetable_grid[e.day_of_week].append(e)
+    for day in days:
+        timetable_grid[day].sort(key=lambda x: str(x.start_time))
+    return render_template('student/timetable.html', student=student, timetable_grid=timetable_grid, days=days)
 
 @bp.route('/library')
 @student_required
 def library():
-    """Show library books and the student's currently issued books."""
-    from app.models import LibraryBook, BookIssue
     student = get_current_student()
-    if not student:
-        flash('Student profile not found.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
-    college_id = current_user.college_id
-    search = request.args.get('search', '').strip()
-    category = request.args.get('category', '').strip()
-
-    query = LibraryBook.query.filter_by(college_id=college_id)
-    if search:
-        query = query.filter(
-            db.or_(
-                LibraryBook.title.ilike(f'%{search}%'),
-                LibraryBook.author.ilike(f'%{search}%'),
-                LibraryBook.isbn.ilike(f'%{search}%')
-            )
-        )
-    if category:
-        query = query.filter_by(category=category)
-
-    books = query.order_by(LibraryBook.title).all()
-    categories = db.session.query(LibraryBook.category).filter_by(college_id=college_id).distinct().all()
-    categories = sorted([c[0] for c in categories if c[0]])
-
-    # Books currently issued to this student
-    my_issues = (BookIssue.query
-                 .filter_by(user_id=current_user.id, college_id=college_id)
-                 .filter(BookIssue.status.in_(['issued', 'overdue']))
-                 .join(LibraryBook)
-                 .order_by(BookIssue.due_date)
-                 .all())
-
-    overdue_count = sum(1 for i in my_issues if i.status == 'overdue')
-
-    return render_template('student/library.html',
-                           books=books,
-                           my_issues=my_issues,
-                           categories=categories,
-                           search=search,
-                           selected_category=category,
-                           overdue_count=overdue_count,
-                           today=date.today())
+    from app.models import LibraryBook, BookIssue
+    books = LibraryBook.query.filter_by(college_id=current_user.college_id).all()
+    my_issues = BookIssue.query.filter_by(user_id=current_user.id).order_by(BookIssue.issue_date.desc()).all()
+    return render_template('student/library.html', student=student, books=books, my_issues=my_issues)

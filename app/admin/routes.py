@@ -881,7 +881,7 @@ def resolve_grievance(gid):
 # ─── Leave Application Management ───────────────────────────────────────────
 
 @bp.route('/leave-applications')
-@admin_required
+@role_required('admin', 'superadmin', 'it_admin', 'hostel_warden', 'hr', 'principal')
 def leave_applications():
     status_filter = request.args.get('status', '')
     query = (LeaveApplication.query.filter_by(college_id=current_user.college_id)
@@ -893,7 +893,7 @@ def leave_applications():
 
 
 @bp.route('/leave-applications/<int:lid>/action', methods=['POST'])
-@admin_required
+@role_required('admin', 'superadmin', 'it_admin', 'hostel_warden', 'hr', 'principal')
 def leave_action(lid):
     leave = LeaveApplication.query.get_or_404(lid)
     action = request.form.get('action')
@@ -910,7 +910,7 @@ def leave_action(lid):
 # ─── Early Warning & Monitoring (Goal 30) ───────────────────────────────────
 
 @bp.route('/at-risk')
-@admin_required
+@role_required('admin', 'superadmin', 'it_admin', 'principal', 'hod', 'academic_advisor')
 def at_risk_dashboard():
     from app.models import FeatureFlag
     flag = FeatureFlag.query.filter_by(college_id=current_user.college_id or 1, feature_key='early_warning').first()
@@ -1138,7 +1138,7 @@ def sample_csv():
 # ─── Counselor Assignments Management ────────────────────────────────────────
 
 @bp.route('/counselors', methods=['GET'])
-@admin_required
+@role_required('admin', 'superadmin', 'it_admin', 'academic_advisor', 'principal')
 def counselor_assignments():
     courses = Course.query.filter_by(college_id=current_user.college_id).order_by(Course.name).all()
     streams = Stream.query.filter_by(college_id=current_user.college_id).order_by(Stream.name).all()
@@ -1206,7 +1206,7 @@ def assign_section_counselor():
 # ─── Courses, Streams & Batches Management ────────────────────────────────────
 
 @bp.route('/courses', methods=['GET', 'POST'])
-@admin_required
+@role_required('admin', 'superadmin', 'it_admin', 'principal', 'course_coordinator')
 def courses_management():
     if request.method == 'POST':
         action = request.form.get('action')
@@ -1247,7 +1247,7 @@ def courses_management():
 # ─── Attendance CSV Matrix Export ─────────────────────────────────────────────
 
 @bp.route('/attendance/export-csv')
-@admin_required
+@role_required('admin', 'superadmin', 'it_admin', 'registrar', 'principal', 'faculty', 'hod')
 def export_attendance_matrix_csv():
     section_id = request.args.get('section_id', type=int)
     from_date_str = request.args.get('from_date')

@@ -1,0 +1,684 @@
+{% extends "base.html" %}
+
+{% block title %}Digital Campus — Student ERP Portal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/erp_portal.css') }}">
+<style>
+  /* SVG Circle Gauge animation */
+  .erp-circle-fill {
+    stroke-dasharray: 226; /* 2 * PI * 36 */
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="erp-portal-container">
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       1. TOP NAVIGATION HUB & MODULE LAUNCHER
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="erp-top-hub">
+    <!-- Quick Utility Bar -->
+    <div class="erp-quick-bar">
+      <a href="javascript:void(0)" class="erp-quick-btn active" onclick="switchErpTab('academics-attendance')">
+        <i class="fa-solid fa-graduation-cap" style="color: #00bca8;"></i>
+        <span class="btn-caption">Digital Campus</span>
+      </a>
+      <a href="{{ url_for('student.assignments') }}" class="erp-quick-btn">
+        <i class="fa-solid fa-book-open" style="color: #3b82f6;"></i>
+        <span class="btn-caption">Learning Exchange</span>
+      </a>
+      <a href="{{ url_for('student.feedback') }}" class="erp-quick-btn">
+        <i class="fa-solid fa-circle-question" style="color: #0ea5e9;"></i>
+        <span class="btn-caption">Contact Help Desk</span>
+      </a>
+      <a href="{{ url_for('student.announcements') }}" class="erp-quick-btn">
+        <i class="fa-solid fa-globe" style="color: #10b981;"></i>
+        <span class="btn-caption">Notifications</span>
+      </a>
+    </div>
+
+    <!-- 9 Primary ERP Module Cards -->
+    <div class="erp-modules-row">
+      <button type="button" class="erp-module-btn" onclick="switchErpTab('profile')">
+        <i class="fa-solid fa-users" style="color: #64748b;"></i>
+        <span class="label">My Profile</span>
+      </button>
+
+      <button type="button" class="erp-module-btn active" id="btn-module-academics" onclick="switchErpTab('academics-attendance')">
+        <i class="fa-solid fa-graduation-cap" style="color: #334155;"></i>
+        <span class="label">Academics</span>
+      </button>
+
+      <button type="button" class="erp-module-btn" onclick="window.location.href='{{ url_for('student.grades') }}'">
+        <i class="fa-solid fa-clipboard-check" style="color: #f59e0b;"></i>
+        <span class="label">Exam & Grading</span>
+      </button>
+
+      <button type="button" class="erp-module-btn" id="btn-module-fee" onclick="switchErpTab('fee')">
+        <i class="fa-solid fa-coins" style="color: #eab308;"></i>
+        <span class="label">Fee</span>
+      </button>
+
+      <button type="button" class="erp-module-btn" onclick="switchErpTab('academics-leave')">
+        <i class="fa-solid fa-envelope-open-text" style="color: #ef4444;"></i>
+        <span class="label">Letter</span>
+      </button>
+
+      <button type="button" class="erp-module-btn" onclick="switchErpTab('library')">
+        <i class="fa-solid fa-book-bookmark" style="color: #0288d1;"></i>
+        <span class="label">Library</span>
+      </button>
+
+      <button type="button" class="erp-module-btn" onclick="switchErpTab('hostel')">
+        <i class="fa-solid fa-hotel" style="color: #64748b;"></i>
+        <span class="label">Hostel</span>
+      </button>
+
+      <button type="button" class="erp-module-btn" onclick="switchErpTab('transport')">
+        <i class="fa-solid fa-bus" style="color: #eab308;"></i>
+        <span class="label">Transport</span>
+      </button>
+
+      <button type="button" class="erp-module-btn" onclick="switchErpTab('feedback')">
+        <i class="fa-solid fa-hand-pointer" style="color: #ec4899;"></i>
+        <span class="label">Feedback</span>
+      </button>
+    </div>
+
+    <!-- Academics Subnav Strip (Visible when in Academics mode) -->
+    <div class="erp-subnav-strip" id="erp-academics-subnav">
+      <button type="button" class="erp-subnav-pill active" id="pill-att" onclick="switchErpTab('academics-attendance')">
+        My Attendance
+      </button>
+      <button type="button" class="erp-subnav-pill" id="pill-tt" onclick="switchErpTab('academics-timetable')">
+        My Timetable
+      </button>
+      <button type="button" class="erp-subnav-pill pill-green" id="pill-leave" onclick="switchErpTab('academics-leave')">
+        Manage Student Leave
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MODULE 1: ATTENDANCE DASHBOARD (SEMESTER VIEW)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="erp-tab-panel active" id="panel-academics-attendance">
+    <div class="erp-attendance-view">
+      <!-- View selector tabs & Course badge -->
+      <div class="erp-view-header">
+        <div class="erp-view-tabs">
+          <span class="erp-view-tab active">Semester View</span>
+          <a href="{{ url_for('student.attendance_report') }}" class="erp-view-tab">Month View</a>
+          <span class="erp-view-tab" onclick="switchErpTab('academics-timetable')">Week View</span>
+        </div>
+        <div class="erp-course-badge">
+          {{ academics.course_label }}
+        </div>
+      </div>
+
+      <!-- Aggregate summary metrics bar -->
+      <div class="erp-summary-bar">
+        <div class="erp-counter-group">
+          <div class="erp-counter-item total">
+            <i class="fa-solid fa-book"></i>
+            <span>Total Lectures</span>
+            <span class="number">{{ academics.total_lectures }}</span>
+          </div>
+          <div class="erp-counter-item present">
+            <i class="fa-solid fa-calendar-check"></i>
+            <span>Present</span>
+            <span class="number">{{ academics.total_present }}</span>
+          </div>
+          <div class="erp-counter-item absent">
+            <i class="fa-solid fa-calendar-xmark"></i>
+            <span>Absent</span>
+            <span class="number">{{ academics.total_absent }}</span>
+          </div>
+        </div>
+
+        <div class="erp-overall-progress-wrap">
+          <div class="erp-overall-bar">
+            <div class="erp-overall-fill" style="width: {{ academics.overall_pct }}%;"></div>
+          </div>
+          <span class="erp-overall-percent">{{ academics.overall_pct }}%</span>
+        </div>
+      </div>
+
+      <!-- Subject Attendance Cards Grid -->
+      <div class="erp-subject-grid">
+        {% for subj in academics.subjects_data %}
+        <div class="erp-subject-card">
+          <div class="erp-card-header">
+            <h4>{{ subj.name }}</h4>
+            <span class="erp-code-pill">{{ subj.code }}</span>
+          </div>
+
+          <div class="erp-card-body">
+            <!-- Left Circular Progress Ring -->
+            <div class="erp-gauge-col">
+              <div class="erp-circular-progress">
+                <svg viewBox="0 0 84 84">
+                  <circle class="erp-circle-bg" cx="42" cy="42" r="36"></circle>
+                  <circle class="erp-circle-fill {% if subj.percent < 75 %}gauge-red{% else %}gauge-green{% endif %}"
+                          cx="42" cy="42" r="36"
+                          style="stroke-dashoffset: {{ 226 - (226 * subj.percent / 100) }};">
+                  </circle>
+                </svg>
+                <div class="erp-gauge-label">
+                  <span class="erp-gauge-percent">{{ subj.percent }}%</span>
+                  <span class="erp-gauge-subtext">Present</span>
+                </div>
+              </div>
+
+              <div class="erp-lecture-stats">
+                <div class="erp-lecture-row">
+                  <span>Total Lectures</span>
+                  <strong>{{ subj.total }}</strong>
+                </div>
+                <div class="erp-lecture-row">
+                  <span>Present</span>
+                  <strong>{{ subj.present }}</strong>
+                </div>
+                <div class="erp-lecture-row">
+                  <span>Absent</span>
+                  <strong>{{ subj.absent }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Activity Breakdown (Theory / Practical) -->
+            <div class="erp-activity-col">
+              <div class="erp-activity-title">Activities (1)</div>
+              <div class="erp-activity-item">
+                <span class="erp-activity-name">{{ subj.activity_type }}</span>
+                <span class="erp-activity-pct">{{ subj.activity_pct }}%</span>
+                <span class="erp-status-badge p">P</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MODULE 2: TIMETABLE DASHBOARD (WEEK VIEW)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="erp-tab-panel" id="panel-academics-timetable">
+    <div class="erp-timetable-view">
+      <!-- Week Navigation & Legend Toolbar -->
+      <div class="erp-tt-toolbar">
+        <div class="erp-date-navigator">
+          <i class="fa-regular fa-calendar-days" style="color: #0288d1;"></i>
+          <button type="button" class="erp-date-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+          <span>{{ timetable_data.week_range_str }}</span>
+          <button type="button" class="erp-date-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
+          <button type="button" class="erp-this-week-btn">This Week</button>
+        </div>
+
+        <div class="erp-legend-strip">
+          <div class="erp-legend-item">
+            <i class="fa-solid fa-ban" style="color: #64748b;"></i>
+            <span>Class Not Conducted</span>
+          </div>
+          <div class="erp-legend-item">
+            <i class="fa-regular fa-circle-xmark" style="color: #f97316;"></i>
+            <span>Attendance Not Marked</span>
+          </div>
+          <div class="erp-legend-item">
+            <span class="erp-status-badge p">P</span>
+            <span>Present</span>
+          </div>
+          <div class="erp-legend-item">
+            <span class="erp-status-badge a">A</span>
+            <span>Absent</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Matrix Grid -->
+      <div class="erp-tt-matrix-wrap">
+        <table class="erp-tt-table">
+          <thead>
+            <tr>
+              <th class="erp-tt-period-hdr">
+                <div>Day</div>
+                <small style="color: #94a3b8;">Time</small>
+              </th>
+              {% for day in timetable_data.days %}
+              <th class="{% if day.is_active %}day-active{% endif %}">
+                <i class="fa-regular fa-calendar" style="font-size: 0.8rem; margin-right: 4px;"></i>
+                {{ day.date_num }} {{ day.day_name }}
+              </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for period in timetable_data.periods %}
+            <tr>
+              <td class="erp-tt-period-hdr">
+                <strong>{{ period.name }}</strong>
+                <div style="font-size: 0.65rem; color: #94a3b8;">{{ period.time }}</div>
+              </td>
+              {% for day in timetable_data.days %}
+                {% set slot = timetable_data.grid.get((period.index, day.index)) %}
+                <td class="erp-tt-cell">
+                  {% if slot %}
+                  <div class="erp-tt-slot-card">
+                    <div class="erp-slot-code">{{ slot.subject_code }}</div>
+                    <div class="erp-slot-type">({{ slot.activity_type }})</div>
+                    <div class="erp-slot-faculty">{{ slot.faculty_name }}</div>
+                    <div class="erp-slot-time">Time: {{ slot.time_str }}</div>
+
+                    <div class="erp-slot-badge-pos">
+                      {% if slot.attendance_status == 'P' %}
+                        <span class="erp-status-badge p">P</span>
+                      {% elif slot.attendance_status == 'A' %}
+                        <span class="erp-status-badge a">A</span>
+                      {% else %}
+                        <span class="erp-status-badge p">P</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                  {% else %}
+                  <div style="text-align: center; color: #cbd5e1; font-size: 0.75rem; padding-top: 1rem;">—</div>
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MODULE 3: APPLICANT FEE DETAILS & RECEIPTS
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="erp-tab-panel" id="panel-fee">
+    <div class="erp-fee-view">
+      <!-- Fee Top Title -->
+      <div class="erp-fee-header">
+        <h3>Applicant Fee Details</h3>
+        <div style="font-weight: 600; font-size: 0.9rem; color: #475569;">
+          Currency : <span style="background: #0288d1; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 0.8rem;">INR</span>
+        </div>
+      </div>
+
+      <!-- Top 3 Colored Banner KPI Cards -->
+      <div class="erp-fee-kpi-row">
+        <div class="erp-fee-kpi-card kpi-blue">
+          <i class="fa-solid fa-money-bill-wave watermark"></i>
+          <div class="amount">₹ {{ "{:,.0f}".format(fee_data.scheduled_amount) }}</div>
+          <div class="label">Current Session Schedule</div>
+          <div class="sublabel">*Excluding Previous Schedule</div>
+        </div>
+
+        <div class="erp-fee-kpi-card kpi-teal">
+          <i class="fa-solid fa-hand-holding-dollar watermark"></i>
+          <div class="amount">₹ {{ "{:,.0f}".format(fee_data.paid_amount) }}</div>
+          <div class="label">Current Session Paid</div>
+          <div class="sublabel">*Excluding Previous Paid</div>
+        </div>
+
+        <div class="erp-fee-kpi-card kpi-coral">
+          <i class="fa-solid fa-clock-rotate-left watermark"></i>
+          <div class="amount">₹ {{ "{:,.0f}".format(fee_data.due_amount) }}</div>
+          <div class="label">Amount Due</div>
+          <div class="sublabel">*Include Previous Dues & Fine</div>
+        </div>
+      </div>
+
+      <!-- Semester Cards Row -->
+      <div class="erp-semester-cards-row">
+        {% for sem in fee_data.semesters %}
+        <div class="erp-semester-card">
+          <div class="erp-semester-card-hdr">
+            <span>{{ sem.name }}</span>
+            <i class="fa-solid fa-user-group" style="opacity: 0.7;"></i>
+          </div>
+          <div class="erp-semester-card-body">
+            {% if sem.active %}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Amount Scheduled</span>
+              <strong>₹ {{ "{:,.0f}".format(sem.scheduled) }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Amount Paid</span>
+              <strong>₹ {{ "{:,.0f}".format(sem.paid) }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>Scholarship Amount</span>
+              <strong>₹ {{ "{:,.0f}".format(sem.scholarship) }}</strong>
+            </div>
+
+            <div class="erp-due-badge-box">
+              <div style="font-size: 0.75rem; color: #dc2626; font-weight: 700;">Amount Due</div>
+              <div class="erp-due-amount">₹ {{ "{:,.0f}".format(sem.due) }}</div>
+            </div>
+            {% else %}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #94a3b8;">
+              <span>Amount Scheduled</span>
+              <span>N/A</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #94a3b8;">
+              <span>Amount Paid</span>
+              <span>N/A</span>
+            </div>
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 1.5rem; font-weight: 800; color: #cbd5e1;">
+              N/A
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Previous 5 Transactions Table -->
+      <div>
+        <div class="erp-tx-section-title">Previous Transactions</div>
+        <table class="erp-tx-table">
+          <thead>
+            <tr>
+              <th>Receipt Number</th>
+              <th>Due Amount</th>
+              <th>Arrear</th>
+              <th>Late Fee</th>
+              <th>Amount Paid/Refund</th>
+              <th>Currency</th>
+              <th>Payment/Refund Date</th>
+              <th>Instrument No.</th>
+              <th>Transaction Type</th>
+              <th style="text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tx in fee_data.transactions %}
+            <tr>
+              <td>
+                <i class="fa-solid fa-angle-down" style="font-size: 0.75rem; margin-right: 4px; color: #64748b;"></i>
+                <strong>{{ tx.receipt_no }}</strong>
+              </td>
+              <td>{{ "{:,.0f}".format(tx.due_amount) }}</td>
+              <td>{{ tx.arrear }}</td>
+              <td>{{ tx.late_fee }}</td>
+              <td><strong>{{ "{:,.0f}".format(tx.paid_amount) }}</strong></td>
+              <td>{{ tx.currency }}</td>
+              <td>{{ tx.date }}</td>
+              <td>{{ tx.instrument_no }}</td>
+              <td>{{ tx.type }}</td>
+              <td style="text-align: center;">
+                <a href="{{ url_for('fees.download_receipt', pid=tx.id) }}" class="erp-print-btn" title="Print/Download PDF Receipt" target="_blank">
+                  <i class="fa-solid fa-print"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MODULE 4: MANAGE STUDENT LEAVE APPLICATION
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="erp-tab-panel" id="panel-academics-leave">
+    <div class="erp-attendance-view">
+      <div class="erp-view-header">
+        <h4 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-envelope-open-text" style="color: #00bca8; margin-right: 8px;"></i>Manage Student Leave Applications</h4>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; margin-top: 1rem;">
+        <!-- Leave Form -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem;">
+          <h5 style="margin-top: 0; margin-bottom: 1rem; color: #334155;">Apply for Leave / On-Duty</h5>
+          <form method="POST" action="{{ url_for('student.leave_application') }}">
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Leave Type</label>
+              <select name="leave_type" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+                <option value="od">On-Duty (OD)</option>
+                <option value="sick">Medical / Sick Leave</option>
+                <option value="personal">Personal Leave</option>
+                <option value="family">Family Function</option>
+              </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">From Date</label>
+                <input type="date" name="from_date" required style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">To Date</label>
+                <input type="date" name="to_date" required style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">Reason for Leave</label>
+              <textarea name="reason" rows="3" required placeholder="Specify reason..." style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"></textarea>
+            </div>
+
+            <button type="submit" class="erp-subnav-pill pill-green" style="width: 100%; padding: 0.75rem;">
+              Submit Leave Application
+            </button>
+          </form>
+        </div>
+
+        <!-- Recent Leave Applications History -->
+        <div>
+          <h5 style="margin-top: 0; margin-bottom: 1rem; color: #334155;">Previous Leave Requests</h5>
+          <table class="erp-tx-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Duration</th>
+                <th>Dates</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for leave in leaves %}
+              <tr>
+                <td><strong>{{ leave.leave_type|upper }}</strong></td>
+                <td>{{ leave.duration_days }} Day(s)</td>
+                <td>{{ leave.from_date.strftime('%d %b') }} - {{ leave.to_date.strftime('%d %b %Y') }}</td>
+                <td>
+                  <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700;
+                    {% if leave.status == 'approved' %}background: #dcfce7; color: #166534;
+                    {% elif leave.status == 'rejected' %}background: #fee2e2; color: #991b1b;
+                    {% else %}background: #fef3c7; color: #92400e;{% endif %}">
+                    {{ leave.status|capitalize }}
+                  </span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" style="text-align: center; color: #94a3b8; padding: 2rem;">No leave applications found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MODULE 5: MY PROFILE QUICK VIEW
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="erp-tab-panel" id="panel-profile">
+    <div class="erp-attendance-view">
+      <div class="erp-view-header">
+        <h4 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-id-card" style="color: #0288d1; margin-right: 8px;"></i>Student Profile Overview</h4>
+        <a href="{{ url_for('student.profile_view') }}" class="erp-subnav-pill" style="padding: 0.4rem 1rem; font-size: 0.78rem;">Full Profile Dossier</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 180px 1fr; gap: 2rem; align-items: start; margin-top: 1rem;">
+        <div style="text-align: center;">
+          <div style="width: 140px; height: 140px; border-radius: 50%; background: #e2e8f0; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #64748b; border: 4px solid #00bca8;">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+          <h4 style="margin: 0.75rem 0 0.25rem 0;">{{ student.user.name }}</h4>
+          <span style="font-size: 0.8rem; color: #64748b;">{{ student.enrollment_number }}</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem;">
+          <div><span style="color: #64748b; font-size: 0.8rem;">Email:</span> <div><strong>{{ student.user.email }}</strong></div></div>
+          <div><span style="color: #64748b; font-size: 0.8rem;">Program:</span> <div><strong>B.Tech. Computer Science & Engineering</strong></div></div>
+          <div><span style="color: #64748b; font-size: 0.8rem;">Current Semester:</span> <div><strong>Semester 1 (No Shift)</strong></div></div>
+          <div><span style="color: #64748b; font-size: 0.8rem;">Section:</span> <div><strong>{{ student.section.name if student.section else 'Section A' }}</strong></div></div>
+          <div><span style="color: #64748b; font-size: 0.8rem;">Roll Number:</span> <div><strong>{{ student.roll_number or '26BTX001' }}</strong></div></div>
+          <div><span style="color: #64748b; font-size: 0.8rem;">Institution:</span> <div><strong>{{ student.user.college.name if student.user.college else "El'Wood International University" }}</strong></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MODULE 6: CAMPUS SERVICES (LIBRARY / HOSTEL / TRANSPORT / FEEDBACK)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="erp-tab-panel" id="panel-library">
+    <div class="erp-attendance-view">
+      <div class="erp-view-header">
+        <h4 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-book-bookmark" style="color: #0288d1; margin-right: 8px;"></i>Library & E-Resources Status</h4>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin-top: 1rem;">
+        <p style="margin: 0; color: #334155;"><strong>Book Lending Status:</strong> All issued books are currently returned. No overdue library fines outstanding.</p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('student.subjects') }}" class="erp-subnav-pill" style="padding: 0.5rem 1.25rem;">View Subject Reference E-Books</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="erp-tab-panel" id="panel-hostel">
+    <div class="erp-attendance-view">
+      <div class="erp-view-header">
+        <h4 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-hotel" style="color: #64748b; margin-right: 8px;"></i>Hostel Residence Allocation</h4>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin-top: 1rem;">
+        <p style="margin: 0; color: #334155;"><strong>Hostel Block:</strong> Block A — Boys Residence | Room 204 (Double Sharing)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="erp-tab-panel" id="panel-transport">
+    <div class="erp-attendance-view">
+      <div class="erp-view-header">
+        <h4 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-bus" style="color: #eab308; margin-right: 8px;"></i>Campus Transport & Fleet Route</h4>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin-top: 1rem;">
+        <p style="margin: 0; color: #334155;"><strong>Route Assigned:</strong> Route #04 (City Center to South Campus) | Vehicle: KA-01-EQ-9122</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="erp-tab-panel" id="panel-feedback">
+    <div class="erp-attendance-view">
+      <div class="erp-view-header">
+        <h4 style="margin: 0; color: #1e293b;"><i class="fa-solid fa-hand-pointer" style="color: #ec4899; margin-right: 8px;"></i>Submit University Feedback & Grievances</h4>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin-top: 1rem;">
+        <a href="{{ url_for('student.feedback') }}" class="erp-subnav-pill" style="padding: 0.5rem 1.25rem; margin-right: 1rem;">Submit Feedback</a>
+        <a href="{{ url_for('student.grievances') }}" class="erp-subnav-pill pill-green" style="padding: 0.5rem 1.25rem;">File Official Grievance</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     CLIENT-SIDE TAB CONTROLLER
+     ══════════════════════════════════════════════════════════════════════ -->
+<script>
+function switchErpTab(tabKey) {
+  // Hide all panels
+  document.querySelectorAll('.erp-tab-panel').forEach(function(panel) {
+    panel.classList.remove('active');
+  });
+
+  // Reset top module buttons active state
+  document.querySelectorAll('.erp-module-btn').forEach(function(btn) {
+    btn.classList.remove('active');
+  });
+
+  // Reset subnav pills active state
+  document.querySelectorAll('.erp-subnav-pill').forEach(function(pill) {
+    pill.classList.remove('active');
+  });
+
+  var subnavStrip = document.getElementById('erp-academics-subnav');
+
+  if (tabKey === 'academics-attendance') {
+    document.getElementById('panel-academics-attendance').classList.add('active');
+    document.getElementById('btn-module-academics').classList.add('active');
+    document.getElementById('pill-att').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'flex';
+  }
+  else if (tabKey === 'academics-timetable') {
+    document.getElementById('panel-academics-timetable').classList.add('active');
+    document.getElementById('btn-module-academics').classList.add('active');
+    document.getElementById('pill-tt').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'flex';
+  }
+  else if (tabKey === 'academics-leave') {
+    document.getElementById('panel-academics-leave').classList.add('active');
+    document.getElementById('btn-module-academics').classList.add('active');
+    document.getElementById('pill-leave').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'flex';
+  }
+  else if (tabKey === 'fee') {
+    document.getElementById('panel-fee').classList.add('active');
+    document.getElementById('btn-module-fee').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'none';
+  }
+  else if (tabKey === 'profile') {
+    document.getElementById('panel-profile').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'none';
+  }
+  else if (tabKey === 'library') {
+    document.getElementById('panel-library').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'none';
+  }
+  else if (tabKey === 'hostel') {
+    document.getElementById('panel-hostel').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'none';
+  }
+  else if (tabKey === 'transport') {
+    document.getElementById('panel-transport').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'none';
+  }
+  else if (tabKey === 'feedback') {
+    document.getElementById('panel-feedback').classList.add('active');
+    if (subnavStrip) subnavStrip.style.display = 'none';
+  }
+
+  // Update hash
+  if (history.pushState) {
+    history.pushState(null, null, '#' + tabKey);
+  } else {
+    location.hash = '#' + tabKey;
+  }
+}
+
+// Restore active tab from hash on load
+document.addEventListener('DOMContentLoaded', function() {
+  var hash = window.location.hash.replace('#', '');
+  if (hash) {
+    switchErpTab(hash);
+  }
+});
+</script>
+{% endblock %}
