@@ -2,9 +2,13 @@ from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 import os
 import json
+import requests as http_requests
 from app.models import db, Student, Grade, Attendance, SoftSkillMetric, MicroCredential, ParentStudentLink, User, College, Semester, Section, Subject
 
 bp = Blueprint('ai', __name__)
+
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
 
 @bp.before_request
 def check_ai_feature_flag():
@@ -17,6 +21,7 @@ def check_ai_feature_flag():
             "disabled": True
         }), 403
 
+
 @bp.route('/chat', methods=['POST'])
 @login_required
 def chat():
@@ -27,7 +32,7 @@ def chat():
     if not message:
         return jsonify({"error": "No message provided"}), 400
 
-    # Gather Context based on Role & student_id
+    # ── Gather Context based on Role & student_id ───────────────────────────────
     context = {}
     if student_id:
         student = Student.query.get(student_id)
@@ -58,72 +63,100 @@ def chat():
         else:
             context = {"role": current_user.role, "user_name": current_user.name}
 
-    # ── Gemini AI call ──────────────────────────────────────────────────────────
+    # ── Gemini REST API call (no SDK needed) ────────────────────────────────────
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
     if not api_key:
-        # Friendly simulation mode when no key is configured
         return jsonify({
             "response": (
-                f"Hello {current_user.name}! I'm your El'Wood Academic Assistant. "
-                f"I'm running in demo mode right now — please ask your IT Admin to configure the GEMINI_API_KEY. "
-                f"I can see you're a **{current_user.role.replace('_', ' ').title()}**. How can I help you today?"
+                f"Hi {current_user.name}! I'm your Academic Assistant running in demo mode. "
+                f"To enable full AI capabilities, please ask your IT Admin to add the GEMINI_API_KEY in the server environment. "
+                f"You're logged in as **{current_user.role.replace('_', ' ').title()}**. "
+                f"Get a free key at: aistudio.google.com"
             ),
             "context": context
         })
 
+    college_name = "El'Wood International University"
     try:
-        from google import genai
-        from google.genai import types
+        college = College.query.get(current_user.college_id) if current_user.college_id else None
+        if college and college.name:
+            college_name = college.name
+    except Exception:
+        pass
 
-        client = genai.Client(api_key=api_key)
+    system_prompt = (
+        f"You are the Academic Assistant for {college_name}. "
+        f"You are helping: {current_user.name} (Role: {current_user.role.replace('_', ' ').title()}). "
+        f"Current data context: {json.dumps(context)}. "
+        f"Instructions: Be supportive and professional. "
+        f"Use the context data to give precise answers. "
+        f"For students/parents give encouraging insights. "
+        f"For admins/faculty give operational insights. "
+        f"Keep replies under 150 words. Use bullet points when listing data. "
+        f"Warm, premium university brand voice."
+    )
 
-        system_prompt = f"""You are 'El'Wood Academic Assistant', the college-wide AI companion for El'Wood International University.
-You are helping: {current_user.name} (Role: {current_user.role.replace('_', ' ').title()}).
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": f"{system_prompt}\n\nUser message: {message}"}
+                ]
+            }
+        ],
+        "generationConfig": {
+            "maxOutputTokens": 350,
+            "temperature": 0.7
+        }
+    }
 
-CURRENT CONTEXT:
-{json.dumps(context, indent=2)}
-
-INSTRUCTIONS:
-1. Be supportive, knowledgeable, and helpful about all college matters.
-2. If you have data in the context, use it to answer precisely.
-3. For Admins: Help with scheduling, fees, and general college overview.
-4. For Faculty: Help with section management, grading, and student performance.
-5. For Students/Parents: Provide encouraging academic insights and performance tips.
-6. Keep responses under 150 words. Use bullet points for data.
-7. Maintain the premium El'Wood brand voice — warm, professional, and encouraging."""
-
-        response = client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=f"{system_prompt}\n\nUser: {message}",
-            config=types.GenerateContentConfig(
-                max_output_tokens=350,
-                temperature=0.7,
-            )
+    try:
+        resp = http_requests.post(
+            f"{GEMINI_API_URL}?key={api_key}",
+            json=payload,
+            timeout=15
         )
 
-        ai_text = response.text.strip() if response and response.text else "I'm sorry, I couldn't generate a response right now."
+        if resp.status_code == 429:
+            return jsonify({
+                "response": "I'm receiving a high volume of requests right now. Please try again in a moment! 🙏"
+            }), 429
+
+        if resp.status_code in (400, 403):
+            return jsonify({
+                "response": "The AI service key is invalid or not authorized. Please ask your IT Admin to check the GEMINI_API_KEY in Vercel settings."
+            }), 503
+
+        if resp.status_code != 200:
+            return jsonify({
+                "response": f"AI service returned an unexpected error (HTTP {resp.status_code}). Please try again shortly."
+            }), 502
+
+        result = resp.json()
+        candidates = result.get("candidates", [])
+        if not candidates:
+            return jsonify({"response": "I couldn't generate a response right now. Please try again!"}), 200
+
+        ai_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+        if not ai_text:
+            ai_text = "I couldn't generate a response. Please rephrase your question and try again."
 
         return jsonify({
             "response": ai_text,
             "context": context
         })
 
+    except http_requests.exceptions.Timeout:
+        return jsonify({"response": "The AI took too long to respond. Please try again in a moment."}), 504
     except Exception as e:
-        error_msg = str(e)
-        if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
-            return jsonify({
-                "response": "I'm receiving a high volume of requests right now. Please try again in a moment! 🙏"
-            }), 429
-        if "API_KEY" in error_msg or "api key" in error_msg.lower() or "invalid" in error_msg.lower():
-            return jsonify({
-                "response": "The AI service isn't configured yet. Please contact your IT Admin to set up the GEMINI_API_KEY."
-            }), 503
         return jsonify({
-            "response": f"I encountered a technical hiccup. Please try again shortly.",
-            "error": error_msg
+            "response": "I encountered an unexpected error. Please try again shortly.",
+            "debug": str(e)
         }), 500
 
+
+# ── Context Helpers ────────────────────────────────────────────────────────────
 
 def gather_student_context(student):
     grades = student.grades.order_by(Grade.date.desc()).limit(10).all()
