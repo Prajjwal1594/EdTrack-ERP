@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Weekly Timetable — EdTrack{% endblock %}
+{% block page_title %}Weekly Timetable{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('student.dashboard') }}">Dashboard</a> / Timetable
+    </div>
+    <h1>Weekly Class Timetable</h1>
+    <p>
+      {% if section %}
+        Section <strong>{{ section.name }}</strong> ({{ section.semester_.name if section.semester_ else 'Semester' }}) &middot; {{ total_slots }} Weekly Class Slots
+      {% else %}
+        No section assigned
+      {% endif %}
+    </p>
+  </div>
+  <div class="flex gap-8">
+    <button onclick="window.print()" class="btn btn-outline">
+      <i class="fas fa-print"></i> Print Schedule
+    </button>
+  </div>
+</div>
+
+{% if not section %}
+<div class="card empty-state">
+  <i class="fas fa-calendar-xmark"></i>
+  <h3>No Section Assigned</h3>
+  <p class="text-muted">You are not currently assigned to any academic section. Please contact your administrator.</p>
+</div>
+{% elif total_slots == 0 %}
+<div class="card empty-state">
+  <i class="fas fa-calendar-day"></i>
+  <h3>No Classes Scheduled</h3>
+  <p class="text-muted">There are currently no timetable slots scheduled for section {{ section.name }}.</p>
+</div>
+{% else %}
+<div style="display: flex; flex-direction: column; gap: 24px;">
+  {% for day in days_order %}
+    {% set slots = timetable_by_day.get(day, []) %}
+    <div class="card">
+      <div class="card-header flex-between">
+        <div class="flex-center gap-12">
+          <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--gold);"></span>
+          <span class="card-title" style="font-size:16px;">{{ day }}</span>
+          <span class="badge badge-outline text-small">{{ slots | length }} Classes</span>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        {% if slots %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 140px;">Time Slot</th>
+                <th>Subject</th>
+                <th>Subject Code</th>
+                <th>Faculty</th>
+                <th>Room</th>
+                <th style="width: 100px;">Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for slot in slots %}
+              <tr>
+                <td class="font-mono text-small" style="color:var(--forest); font-weight:600;">
+                  <i class="far fa-clock" style="margin-right:4px;"></i>
+                  {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}
+                </td>
+                <td style="font-weight:600; color:var(--ink);">
+                  {{ slot.subject.name if slot.subject else '—' }}
+                </td>
+                <td class="font-mono text-small text-muted">
+                  {{ slot.subject.code if slot.subject else '—' }}
+                </td>
+                <td style="color:var(--ink-mid);">
+                  <i class="fas fa-chalkboard-user" style="margin-right:6px; color:var(--gold);"></i>
+                  {{ slot.faculty.name if slot.faculty else 'TBD' }}
+                </td>
+                <td>
+                  <span class="badge badge-outline">
+                    <i class="fas fa-location-dot" style="margin-right:4px;"></i>
+                    {{ slot.room_number or 'Classroom' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-success">Theory</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-small text-center" style="padding: 24px;">No classes scheduled on {{ day }}.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

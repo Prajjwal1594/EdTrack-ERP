@@ -8,6 +8,7 @@ from sqlalchemy import or_
 
 
 @bp.route('/')
+@bp.route('/inbox')
 @login_required
 def inbox():
     messages = (Message.query

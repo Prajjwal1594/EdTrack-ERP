@@ -1324,3 +1324,28 @@ def export_attendance_matrix_csv():
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
 
+
+@bp.route('/noticeboard')
+@admin_required
+def noticeboard():
+    """Admin noticeboard — view all announcements and events."""
+    college_id = current_user.college_id
+    filter_type = request.args.get('type', '').strip()
+
+    announcement_query = Announcement.query.filter_by(college_id=college_id)
+    if filter_type and filter_type != 'all':
+        announcement_query = announcement_query.filter_by(announcement_type=filter_type)
+    announcements = announcement_query.order_by(Announcement.date.desc()).all()
+
+    events = (Event.query.filter_by(college_id=college_id, is_active=True)
+              .order_by(Event.event_date.asc()).all())
+
+    total_active = Announcement.query.filter_by(college_id=college_id, is_active=True).count()
+    total_events = Event.query.filter_by(college_id=college_id, is_active=True).count()
+
+    return render_template('admin/noticeboard.html',
+                           announcements=announcements,
+                           events=events,
+                           filter_type=filter_type,
+                           total_active=total_active,
+                           total_events=total_events)

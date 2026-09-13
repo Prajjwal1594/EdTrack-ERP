@@ -730,3 +730,89 @@ def export_attendance_matrix_csv():
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
 
+
+@bp.route('/timetable')
+@faculty_required
+def timetable():
+    """Show the faculty member's weekly teaching schedule."""
+    from app.models import TimetableSlot
+    # Get all sections this faculty teaches
+    faculty_section_ids = [fa.section_id for fa in get_faculty_assignments_list()]
+    faculty_subject_ids = [fa.subject_id for fa in get_faculty_assignments_list()]
+
+    slots = (TimetableSlot.query
+             .filter(TimetableSlot.faculty_id == current_user.id)
+             .order_by(TimetableSlot.day_of_week, TimetableSlot.start_time)
+             .all())
+
+    days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    timetable_by_day = {day: [] for day in days_order}
+    for slot in slots:
+        if slot.day_of_week in timetable_by_day:
+            timetable_by_day[slot.day_of_week].append(slot)
+
+    total_weekly_hours = sum(
+        (datetime.combine(date.today(), slot.end_time) -
+         datetime.combine(date.today(), slot.start_time)).seconds / 3600
+        for slot in slots
+    )
+
+    sections = get_faculty_sections()
+    return render_template('faculty/timetable.html',
+                           timetable_by_day=timetable_by_day,
+                           days_order=days_order,
+                           total_slots=len(slots),
+                           total_weekly_hours=round(total_weekly_hours, 1),
+                           sections=sections)
+
+
+@bp.route('/students')
+@faculty_required
+def students():
+    """List all students in the faculty's assigned sections with filters."""
+    sections = get_faculty_sections()
+    section_id = request.args.get('section_id', type=int)
+    search = request.args.get('search', '').strip()
+
+    if section_id:
+        sections_to_show = [s for s in sections if s.id == section_id]
+    else:
+        sections_to_show = sections
+
+    all_students = []
+    for sec in sections_to_show:
+        for student in sec.students.all():
+            if search:
+                name = student.user.name.lower()
+                enroll = (student.enrollment_number or '').lower()
+                if search.lower() not in name and search.lower() not in enroll:
+                    continue
+            # Compute attendance % for this student
+            total_att = student.attendance_records.count()
+            present_att = student.attendance_records.filter(
+                Attendance.status.in_(['present', 'late'])
+            ).count()
+            att_pct = round((present_att / total_att * 100), 1) if total_att > 0 else None
+
+            # Latest grade average
+            recent_grades = student.grades.order_by(Grade.created_at.desc()).limit(5).all()
+            avg_grade = round(sum(g.percentage for g in recent_grades) / len(recent_grades), 1) if recent_grades else None
+
+            all_students.append({
+                'student': student,
+                'section': sec,
+                'att_pct': att_pct,
+                'avg_grade': avg_grade,
+                'at_risk': (att_pct is not None and att_pct < 75) or (avg_grade is not None and avg_grade < 50)
+            })
+
+    # Sort: at-risk first, then alphabetical
+    all_students.sort(key=lambda x: (not x['at_risk'], x['student'].user.name))
+
+    return render_template('faculty/students.html',
+                           all_students=all_students,
+                           sections=sections,
+                           selected_section_id=section_id,
+                           search=search,
+                           total_count=len(all_students))
+

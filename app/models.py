@@ -32,6 +32,11 @@ class College(db.Model):
     logo_url = db.Column(db.String(300))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
     users = db.relationship('User', backref='college', lazy='dynamic', cascade='all, delete-orphan')
     semesters = db.relationship('Semester', backref='college', lazy='dynamic', cascade='all, delete-orphan')
     subjects = db.relationship('Subject', backref='college', lazy='dynamic', cascade='all, delete-orphan')
@@ -51,6 +56,11 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(50), nullable=False)
     college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'))
     _is_active = db.Column('is_active', db.Boolean, default=True)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     @property
     def is_active(self):

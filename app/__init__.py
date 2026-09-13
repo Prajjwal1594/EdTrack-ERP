@@ -6,8 +6,16 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_socketio import SocketIO
 from config import Config
+from flask_sqlalchemy.model import Model
 
-db = SQLAlchemy()
+
+class BaseModel(Model):
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+
+db = SQLAlchemy(model_class=BaseModel)
 login_manager = LoginManager()
 mail = Mail()
 socketio = SocketIO()
@@ -315,14 +323,14 @@ def create_app(config_class=Config):
 
                 from app.models import College
                 if cid and not College.query.get(cid):
-                    c = College(id=cid, name="EdTrack International University", code=f"EDTRACK{cid}", address="Main Campus")
+                    c = College(id=cid, name="EdTrack International University", code=f"EDTRACK{cid}", address="Main Campus")  # type: ignore
                     db.session.add(c)
                     db.session.flush()
 
                 added_any = False
                 for r_role, r_name, r_email, r_pwd in demo_accounts:
                     if not User.query.filter_by(email=r_email).first():
-                        u = User(name=r_name, email=r_email, role=r_role, college_id=cid if r_role != 'superadmin' else None)
+                        u = User(name=r_name, email=r_email, role=r_role, college_id=cid if r_role != 'superadmin' else None)  # type: ignore
                         u.set_password(r_pwd)
                         db.session.add(u)
                         added_any = True

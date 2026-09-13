@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Student Fee Status — EdTrack Finance{% endblock %}
+{% block page_title %}Student Fee Status{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('accountant.dashboard') }}">Dashboard</a> / Fees Overview
+    </div>
+    <h1>Student Fee Accounts & Clearance</h1>
+    <p>Monitor term-wise fee obligations, outstanding balances, and clearance status across all enrolled students.</p>
+  </div>
+  <div class="flex gap-8">
+    <a href="{{ url_for('accountant.payments') }}" class="btn btn-outline"><i class="fas fa-credit-card"></i> Payment Transactions</a>
+    <a href="{{ url_for('fees.index') }}" class="btn btn-primary"><i class="fas fa-receipt"></i> Fee Structure</a>
+  </div>
+</div>
+
+<!-- Financial Summary Cards -->
+<div class="stat-grid mb-24">
+  <div class="stat-card">
+    <div class="stat-icon forest"><i class="fas fa-indian-rupee-sign"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Total Fee Collected</span>
+      <span class="stat-value">₹{{ '{:,.0f}'.format(overall_collected) }}</span>
+      <span class="stat-sub">{{ cleared_count }} Fully Cleared Accounts</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon coral"><i class="fas fa-clock-rotate-left"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Total Outstanding / Pending</span>
+      <span class="stat-value">₹{{ '{:,.0f}'.format(overall_pending) }}</span>
+      <span class="stat-sub">Across {{ total_students }} Students</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon gold"><i class="fas fa-users-viewfinder"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Accounts Under Review</span>
+      <span class="stat-value">{{ total_students }}</span>
+      <span class="stat-sub">{{ selected_term.name if selected_term else 'Current Term' }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card mb-20">
+  <div class="card-body">
+    <form method="GET" action="{{ url_for('accountant.fees') }}" class="filter-bar">
+      <input type="text" name="search" class="form-control" placeholder="Search student name, roll number..." value="{{ search }}" style="max-width:280px;">
+      
+      <select name="term_id" class="form-control" onchange="this.form.submit()">
+        {% for t in terms %}
+        <option value="{{ t.id }}" {% if selected_term and selected_term.id == t.id %}selected{% endif %}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="status" class="form-control" onchange="this.form.submit()">
+        <option value="">All Clearance Statuses</option>
+        <option value="cleared" {% if status_filter == 'cleared' %}selected{% endif %}>Cleared (100%)</option>
+        <option value="partial" {% if status_filter == 'partial' %}selected{% endif %}>Partially Paid</option>
+        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending (0%)</option>
+      </select>
+
+      <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
+      {% if search or status_filter %}
+      <a href="{{ url_for('accountant.fees') }}" class="btn btn-outline">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Student Fee Table -->
+<div class="card">
+  <div class="card-header flex-between">
+    <span class="card-title"><i class="fas fa-file-invoice-dollar" style="color:var(--gold); margin-right:8px;"></i> Student Ledger Records ({{ student_summaries | length }} Shown)</span>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    {% if student_summaries %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student Details</th>
+            <th>Section</th>
+            <th>Total Due</th>
+            <th>Total Paid</th>
+            <th>Balance Due</th>
+            <th>Clearance %</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in student_summaries %}
+          <tr>
+            <td>
+              <div style="font-weight:600; color:var(--ink);">{{ s.student.user.name }}</div>
+              <small class="text-muted font-mono">{{ s.student.roll_number or s.student.enrollment_number or '—' }}</small>
+            </td>
+            <td>
+              <span class="badge badge-outline">{{ s.student.section.full_name if s.student.section else '—' }}</span>
+            </td>
+            <td class="font-mono text-small" style="font-weight:600;">₹{{ '{:,.0f}'.format(s.total_due) }}</td>
+            <td class="font-mono text-small" style="color:var(--forest); font-weight:600;">₹{{ '{:,.0f}'.format(s.total_paid) }}</td>
+            <td class="font-mono text-small" style="color:{% if s.total_pending > 0 %}var(--danger){% else %}var(--forest){% endif %}; font-weight:600;">
+              ₹{{ '{:,.0f}'.format(s.total_pending) }}
+            </td>
+            <td style="min-width:110px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px;">
+                <span>{{ s.clearance_pct }}%</span>
+              </div>
+              <div class="progress" style="height:6px;">
+                <div class="progress-bar {% if s.clearance_pct == 100 %}green{% elif s.clearance_pct > 0 %}gold{% else %}red{% endif %}" style="width:{{ s.clearance_pct }}%"></div>
+              </div>
+            </td>
+            <td>
+              {% if s.status == 'cleared' %}
+                <span class="badge badge-success"><i class="fas fa-check" style="margin-right:4px;"></i> Cleared</span>
+              {% elif s.status == 'partial' %}
+                <span class="badge badge-gold"><i class="fas fa-circle-half-stroke" style="margin-right:4px;"></i> Partial</span>
+              {% else %}
+                <span class="badge badge-danger"><i class="fas fa-hourglass-start" style="margin-right:4px;"></i> Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('reports.report_card', student_id=s.student.id) }}" class="btn btn-outline" style="padding:4px 10px; font-size:12px;" title="Progress & Fees Report">
+                <i class="fas fa-file-invoice"></i> Report
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-receipt"></i>
+      <h3>No Fee Records Found</h3>
+      <p class="text-muted">No students matching the selected term or filter criteria were found.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

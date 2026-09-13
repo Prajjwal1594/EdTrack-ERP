@@ -117,6 +117,18 @@ def child_detail(student_id):
 
     fee_payments = FeePayment.query.filter_by(student_id=student_id).order_by(FeePayment.created_at.desc()).all()
 
+    by_subject = {}
+    for g in grades:
+        subj_name = g.subject.name if g.subject else 'General'
+        if subj_name not in by_subject:
+            by_subject[subj_name] = []
+        by_subject[subj_name].append(g)
+
+    attendance = Attendance.query.filter_by(student_id=student_id).order_by(Attendance.date.desc()).all()
+    total_att = len(attendance)
+    present_att = sum(1 for a in attendance if a.status in ('present', 'late'))
+    att_pct = round((present_att / total_att * 100), 1) if total_att > 0 else 100.0
+
     # Phase 5: Infrastructure & Library
     from app.models import TransportAllocation, HostelAllocation, BookIssue
     transport = TransportAllocation.query.filter_by(student_id=student.id).first()
