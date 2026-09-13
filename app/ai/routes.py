@@ -7,7 +7,7 @@ from app.models import db, Student, Grade, Attendance, SoftSkillMetric, MicroCre
 
 bp = Blueprint('ai', __name__)
 
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 
 @bp.before_request
