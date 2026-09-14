@@ -9,15 +9,14 @@ bp = Blueprint('ai', __name__)
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com"
 
-# Models confirmed available for this project (from ListModels), in priority order
-GEMINI_MODELS = [
-    "gemini-2.5-flash",
+# Primary model confirmed working for this project
+PRIMARY_MODEL = "gemini-2.5-flash"
+# Fallbacks if primary fails
+FALLBACK_MODELS = [
     "gemini-flash-latest",
     "gemini-2.5-flash-lite",
     "gemini-flash-lite-latest",
-    "gemini-2.5-pro",
     "gemini-pro-latest",
-    "gemini-3-flash-preview",
 ]
 
 
@@ -140,32 +139,28 @@ def chat():
         "generationConfig": {"maxOutputTokens": 350, "temperature": 0.7}
     }
 
-    # ── Call Gemini — try each model until one succeeds ─────────────────────────
+    # ── Call Gemini ──────────────────────────────────────────────────
     try:
         resp = None
-        last_err = {}
-        for model_name in GEMINI_MODELS:
+        models_to_try = [PRIMARY_MODEL] + FALLBACK_MODELS
+        for model_name in models_to_try:
             url = f"{GEMINI_BASE}/v1beta/models/{model_name}:generateContent"
-            resp = http_requests.post(url, json=payload, headers=_gemini_headers(api_key), timeout=20)
-            if resp.status_code == 404:
-                try:
-                    last_err = resp.json()
-                except Exception:
-                    last_err = {}
-                continue
-            break  # success or a real error (not 404)
+            try:
+                resp = http_requests.post(
+                    url, json=payload,
+                    headers=_gemini_headers(api_key),
+                    timeout=12
+                )
+                if resp.status_code == 404:
+                    continue  # try next
+                break  # got a real response
+            except http_requests.exceptions.Timeout:
+                continue  # try next on timeout too
 
-        # If all known models 404'd, try dynamic discovery as last resort
         if resp is None or resp.status_code == 404:
-            fallback = _discover_model(api_key)
-            if fallback:
-                url = f"{GEMINI_BASE}/v1beta/models/{fallback}:generateContent"
-                resp = http_requests.post(url, json=payload, headers=_gemini_headers(api_key), timeout=20)
-            else:
-                return jsonify({
-                    "response": "No Gemini model available for this API key. Visit /api/ai/test-key (IT Admin) to diagnose.",
-                    "debug": last_err
-                }), 503
+            return jsonify({
+                "response": "AI service temporarily unavailable. Please try again in a moment."
+            }), 503
 
         if resp.status_code == 429:
             return jsonify({"response": "High request volume — please try again in a moment! 🙏"}), 429
