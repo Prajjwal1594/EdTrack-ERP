@@ -230,6 +230,42 @@
       background: var(--gold);
       color: var(--forest);
     }
+    .school-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-top: 4px;
+      width: fit-content;
+      letter-spacing: 0.2px;
+    }
+    .tag-elwood {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .tag-sunrise {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .tag-global {
+      background: #f3e8ff;
+      color: #6b21a8;
+    }
+    .role-chip:hover .tag-elwood {
+      background: rgba(219, 234, 254, 0.25);
+      color: #bfdbfe;
+    }
+    .role-chip:hover .tag-sunrise {
+      background: rgba(254, 243, 199, 0.25);
+      color: #fde68a;
+    }
+    .role-chip:hover .tag-global {
+      background: rgba(243, 232, 255, 0.25);
+      color: #e9d5ff;
+    }
   </style>
 </head>
 <body>
@@ -250,37 +286,39 @@
       {% endwith %}
       <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
         <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input type="email" name="email" id="email-input" class="form-control" placeholder="you@gmail.com" value="admin@gmail.com" required autofocus>
+          <label class="form-label" for="email-input">Email Address</label>
+          <input type="email" id="email-input" name="email" class="form-control" placeholder="user@gmail.com" required autocomplete="email">
         </div>
+
         <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" id="password-input" class="form-control" placeholder="••••••••" value="admin123" required>
+          <label class="form-label" for="password-input">Password</label>
+          <input type="password" id="password-input" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
         </div>
-        <div class="remember-row">
-          <label><input type="checkbox" name="remember" checked> Remember session</label>
+
+        <div class="form-check">
+          <input type="checkbox" id="remember" name="remember">
+          <label for="remember">Remember this device for 30 days</label>
         </div>
-        <button type="submit" class="btn-login" id="submit-btn">
-          <i class="fas fa-right-to-bracket"></i> Sign In to Portal
+
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <i class="fas fa-arrow-right-to-bracket"></i> Sign In to ERP
         </button>
 
-        <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
-          <div style="font-size: 11px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-            <span><i class="fas fa-bolt" style="color: var(--gold);"></i> Quick Preset Roles:</span>
-            <span style="font-size: 10px; color: var(--forest-light);">Click to Login</span>
-          </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-            <button type="button" class="badge" onclick="quickLogin('admin@gmail.com', 'admin123')" style="background:#e0e7ff; color:#3730a3; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
-              <i class="fas fa-shield"></i> Admin
+        <!-- Quick preset bar -->
+        <div class="quick-roles">
+          <div class="quick-roles-label">Quick Sign In</div>
+          <div class="quick-roles-grid">
+            <button type="button" class="badge" onclick="quickLogin('admin@gmail.com', 'admin123')" style="background:#dcfce7; color:#166534; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
+              <i class="fas fa-user-shield"></i> Admin (El'Wood)
             </button>
-            <button type="button" class="badge" onclick="quickLogin('principal@gmail.com', 'principal123')" style="background:#fef3c7; color:#92400e; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
-              <i class="fas fa-user-tie"></i> Principal
+            <button type="button" class="badge" onclick="quickLogin('itadmin@gmail.com', 'itadmin123')" style="background:#fef3c7; color:#92400e; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
+              <i class="fas fa-network-wired"></i> IT Admin (Sunrise)
             </button>
-            <button type="button" class="badge" onclick="quickLogin('faculty@gmail.com', 'faculty123')" style="background:#dcfce7; color:#166534; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
-              <i class="fas fa-chalkboard-user"></i> Faculty
+            <button type="button" class="badge" onclick="quickLogin('faculty@gmail.com', 'faculty123')" style="background:#fef3c7; color:#854d0e; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
+              <i class="fas fa-chalkboard-user"></i> Faculty (El'Wood)
             </button>
             <button type="button" class="badge" onclick="quickLogin('student@gmail.com', 'student123')" style="background:#dbeafe; color:#1e40af; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
-              <i class="fas fa-user-graduate"></i> Student
+              <i class="fas fa-user-graduate"></i> Student (El'Wood)
             </button>
             <button type="button" class="badge" onclick="quickLogin('superadmin@edtrack.com', 'super123')" style="background:#f3e8ff; color:#6b21a8; border:none; padding:6px 10px; border-radius:6px; font-weight:700; cursor:pointer; font-size:11px;">
               <i class="fas fa-crown"></i> Superadmin
@@ -295,7 +333,7 @@
   <div class="demo-panel">
     <div class="demo-panel-header">
       <h2><i class="fas fa-bolt" style="color: var(--gold);"></i> Single-Click Demo Login</h2>
-      <span>22 CSV Roles</span>
+      <span>22 CSV Roles • Multi-Tenant</span>
     </div>
 
     <!-- Category 1: Platform -->
@@ -306,16 +344,19 @@
           <div class="role-title">Super Admin <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">superadmin@edtrack.com</div>
           <div class="role-password">🔑 super123</div>
+          <span class="school-tag tag-global"><i class="fas fa-globe"></i> Global Platform</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('admin@gmail.com', 'admin123')">
           <div class="role-title">Institution Admin <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">admin@gmail.com</div>
           <div class="role-password">🔑 admin123</div>
+          <span class="school-tag tag-elwood"><i class="fas fa-landmark"></i> El'Wood School</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('itadmin@gmail.com', 'itadmin123')">
           <div class="role-title">IT Administrator <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">itadmin@gmail.com</div>
           <div class="role-password">🔑 itadmin123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
       </div>
     </div>
@@ -328,16 +369,19 @@
           <div class="role-title">Principal <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">principal@gmail.com</div>
           <div class="role-password">🔑 principal123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('registrar@gmail.com', 'registrar123')">
           <div class="role-title">Registrar <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">registrar@gmail.com</div>
           <div class="role-password">🔑 registrar123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('hod@gmail.com', 'hod123')">
           <div class="role-title">HOD <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">hod@gmail.com</div>
           <div class="role-password">🔑 hod123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
       </div>
     </div>
@@ -350,21 +394,25 @@
           <div class="role-title">Admission Officer <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">admissions@gmail.com</div>
           <div class="role-password">🔑 admissions123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('accountant@gmail.com', 'accountant123')">
           <div class="role-title">Accountant <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">accountant@gmail.com</div>
           <div class="role-password">🔑 accountant123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('hr@gmail.com', 'hr123')">
           <div class="role-title">HR Manager <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">hr@gmail.com</div>
           <div class="role-password">🔑 hr123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('exam_officer@gmail.com', 'exam123')">
           <div class="role-title">Examination Officer <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">exam_officer@gmail.com</div>
           <div class="role-password">🔑 exam123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
       </div>
     </div>
@@ -377,16 +425,19 @@
           <div class="role-title">Faculty <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">faculty@gmail.com</div>
           <div class="role-password">🔑 faculty123</div>
+          <span class="school-tag tag-elwood"><i class="fas fa-landmark"></i> El'Wood School</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('coordinator@gmail.com', 'coordinator123')">
           <div class="role-title">Course Coordinator <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">coordinator@gmail.com</div>
           <div class="role-password">🔑 coordinator123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('advisor@gmail.com', 'advisor123')">
           <div class="role-title">Academic Advisor <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">advisor@gmail.com</div>
           <div class="role-password">🔑 advisor123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
       </div>
     </div>
@@ -399,26 +450,31 @@
           <div class="role-title">Librarian <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">librarian@gmail.com</div>
           <div class="role-password">🔑 librarian123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('warden@gmail.com', 'warden123')">
           <div class="role-title">Hostel Warden <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">warden@gmail.com</div>
           <div class="role-password">🔑 warden123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('transport@gmail.com', 'transport123')">
           <div class="role-title">Transport Manager <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">transport@gmail.com</div>
           <div class="role-password">🔑 transport123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('placement@gmail.com', 'placement123')">
           <div class="role-title">Placement Officer <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">placement@gmail.com</div>
           <div class="role-password">🔑 placement123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('affairs@gmail.com', 'affairs123')">
           <div class="role-title">Student Affairs Officer <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">affairs@gmail.com</div>
           <div class="role-password">🔑 affairs123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
       </div>
     </div>
@@ -431,21 +487,25 @@
           <div class="role-title">Student <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">student@gmail.com</div>
           <div class="role-password">🔑 student123</div>
+          <span class="school-tag tag-elwood"><i class="fas fa-landmark"></i> El'Wood School</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('parent@gmail.com', 'parent123')">
           <div class="role-title">Parent <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">parent@gmail.com</div>
           <div class="role-password">🔑 parent123</div>
+          <span class="school-tag tag-elwood"><i class="fas fa-landmark"></i> El'Wood School</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('alumni@gmail.com', 'alumni123')">
           <div class="role-title">Alumni <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">alumni@gmail.com</div>
           <div class="role-password">🔑 alumni123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
         <button type="button" class="role-chip" onclick="quickLogin('employer@gmail.com', 'employer123')">
           <div class="role-title">Employer <span class="one-click-badge">1-Click</span></div>
           <div class="role-email">employer@gmail.com</div>
           <div class="role-password">🔑 employer123</div>
+          <span class="school-tag tag-sunrise"><i class="fas fa-sun"></i> Sunrise Academy</span>
         </button>
       </div>
     </div>

@@ -43,22 +43,24 @@ def seed_default_feature_flags(college_id):
 @login_required
 @it_admin_required
 def dashboard():
-    college_id = current_user.college_id or 1
-    seed_default_feature_flags(college_id)
-
-    # Feature flags for college
-    feature_flags = FeatureFlag.query.filter_by(college_id=college_id).all()
-
-    # Recent Audit Logs
-    recent_logs = AuditLog.query.filter(
-        (AuditLog.college_id == college_id) | (AuditLog.college_id == None)
-    ).order_by(AuditLog.timestamp.desc()).limit(15).all()
-
-    # System Health Metrics
-    user_count = User.query.filter_by(college_id=college_id).count() if current_user.college_id else User.query.count()
-    active_users = User.query.filter_by(is_active=True).count()
-    student_count = Student.query.count()
-    total_logs_count = AuditLog.query.count()
+    college_id = current_user.college_id
+    if current_user.role == 'superadmin':
+        feature_flags = FeatureFlag.query.all()
+        recent_logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(15).all()
+        user_count = User.query.count()
+        active_users = User.query.filter_by(is_active=True).count()
+        student_count = Student.query.count()
+        total_logs_count = AuditLog.query.count()
+    else:
+        if not college_id:
+            college_id = 1
+        seed_default_feature_flags(college_id)
+        feature_flags = FeatureFlag.query.filter_by(college_id=college_id).all()
+        recent_logs = AuditLog.query.filter_by(college_id=college_id).order_by(AuditLog.timestamp.desc()).limit(15).all()
+        user_count = User.query.filter_by(college_id=college_id).count()
+        active_users = User.query.filter_by(college_id=college_id, is_active=True).count()
+        student_count = Student.query.join(User).filter(User.college_id == college_id).count()
+        total_logs_count = AuditLog.query.filter_by(college_id=college_id).count()
 
     # System Performance Indicators
     db_size_kb = 0
@@ -97,6 +99,10 @@ def dashboard():
 @it_admin_required
 def toggle_feature(flag_id):
     flag = FeatureFlag.query.get_or_404(flag_id)
+    if current_user.role != 'superadmin' and flag.college_id != current_user.college_id:
+        flash("Unauthorized to modify feature flags for another institution.", "danger")
+        return redirect(url_for('it_admin.dashboard'))
+
     flag.is_enabled = not flag.is_enabled
     flag.updated_at = datetime.utcnow()
 
@@ -125,7 +131,11 @@ def audit_logs():
     severity_filter = request.args.get('severity', '')
     module_filter = request.args.get('module', '')
 
-    query = AuditLog.query
+    if current_user.role == 'superadmin':
+        query = AuditLog.query
+    else:
+        query = AuditLog.query.filter_by(college_id=current_user.college_id)
+
     if severity_filter:
         query = query.filter_by(severity=severity_filter)
     if module_filter:
@@ -145,7 +155,11 @@ def audit_logs():
 @login_required
 @it_admin_required
 def export_audit_logs():
-    logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).all()
+    if current_user.role == 'superadmin':
+        logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).all()
+    else:
+        logs = AuditLog.query.filter_by(college_id=current_user.college_id).order_by(AuditLog.timestamp.desc()).all()
+
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['ID', 'Timestamp', 'User', 'Role', 'Module', 'Action', 'Severity', 'IP Address', 'Details'])
@@ -179,8 +193,10 @@ def export_audit_logs():
 @login_required
 @it_admin_required
 def sessions():
-    cid = current_user.college_id or 1
-    users = User.query.filter_by(college_id=cid).order_by(User.role, User.name).all() if current_user.college_id else User.query.order_by(User.role, User.name).all()
+    if current_user.role == 'superadmin':
+        users = User.query.order_by(User.college_id, User.role, User.name).all()
+    else:
+        users = User.query.filter_by(college_id=current_user.college_id).order_by(User.role, User.name).all() if current_user.college_id else []
     return render_template('it_admin/sessions.html', users=users)
 
 
@@ -189,6 +205,10 @@ def sessions():
 @it_admin_required
 def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
+    if current_user.role != 'superadmin' and user.college_id != current_user.college_id:
+        flash("Unauthorized to modify user status for another institution.", "danger")
+        return redirect(url_for('it_admin.sessions'))
+
     user.is_active = not user.is_active
     db.session.commit()
 
@@ -212,16 +232,27 @@ def toggle_user_status(user_id):
 @login_required
 @it_admin_required
 def backup():
-    cid = current_user.college_id or 1
-    table_stats = {
-        'Users': User.query.count(),
-        'Students': Student.query.count(),
-        'Attendance Records': Attendance.query.count(),
-        'Grades': Grade.query.count(),
-        'Fee Payments': FeePayment.query.count(),
-        'Audit Events': AuditLog.query.count(),
-        'Feature Flags': FeatureFlag.query.count()
-    }
+    cid = current_user.college_id
+    if current_user.role == 'superadmin':
+        table_stats = {
+            'Users': User.query.count(),
+            'Students': Student.query.count(),
+            'Attendance Records': Attendance.query.count(),
+            'Grades': Grade.query.count(),
+            'Fee Payments': FeePayment.query.count(),
+            'Audit Events': AuditLog.query.count(),
+            'Feature Flags': FeatureFlag.query.count()
+        }
+    else:
+        table_stats = {
+            'Users': User.query.filter_by(college_id=cid).count(),
+            'Students': Student.query.join(User).filter(User.college_id == cid).count(),
+            'Attendance Records': Attendance.query.join(Student).join(User).filter(User.college_id == cid).count(),
+            'Grades': Grade.query.join(Student).join(User).filter(User.college_id == cid).count(),
+            'Fee Payments': FeePayment.query.join(Student).join(User).filter(User.college_id == cid).count(),
+            'Audit Events': AuditLog.query.filter_by(college_id=cid).count(),
+            'Feature Flags': FeatureFlag.query.filter_by(college_id=cid).count()
+        }
     return render_template('it_admin/backup.html', table_stats=table_stats)
 
 
@@ -229,19 +260,31 @@ def backup():
 @login_required
 @it_admin_required
 def download_snapshot():
-    cid = current_user.college_id or 1
-    users = [u.email for u in User.query.all()]
+    cid = current_user.college_id
+    if current_user.role == 'superadmin':
+        users = [u.email for u in User.query.all()]
+        total_st = Student.query.count()
+        total_gr = Grade.query.count()
+        total_att = Attendance.query.count()
+        flags = [{'key': f.feature_key, 'enabled': f.is_enabled} for f in FeatureFlag.query.all()]
+    else:
+        users = [u.email for u in User.query.filter_by(college_id=cid).all()]
+        total_st = Student.query.join(User).filter(User.college_id == cid).count()
+        total_gr = Grade.query.join(Student).join(User).filter(User.college_id == cid).count()
+        total_att = Attendance.query.join(Student).join(User).filter(User.college_id == cid).count()
+        flags = [{'key': f.feature_key, 'enabled': f.is_enabled} for f in FeatureFlag.query.filter_by(college_id=cid).all()]
+
     snapshot = {
         'college_id': cid,
         'timestamp': datetime.utcnow().isoformat(),
         'generated_by': current_user.email,
         'summary': {
             'total_users': len(users),
-            'total_students': Student.query.count(),
-            'total_grades': Grade.query.count(),
-            'total_attendance': Attendance.query.count()
+            'total_students': total_st,
+            'total_grades': total_gr,
+            'total_attendance': total_att
         },
-        'feature_flags': [{'key': f.feature_key, 'enabled': f.is_enabled} for f in FeatureFlag.query.all()]
+        'feature_flags': flags
     }
 
     # Audit security event for database snapshot download

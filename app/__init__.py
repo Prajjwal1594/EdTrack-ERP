@@ -318,26 +318,45 @@ def create_app(config_class=Config):
                     ("employer",            "TechCorp HR",           "employer@gmail.com",         "employer123"),
                 ]
 
-                admin_user = User.query.filter_by(role='admin').first()
-                cid = admin_user.college_id if admin_user else 1
-
                 from app.models import College
-                if cid and not College.query.get(cid):
-                    c = College(id=cid, name="EdTrack International University", code=f"EDTRACK{cid}", address="Main Campus")  # type: ignore
-                    db.session.add(c)
-                    db.session.flush()
+                c1 = College.query.get(1)
+                if not c1:
+                    c1 = College(id=1, name="El'Wood International School", code="EWIU", address="14 Greenwood Avenue, Education City")  # type: ignore
+                    db.session.add(c1)
+                elif c1.name != "El'Wood International School":
+                    c1.name = "El'Wood International School"
 
-                added_any = False
+                c2 = College.query.get(2)
+                if not c2:
+                    c2 = College(id=2, name="Sunrise Academy", code="SRA", address="88 Sunrise Boulevard, Metro District")  # type: ignore
+                    db.session.add(c2)
+                elif c2.name != "Sunrise Academy":
+                    c2.name = "Sunrise Academy"
+                db.session.flush()
+
+                elwood_roles = {'admin', 'faculty', 'student', 'parent'}
+                added_or_updated = False
                 for r_role, r_name, r_email, r_pwd in demo_accounts:
-                    if not User.query.filter_by(email=r_email).first():
-                        u = User(name=r_name, email=r_email, role=r_role, college_id=cid if r_role != 'superadmin' else None)  # type: ignore
+                    if r_role == 'superadmin':
+                        target_cid = None
+                    elif r_role in elwood_roles:
+                        target_cid = 1
+                    else:
+                        target_cid = 2
+
+                    u = User.query.filter_by(email=r_email).first()
+                    if not u:
+                        u = User(name=r_name, email=r_email, role=r_role, college_id=target_cid)  # type: ignore
                         u.set_password(r_pwd)
                         db.session.add(u)
-                        added_any = True
+                        added_or_updated = True
+                    elif u.college_id != target_cid:
+                        u.college_id = target_cid
+                        added_or_updated = True
 
-                if added_any:
+                if added_or_updated:
                     db.session.commit()
-                    print("[STARTUP] Synchronized missing CSV demo role accounts.", flush=True)
+                    print("[STARTUP] Synchronized CSV demo role accounts with correct college multi-tenancy.", flush=True)
         except Exception as e:
             print(f"[STARTUP] ERROR during db.create_all()/sync: {e}", flush=True)
             traceback.print_exc()

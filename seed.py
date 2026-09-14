@@ -137,7 +137,7 @@ def seed(app=None, auto=False):
         # COLLEGE 1 — El'Wood International University
         # ══════════════════════════════════════════════════════════════════════
         college1 = College(
-            name="El'Wood International University",
+            name="El'Wood International School",
             code="EWIU",
             address="14 Greenwood Avenue, Education City",
             phone="+1 (555) 0142",
@@ -151,12 +151,12 @@ def seed(app=None, auto=False):
         admin1.set_password("admin123")
         db.session.add(admin1)
 
-        accountant1 = User(name="Robert Vance", email="accountant@gmail.com",
+        accountant1 = User(name="Robert Vance (El'Wood)", email="accountant1@elwood.edu",
                            role="accountant", college_id=college1.id, phone="+1 555-0004")
         accountant1.set_password("accountant123")
         db.session.add(accountant1)
 
-        hr1 = User(name="Amanda Miller", email="hr@gmail.com",
+        hr1 = User(name="Amanda Miller (El'Wood)", email="hr1@elwood.edu",
                    role="hr", college_id=college1.id, phone="+1 555-0005")
         hr1.set_password("hr123")
         db.session.add(hr1)
@@ -207,30 +207,6 @@ def seed(app=None, auto=False):
             db.session.add(s)
             extra_students1.append(s)
         db.session.flush()
-
-        # Additional Demo Users for all CSV Roles (College 1)
-        additional_roles = [
-            ("it_admin",           "Vikram Seth",          "itadmin@gmail.com",      "itadmin123"),
-            ("principal",          "Dr. Arthur Pendelton", "principal@gmail.com",    "principal123"),
-            ("registrar",          "Eleanor Vance",        "registrar@gmail.com",    "registrar123"),
-            ("hod",                "Dr. S. Ranganathan",   "hod@gmail.com",          "hod123"),
-            ("admission_officer",  "Marcus Thorne",        "admissions@gmail.com",   "admissions123"),
-            ("examination_officer","Patricia Sterling",    "exam_officer@gmail.com", "exam123"),
-            ("course_coordinator", "Dr. Evelyn Reed",      "coordinator@gmail.com",  "coordinator123"),
-            ("academic_advisor",   "Prof. Jonathan Blake", "advisor@gmail.com",      "advisor123"),
-            ("librarian",          "Clara Oswald",         "librarian@gmail.com",    "librarian123"),
-            ("hostel_warden",      "Captain Arthur Dent",  "warden@gmail.com",       "warden123"),
-            ("transport_manager",  "George Miller",        "transport@gmail.com",    "transport123"),
-            ("placement_officer",  "Rachel Green",         "placement@gmail.com",    "placement123"),
-            ("student_affairs",    "Daniel Cho",           "affairs@gmail.com",      "affairs123"),
-            ("alumni",             "Samantha Wright",      "alumni@gmail.com",       "alumni123"),
-            ("employer",           "TechCorp HR",          "employer@gmail.com",     "employer123"),
-        ]
-
-        for role_key, name, email, pwd in additional_roles:
-            u = User(name=name, email=email, role=role_key, college_id=college1.id)
-            u.set_password(pwd)
-            db.session.add(u)
 
         # Parent (College 1)
         parent1 = User(name="Robert Johnson", email="parent@gmail.com",
@@ -357,6 +333,33 @@ def seed(app=None, auto=False):
                         gender=random.choice(["Male", "Female"]))
             db.session.add(s)
             extra_students2.append(s)
+        db.session.flush()
+
+        # Demo Users for CSV Roles (College 2 — Sunrise Academy)
+        additional_roles_sunrise = [
+            ("it_admin",           "Vikram Seth",          "itadmin@gmail.com",      "itadmin123"),
+            ("principal",          "Dr. Arthur Pendelton", "principal@gmail.com",    "principal123"),
+            ("registrar",          "Eleanor Vance",        "registrar@gmail.com",    "registrar123"),
+            ("hod",                "Dr. S. Ranganathan",   "hod@gmail.com",          "hod123"),
+            ("admission_officer",  "Marcus Thorne",        "admissions@gmail.com",   "admissions123"),
+            ("accountant",         "Robert Vance",         "accountant@gmail.com",   "accountant123"),
+            ("hr",                 "Amanda Miller",        "hr@gmail.com",           "hr123"),
+            ("examination_officer","Patricia Sterling",    "exam_officer@gmail.com", "exam123"),
+            ("course_coordinator", "Dr. Evelyn Reed",      "coordinator@gmail.com",  "coordinator123"),
+            ("academic_advisor",   "Prof. Jonathan Blake", "advisor@gmail.com",      "advisor123"),
+            ("librarian",          "Clara Oswald",         "librarian@gmail.com",    "librarian123"),
+            ("hostel_warden",      "Captain Arthur Dent",  "warden@gmail.com",       "warden123"),
+            ("transport_manager",  "George Miller",        "transport@gmail.com",    "transport123"),
+            ("placement_officer",  "Rachel Green",         "placement@gmail.com",    "placement123"),
+            ("student_affairs",    "Daniel Cho",           "affairs@gmail.com",      "affairs123"),
+            ("alumni",             "Samantha Wright",      "alumni@gmail.com",       "alumni123"),
+            ("employer",           "TechCorp HR",          "employer@gmail.com",     "employer123"),
+        ]
+
+        for role_key, name, email, pwd in additional_roles_sunrise:
+            u = User(name=name, email=email, role=role_key, college_id=college2.id)
+            u.set_password(pwd)
+            db.session.add(u)
         db.session.flush()
 
         # Grades for College 2
