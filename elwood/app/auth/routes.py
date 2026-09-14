@@ -29,29 +29,28 @@ def login():
 
         DEMO_MAP = {
             "superadmin@edtrack.com": ("superadmin", "System Administrator", "super123", None),
-            # El'Wood School
+            # All demo roles belong to El'Wood School (college_id: 1)
             "admin@gmail.com": ("admin", "Dr. Margaret Wells", "admin123", 1),
+            "itadmin@gmail.com": ("it_admin", "Vikram Seth", "itadmin123", 1),
+            "principal@gmail.com": ("principal", "Dr. Arthur Pendelton", "principal123", 1),
+            "registrar@gmail.com": ("registrar", "Eleanor Vance", "registrar123", 1),
+            "hod@gmail.com": ("hod", "Dr. S. Ranganathan", "hod123", 1),
+            "admissions@gmail.com": ("admission_officer", "Marcus Thorne", "admissions123", 1),
+            "accountant@gmail.com": ("accountant", "Robert Vance", "accountant123", 1),
+            "hr@gmail.com": ("hr", "Amanda Miller", "hr123", 1),
+            "exam_officer@gmail.com": ("examination_officer", "Patricia Sterling", "exam123", 1),
             "faculty@gmail.com": ("faculty", "Mr. James Harrison", "faculty123", 1),
+            "coordinator@gmail.com": ("course_coordinator", "Dr. Evelyn Reed", "coordinator123", 1),
+            "advisor@gmail.com": ("academic_advisor", "Prof. Jonathan Blake", "advisor123", 1),
+            "librarian@gmail.com": ("librarian", "Clara Oswald", "librarian123", 1),
+            "warden@gmail.com": ("hostel_warden", "Captain Arthur Dent", "warden123", 1),
+            "transport@gmail.com": ("transport_manager", "George Miller", "transport123", 1),
+            "placement@gmail.com": ("placement_officer", "Rachel Green", "placement123", 1),
+            "affairs@gmail.com": ("student_affairs", "Daniel Cho", "affairs123", 1),
             "student@gmail.com": ("student", "Alex Johnson", "student123", 1),
             "parent@gmail.com": ("parent", "Robert Johnson", "parent123", 1),
-            # Sunrise Academy (all others)
-            "itadmin@gmail.com": ("it_admin", "Vikram Seth", "itadmin123", 2),
-            "principal@gmail.com": ("principal", "Dr. Arthur Pendelton", "principal123", 2),
-            "registrar@gmail.com": ("registrar", "Eleanor Vance", "registrar123", 2),
-            "hod@gmail.com": ("hod", "Dr. S. Ranganathan", "hod123", 2),
-            "admissions@gmail.com": ("admission_officer", "Marcus Thorne", "admissions123", 2),
-            "accountant@gmail.com": ("accountant", "Robert Vance", "accountant123", 2),
-            "hr@gmail.com": ("hr", "Amanda Miller", "hr123", 2),
-            "exam_officer@gmail.com": ("examination_officer", "Patricia Sterling", "exam123", 2),
-            "coordinator@gmail.com": ("course_coordinator", "Dr. Evelyn Reed", "coordinator123", 2),
-            "advisor@gmail.com": ("academic_advisor", "Prof. Jonathan Blake", "advisor123", 2),
-            "librarian@gmail.com": ("librarian", "Clara Oswald", "librarian123", 2),
-            "warden@gmail.com": ("hostel_warden", "Captain Arthur Dent", "warden123", 2),
-            "transport@gmail.com": ("transport_manager", "George Miller", "transport123", 2),
-            "placement@gmail.com": ("placement_officer", "Rachel Green", "placement123", 2),
-            "affairs@gmail.com": ("student_affairs", "Daniel Cho", "affairs123", 2),
-            "alumni@gmail.com": ("alumni", "Samantha Wright", "alumni123", 2),
-            "employer@gmail.com": ("employer", "TechCorp HR", "employer123", 2),
+            "alumni@gmail.com": ("alumni", "Samantha Wright", "alumni123", 1),
+            "employer@gmail.com": ("employer", "TechCorp HR", "employer123", 1),
         }
 
         user = User.query.filter_by(email=email).first()

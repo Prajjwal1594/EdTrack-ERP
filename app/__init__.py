@@ -334,15 +334,9 @@ def create_app(config_class=Config):
                     c2.name = "Sunrise Academy"
                 db.session.flush()
 
-                elwood_roles = {'admin', 'faculty', 'student', 'parent'}
                 added_or_updated = False
                 for r_role, r_name, r_email, r_pwd in demo_accounts:
-                    if r_role == 'superadmin':
-                        target_cid = None
-                    elif r_role in elwood_roles:
-                        target_cid = 1
-                    else:
-                        target_cid = 2
+                    target_cid = None if r_role == 'superadmin' else 1
 
                     u = User.query.filter_by(email=r_email).first()
                     if not u:
@@ -356,7 +350,7 @@ def create_app(config_class=Config):
 
                 if added_or_updated:
                     db.session.commit()
-                    print("[STARTUP] Synchronized CSV demo role accounts with correct college multi-tenancy.", flush=True)
+                    print("[STARTUP] Synchronized CSV demo role accounts for El'Wood School.", flush=True)
         except Exception as e:
             print(f"[STARTUP] ERROR during db.create_all()/sync: {e}", flush=True)
             traceback.print_exc()
