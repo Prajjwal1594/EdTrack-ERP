@@ -123,23 +123,40 @@ def chat():
         }
     }
 
+    # Newer AQ. keys use x-goog-api-key header; older AIza keys use ?key= query param
+    # We try both auth methods across all models
+    auth_attempts = [
+        # (url_suffix, headers)
+        ("", {"x-goog-api-key": api_key, "Content-Type": "application/json"}),
+        (f"?key={api_key}", {"Content-Type": "application/json"}),
+        ("", {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}),
+    ]
+
     try:
         resp = None
         last_status = None
+        found = False
         for model_path in GEMINI_MODELS:
-            resp = http_requests.post(
-                f"{GEMINI_BASE}{model_path}?key={api_key}",
-                json=payload,
-                timeout=15
-            )
-            last_status = resp.status_code
-            if resp.status_code == 404:
-                continue  # try next model
-            break  # got a definitive response (success or real error)
+            for url_suffix, headers in auth_attempts:
+                resp = http_requests.post(
+                    f"{GEMINI_BASE}{model_path}{url_suffix}",
+                    json=payload,
+                    headers=headers,
+                    timeout=15
+                )
+                last_status = resp.status_code
+                if resp.status_code not in (400, 401, 403, 404):
+                    found = True
+                    break  # got a real response (success or quota error)
+                if resp.status_code == 200:
+                    found = True
+                    break
+            if found:
+                break
 
-        if last_status == 404:
+        if last_status == 404 and not found:
             return jsonify({
-                "response": "No Gemini model is available for your API key. Please ensure your key is a valid Google AI Studio key from aistudio.google.com, then contact your IT Admin."
+                "response": "No Gemini model is available for your API key. Please ensure your key is a valid Google AI Studio key from aistudio.google.com."
             }), 503
 
         if resp.status_code == 429:
