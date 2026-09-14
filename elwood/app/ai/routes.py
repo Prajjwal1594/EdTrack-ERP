@@ -7,7 +7,16 @@ from app.models import db, Student, Grade, Attendance, SoftSkillMetric, MicroCre
 
 bp = Blueprint('ai', __name__)
 
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+GEMINI_BASE = "https://generativelanguage.googleapis.com"
+# Try models in order of preference; skip any that return 404
+GEMINI_MODELS = [
+    "/v1beta/models/gemini-1.5-flash:generateContent",
+    "/v1beta/models/gemini-1.5-flash-latest:generateContent",
+    "/v1beta/models/gemini-1.5-flash-001:generateContent",
+    "/v1beta/models/gemini-pro:generateContent",
+    "/v1/models/gemini-1.5-flash:generateContent",
+    "/v1/models/gemini-pro:generateContent",
+]
 
 
 @bp.before_request
@@ -115,11 +124,23 @@ def chat():
     }
 
     try:
-        resp = http_requests.post(
-            f"{GEMINI_API_URL}?key={api_key}",
-            json=payload,
-            timeout=15
-        )
+        resp = None
+        last_status = None
+        for model_path in GEMINI_MODELS:
+            resp = http_requests.post(
+                f"{GEMINI_BASE}{model_path}?key={api_key}",
+                json=payload,
+                timeout=15
+            )
+            last_status = resp.status_code
+            if resp.status_code == 404:
+                continue  # try next model
+            break  # got a definitive response (success or real error)
+
+        if last_status == 404:
+            return jsonify({
+                "response": "No Gemini model is available for your API key. Please ensure your key is a valid Google AI Studio key from aistudio.google.com, then contact your IT Admin."
+            }), 503
 
         if resp.status_code == 429:
             return jsonify({
@@ -128,17 +149,12 @@ def chat():
 
         if resp.status_code in (400, 401, 403):
             return jsonify({
-                "response": "The GEMINI_API_KEY is missing or invalid. Please ask your IT Admin to add a valid key in Vercel Environment Variables (Settings → Environment Variables → GEMINI_API_KEY). Get a free key at aistudio.google.com."
-            }), 503
-
-        if resp.status_code == 404:
-            return jsonify({
-                "response": "The AI model could not be found. Please contact your IT Admin."
+                "response": "The GEMINI_API_KEY is invalid or not authorized. Please ask your IT Admin to add a valid key in Vercel → Settings → Environment Variables → GEMINI_API_KEY. Get a free key at aistudio.google.com."
             }), 503
 
         if resp.status_code != 200:
             return jsonify({
-                "response": f"AI service returned an unexpected error (HTTP {resp.status_code}). Please try again shortly."
+                "response": f"AI service error (HTTP {resp.status_code}). Please try again shortly."
             }), 502
 
         result = resp.json()
