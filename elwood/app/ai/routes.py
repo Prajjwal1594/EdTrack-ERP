@@ -9,33 +9,42 @@ bp = Blueprint('ai', __name__)
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com"
 
+# Models confirmed available from ListModels (in priority order)
+GEMINI_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-flash-latest",
+    "gemini-2.5-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-2.5-pro",
+    "gemini-pro-latest",
+    "gemini-3-flash-preview",
+]
+    """Call Gemini ListModels to find the first model that supports generateContent."""
 
 def _gemini_headers(api_key):
     return {"x-goog-api-key": api_key, "Content-Type": "application/json"}
 
 
 def _discover_model(api_key):
-    """Call Gemini ListModels to find the first model that supports generateContent."""
+    """Fallback: call ListModels to find a working model."""
     try:
         r = http_requests.get(
             f"{GEMINI_BASE}/v1beta/models",
             headers=_gemini_headers(api_key),
             params={"pageSize": 50},
-            timeout=10
+            timeout=8
         )
         if r.status_code == 200:
             models = r.json().get("models", [])
             supported = [
-                m for m in models
+                m["name"].split("/")[-1] for m in models
                 if "generateContent" in m.get("supportedGenerationMethods", [])
                 and "embedding" not in m.get("name", "").lower()
             ]
-            # Prefer flash over pro for speed/cost
             for pref in ["flash", "pro", ""]:
-                for m in supported:
-                    if pref in m.get("name", "").lower():
-                        name = m["name"].split("/")[-1]
-                        return f"/v1beta/models/{name}:generateContent"
+                for name in supported:
+                    if pref in name.lower():
+                        return name
     except Exception:
         pass
     return None
@@ -108,18 +117,7 @@ def chat():
             "context": context
         })
 
-    # ── Discover model dynamically from Gemini ListModels ──────────────────────
-    model_path = _discover_model(api_key)
-    if not model_path:
-        return jsonify({
-            "response": (
-                "Could not find any available Gemini model for your API key. "
-                "Please ensure Generative Language API is enabled in your Google Cloud project, "
-                "and the key is from aistudio.google.com."
-            )
-        }), 503
-
-    # ── Build college name ──────────────────────────────────────────────────────
+    # ── Call Gemini - try each model until one works ───────────────────────────
     college_name = "El'Wood International University"
     try:
         college = College.query.get(current_user.college_id) if current_user.college_id else None
@@ -144,12 +142,32 @@ def chat():
     }
 
     try:
-        resp = http_requests.post(
-            f"{GEMINI_BASE}{model_path}",
-            json=payload,
-            headers=_gemini_headers(api_key),
-            timeout=20
-        )
+        resp = None
+        last_body = {}
+        for model_name in GEMINI_MODELS:
+            url = f"{GEMINI_BASE}/v1beta/models/{model_name}:generateContent"
+            resp = http_requests.post(
+                url,
+                json=payload,
+                headers=_gemini_headers(api_key),
+                timeout=20
+            )
+            if resp.status_code == 404:
+                last_body = resp.json() if resp.headers.get('content-type','').startswith('application') else {}
+                continue  # try next model
+            break  # success or real error
+
+        if resp is None or resp.status_code == 404:
+            # All known models failed - try dynamic discovery
+            fallback = _discover_model(api_key)
+            if fallback:
+                url = f"{GEMINI_BASE}/v1beta/models/{fallback}:generateContent"
+                resp = http_requests.post(url, json=payload, headers=_gemini_headers(api_key), timeout=20)
+            else:
+                return jsonify({
+                    "response": "No Gemini model available. Please go to IT Admin → test-key to see available models.",
+                    "debug": last_body
+                }), 503
 
         if resp.status_code == 429:
             return jsonify({"response": "I'm receiving a high volume of requests. Please try again in a moment! 🙏"}), 429
