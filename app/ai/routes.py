@@ -246,3 +246,34 @@ def get_insights(student_id):
     student = Student.query.get_or_404(student_id)
     context = gather_student_context(student)
     return jsonify(context)
+
+
+@bp.route('/test-key')
+@login_required
+def test_key():
+    """Debug endpoint: tests the GEMINI_API_KEY and returns raw Gemini responses."""
+    if current_user.role not in ['it_admin', 'admin', 'superadmin']:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    api_key = (os.getenv('GEMINI_API_KEY') or '').strip()
+    if not api_key:
+        return jsonify({"error": "GEMINI_API_KEY not set"})
+
+    results = []
+    test_payload = {"contents": [{"parts": [{"text": "Say hello"}]}], "generationConfig": {"maxOutputTokens": 10}}
+
+    for model_path in GEMINI_MODELS[:2]:
+        for label, url_suffix, headers in [
+            ("x-goog-api-key header", "", {"x-goog-api-key": api_key, "Content-Type": "application/json"}),
+            ("?key= queryparam", f"?key={api_key}", {"Content-Type": "application/json"}),
+        ]:
+            try:
+                r = http_requests.post(f"{GEMINI_BASE}{model_path}{url_suffix}", json=test_payload, headers=headers, timeout=10)
+                body = r.json() if 'json' in r.headers.get('content-type', '') else r.text[:300]
+                results.append({"model": model_path, "auth": label, "status": r.status_code, "body": body})
+                if r.status_code == 200:
+                    break
+            except Exception as e:
+                results.append({"model": model_path, "auth": label, "error": str(e)})
+
+    return jsonify({"key_prefix": api_key[:12] + "...", "key_length": len(api_key), "results": results})
