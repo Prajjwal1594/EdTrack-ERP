@@ -25,7 +25,7 @@ def it_admin_required(f):
 def seed_default_feature_flags(college_id):
     """Ensure standard feature flags exist for a college."""
     default_flags = [
-        ('ai_assistant', 'OpenAI GPT AI Academic Tutor', 'Enable AI syllabus assistant and study plan generation for students & faculty.'),
+        ('ai_assistant', 'Gemini AI Academic Assistant', 'Enable Google Gemini AI chatbot for students, faculty & staff. Requires GEMINI_API_KEY in server environment.'),
         ('digital_wallet', 'Razorpay Parent Digital Wallet', 'Enable parent micro-fee top-ups and automatic receipt generation.'),
         ('early_warning', 'Predictive Early Warning System', 'Enable automated background algorithms detecting at-risk attendance and grades.'),
         ('lms_sync', 'External LMS Integration API', 'Enable REST API endpoints for Canvas, Moodle, and Google Classroom sync.'),
@@ -82,10 +82,14 @@ def dashboard():
         'uptime_pct': '99.98%'
     }
 
+    gemini_key = (os.getenv('GEMINI_API_KEY') or '').strip()
+    gemini_configured = bool(gemini_key) and gemini_key not in ('your-gemini-key-here', 'REPLACE_ME')
+
     return render_template('it_admin/dashboard.html',
                            feature_flags=feature_flags,
                            recent_logs=recent_logs,
-                           metrics=system_metrics)
+                           metrics=system_metrics,
+                           gemini_configured=gemini_configured)
 
 
 @bp.route('/toggle-feature/<int:flag_id>', methods=['POST'])

@@ -55,11 +55,11 @@
 
   <div class="card" style="padding: 20px; border-radius: 14px; background: var(--white); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-      <span style="font-size: 12px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase;">System Uptime</span>
-      <i class="fas fa-clock" style="color: #f59e0b; font-size: 18px;"></i>
+      <span style="font-size: 12px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase;">Gemini AI Status</span>
+      <i class="fas fa-robot" style="color: {% if gemini_configured %}#10b981{% else %}#ef4444{% endif %}; font-size: 18px;"></i>
     </div>
-    <div style="font-size: 24px; font-weight: 700; color: var(--forest); font-family: 'Playfair Display', serif;">{{ metrics.uptime_pct }}</div>
-    <div style="font-size: 12px; color: var(--ink-mid); margin-top: 4px;">{{ metrics.audit_events }} Security events logged</div>
+    <div style="font-size: 20px; font-weight: 700; color: {% if gemini_configured %}#10b981{% else %}#ef4444{% endif %}; font-family: 'Playfair Display', serif;">{% if gemini_configured %}Configured ✓{% else %}Not Set ✗{% endif %}</div>
+    <div style="font-size: 12px; color: var(--ink-mid); margin-top: 4px;">{% if gemini_configured %}GEMINI_API_KEY active{% else %}Add GEMINI_API_KEY in Vercel{% endif %}</div>
   </div>
 </div>
 
