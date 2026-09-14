@@ -8,15 +8,37 @@ from app.models import db, Student, Grade, Attendance, SoftSkillMetric, MicroCre
 bp = Blueprint('ai', __name__)
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com"
-# Try models in order of preference; skip any that return 404
-GEMINI_MODELS = [
-    "/v1beta/models/gemini-1.5-flash:generateContent",
-    "/v1beta/models/gemini-1.5-flash-latest:generateContent",
-    "/v1beta/models/gemini-1.5-flash-001:generateContent",
-    "/v1beta/models/gemini-pro:generateContent",
-    "/v1/models/gemini-1.5-flash:generateContent",
-    "/v1/models/gemini-pro:generateContent",
-]
+
+
+def _gemini_headers(api_key):
+    return {"x-goog-api-key": api_key, "Content-Type": "application/json"}
+
+
+def _discover_model(api_key):
+    """Call Gemini ListModels to find the first model that supports generateContent."""
+    try:
+        r = http_requests.get(
+            f"{GEMINI_BASE}/v1beta/models",
+            headers=_gemini_headers(api_key),
+            params={"pageSize": 50},
+            timeout=10
+        )
+        if r.status_code == 200:
+            models = r.json().get("models", [])
+            supported = [
+                m for m in models
+                if "generateContent" in m.get("supportedGenerationMethods", [])
+                and "embedding" not in m.get("name", "").lower()
+            ]
+            # Prefer flash over pro for speed/cost
+            for pref in ["flash", "pro", ""]:
+                for m in supported:
+                    if pref in m.get("name", "").lower():
+                        name = m["name"].split("/")[-1]
+                        return f"/v1beta/models/{name}:generateContent"
+    except Exception:
+        pass
+    return None
 
 
 @bp.before_request
@@ -36,12 +58,12 @@ def check_ai_feature_flag():
 def chat():
     data = request.get_json()
     message = data.get('message')
-    student_id = data.get('student_id')  # Optional
+    student_id = data.get('student_id')
 
     if not message:
         return jsonify({"error": "No message provided"}), 400
 
-    # ── Gather Context based on Role & student_id ───────────────────────────────
+    # ── Gather Context ──────────────────────────────────────────────────────────
     context = {}
     if student_id:
         student = Student.query.get(student_id)
@@ -56,7 +78,6 @@ def chat():
                     authorized = True
             elif current_user.role in ['admin', 'faculty']:
                 authorized = True
-
             if authorized:
                 context = gather_student_context(student)
             else:
@@ -72,23 +93,33 @@ def chat():
         else:
             context = {"role": current_user.role, "user_name": current_user.name}
 
-    # ── Gemini REST API call (no SDK needed) ────────────────────────────────────
+    # ── API Key Check ───────────────────────────────────────────────────────────
     api_key = (os.getenv("GEMINI_API_KEY") or "").strip()
-    # Treat placeholder values as missing
     if api_key in ('your-gemini-key-here', 'your_gemini_key', 'REPLACE_ME', ''):
         api_key = ''
 
     if not api_key:
         return jsonify({
             "response": (
-                f"Hi {current_user.name}! I'm your Academic Assistant running in demo mode. "
-                f"To enable full AI capabilities, please ask your IT Admin to add the GEMINI_API_KEY in the server environment. "
-                f"You're logged in as **{current_user.role.replace('_', ' ').title()}**. "
-                f"Get a free key at: aistudio.google.com"
+                f"Hi {current_user.name}! I'm your Academic Assistant in demo mode. "
+                f"Ask your IT Admin to set GEMINI_API_KEY in Vercel Environment Variables. "
+                f"Get a free key at aistudio.google.com"
             ),
             "context": context
         })
 
+    # ── Discover model dynamically from Gemini ListModels ──────────────────────
+    model_path = _discover_model(api_key)
+    if not model_path:
+        return jsonify({
+            "response": (
+                "Could not find any available Gemini model for your API key. "
+                "Please ensure Generative Language API is enabled in your Google Cloud project, "
+                "and the key is from aistudio.google.com."
+            )
+        }), 503
+
+    # ── Build college name ──────────────────────────────────────────────────────
     college_name = "El'Wood International University"
     try:
         college = College.query.get(current_user.college_id) if current_user.college_id else None
@@ -101,103 +132,56 @@ def chat():
         f"You are the Academic Assistant for {college_name}. "
         f"You are helping: {current_user.name} (Role: {current_user.role.replace('_', ' ').title()}). "
         f"Current data context: {json.dumps(context)}. "
-        f"Instructions: Be supportive and professional. "
-        f"Use the context data to give precise answers. "
-        f"For students/parents give encouraging insights. "
-        f"For admins/faculty give operational insights. "
+        f"Be supportive and professional. Use the context data to give precise answers. "
+        f"For students/parents give encouraging insights. For admins/faculty give operational insights. "
         f"Keep replies under 150 words. Use bullet points when listing data. "
         f"Warm, premium university brand voice."
     )
 
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": f"{system_prompt}\n\nUser message: {message}"}
-                ]
-            }
-        ],
-        "generationConfig": {
-            "maxOutputTokens": 350,
-            "temperature": 0.7
-        }
+        "contents": [{"parts": [{"text": f"{system_prompt}\n\nUser message: {message}"}]}],
+        "generationConfig": {"maxOutputTokens": 350, "temperature": 0.7}
     }
 
-    # Newer AQ. keys use x-goog-api-key header; older AIza keys use ?key= query param
-    # We try both auth methods across all models
-    auth_attempts = [
-        # (url_suffix, headers)
-        ("", {"x-goog-api-key": api_key, "Content-Type": "application/json"}),
-        (f"?key={api_key}", {"Content-Type": "application/json"}),
-        ("", {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}),
-    ]
-
     try:
-        resp = None
-        last_status = None
-        found = False
-        for model_path in GEMINI_MODELS:
-            for url_suffix, headers in auth_attempts:
-                resp = http_requests.post(
-                    f"{GEMINI_BASE}{model_path}{url_suffix}",
-                    json=payload,
-                    headers=headers,
-                    timeout=15
-                )
-                last_status = resp.status_code
-                if resp.status_code not in (400, 401, 403, 404):
-                    found = True
-                    break  # got a real response (success or quota error)
-                if resp.status_code == 200:
-                    found = True
-                    break
-            if found:
-                break
-
-        if last_status == 404 and not found:
-            return jsonify({
-                "response": "No Gemini model is available for your API key. Please ensure your key is a valid Google AI Studio key from aistudio.google.com."
-            }), 503
+        resp = http_requests.post(
+            f"{GEMINI_BASE}{model_path}",
+            json=payload,
+            headers=_gemini_headers(api_key),
+            timeout=20
+        )
 
         if resp.status_code == 429:
-            return jsonify({
-                "response": "I'm receiving a high volume of requests right now. Please try again in a moment! 🙏"
-            }), 429
+            return jsonify({"response": "I'm receiving a high volume of requests. Please try again in a moment! 🙏"}), 429
 
         if resp.status_code in (400, 401, 403):
+            body = resp.json() if resp.headers.get('content-type', '').startswith('application') else {}
+            err_msg = body.get('error', {}).get('message', 'unknown')
             return jsonify({
-                "response": "The GEMINI_API_KEY is invalid or not authorized. Please ask your IT Admin to add a valid key in Vercel → Settings → Environment Variables → GEMINI_API_KEY. Get a free key at aistudio.google.com."
+                "response": f"AI key error: {err_msg}. Please ask IT Admin to verify the GEMINI_API_KEY in Vercel."
             }), 503
 
         if resp.status_code != 200:
-            return jsonify({
-                "response": f"AI service error (HTTP {resp.status_code}). Please try again shortly."
-            }), 502
+            return jsonify({"response": f"AI service error (HTTP {resp.status_code}). Please try again."}), 502
 
         result = resp.json()
         candidates = result.get("candidates", [])
         if not candidates:
-            return jsonify({"response": "I couldn't generate a response right now. Please try again!"}), 200
+            return jsonify({"response": "I couldn't generate a response. Please try again!"}), 200
 
         ai_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
         if not ai_text:
-            ai_text = "I couldn't generate a response. Please rephrase your question and try again."
+            ai_text = "I couldn't generate a response. Please rephrase and try again."
 
-        return jsonify({
-            "response": ai_text,
-            "context": context
-        })
+        return jsonify({"response": ai_text, "context": context, "model": model_path})
 
     except http_requests.exceptions.Timeout:
-        return jsonify({"response": "The AI took too long to respond. Please try again in a moment."}), 504
+        return jsonify({"response": "The AI took too long to respond. Please try again."}), 504
     except Exception as e:
-        return jsonify({
-            "response": "I encountered an unexpected error. Please try again shortly.",
-            "debug": str(e)
-        }), 500
+        return jsonify({"response": "Unexpected error. Please try again.", "debug": str(e)}), 500
 
 
-# ── Context Helpers ────────────────────────────────────────────────────────────
+# ── Context Helpers ─────────────────────────────────────────────────────────────
 
 def gather_student_context(student):
     grades = student.grades.order_by(Grade.date.desc()).limit(10).all()
@@ -205,7 +189,6 @@ def gather_student_context(student):
     latest_skills = student.soft_skills.order_by(SoftSkillMetric.week_ending.desc()).first()
     att_total = student.attendance_records.count()
     att_present = student.attendance_records.filter_by(status='present').count()
-
     return {
         "type": "student_deep_dive",
         "student_name": student.user.name,
@@ -251,29 +234,40 @@ def get_insights(student_id):
 @bp.route('/test-key')
 @login_required
 def test_key():
-    """Debug endpoint: tests the GEMINI_API_KEY and returns raw Gemini responses."""
+    """IT Admin: test GEMINI_API_KEY and show available models."""
     if current_user.role not in ['it_admin', 'admin', 'superadmin']:
         return jsonify({"error": "Unauthorized"}), 403
 
-    api_key = (os.getenv('GEMINI_API_KEY') or '').strip()
+    api_key = (os.getenv("GEMINI_API_KEY") or "").strip()
     if not api_key:
-        return jsonify({"error": "GEMINI_API_KEY not set"})
+        return jsonify({"error": "GEMINI_API_KEY not set in environment"})
 
-    results = []
-    test_payload = {"contents": [{"parts": [{"text": "Say hello"}]}], "generationConfig": {"maxOutputTokens": 10}}
-
-    for model_path in GEMINI_MODELS[:2]:
-        for label, url_suffix, headers in [
-            ("x-goog-api-key header", "", {"x-goog-api-key": api_key, "Content-Type": "application/json"}),
-            ("?key= queryparam", f"?key={api_key}", {"Content-Type": "application/json"}),
-        ]:
-            try:
-                r = http_requests.post(f"{GEMINI_BASE}{model_path}{url_suffix}", json=test_payload, headers=headers, timeout=10)
-                body = r.json() if 'json' in r.headers.get('content-type', '') else r.text[:300]
-                results.append({"model": model_path, "auth": label, "status": r.status_code, "body": body})
-                if r.status_code == 200:
-                    break
-            except Exception as e:
-                results.append({"model": model_path, "auth": label, "error": str(e)})
-
-    return jsonify({"key_prefix": api_key[:12] + "...", "key_length": len(api_key), "results": results})
+    try:
+        r = http_requests.get(
+            f"{GEMINI_BASE}/v1beta/models",
+            headers=_gemini_headers(api_key),
+            params={"pageSize": 50},
+            timeout=10
+        )
+        if r.status_code == 200:
+            models = r.json().get("models", [])
+            generatable = [
+                m["name"] for m in models
+                if "generateContent" in m.get("supportedGenerationMethods", [])
+            ]
+            discovered = _discover_model(api_key)
+            return jsonify({
+                "key_prefix": api_key[:12] + "...",
+                "key_length": len(api_key),
+                "status": "KEY VALID",
+                "available_generative_models": generatable,
+                "will_use": discovered
+            })
+        else:
+            return jsonify({
+                "key_prefix": api_key[:12] + "...",
+                "status": f"LIST MODELS FAILED (HTTP {r.status_code})",
+                "body": r.json()
+            })
+    except Exception as e:
+        return jsonify({"error": str(e)})
