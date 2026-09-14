@@ -9,7 +9,7 @@ bp = Blueprint('ai', __name__)
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com"
 
-# Models confirmed available from ListModels (in priority order)
+# Models confirmed available for this project (from ListModels), in priority order
 GEMINI_MODELS = [
     "gemini-2.5-flash",
     "gemini-flash-latest",
@@ -19,14 +19,14 @@ GEMINI_MODELS = [
     "gemini-pro-latest",
     "gemini-3-flash-preview",
 ]
-    """Call Gemini ListModels to find the first model that supports generateContent."""
+
 
 def _gemini_headers(api_key):
     return {"x-goog-api-key": api_key, "Content-Type": "application/json"}
 
 
 def _discover_model(api_key):
-    """Fallback: call ListModels to find a working model."""
+    """Fallback: call ListModels to dynamically find a working model."""
     try:
         r = http_requests.get(
             f"{GEMINI_BASE}/v1beta/models",
@@ -110,14 +110,13 @@ def chat():
     if not api_key:
         return jsonify({
             "response": (
-                f"Hi {current_user.name}! I'm your Academic Assistant in demo mode. "
-                f"Ask your IT Admin to set GEMINI_API_KEY in Vercel Environment Variables. "
-                f"Get a free key at aistudio.google.com"
+                f"Hi {current_user.name}! I'm in demo mode — no GEMINI_API_KEY set. "
+                "Ask IT Admin to add it in Vercel Environment Variables."
             ),
             "context": context
         })
 
-    # ── Call Gemini - try each model until one works ───────────────────────────
+    # ── Build system prompt ─────────────────────────────────────────────────────
     college_name = "El'Wood International University"
     try:
         college = College.query.get(current_user.college_id) if current_user.college_id else None
@@ -141,60 +140,64 @@ def chat():
         "generationConfig": {"maxOutputTokens": 350, "temperature": 0.7}
     }
 
+    # ── Call Gemini — try each model until one succeeds ─────────────────────────
     try:
         resp = None
-        last_body = {}
+        last_err = {}
         for model_name in GEMINI_MODELS:
             url = f"{GEMINI_BASE}/v1beta/models/{model_name}:generateContent"
-            resp = http_requests.post(
-                url,
-                json=payload,
-                headers=_gemini_headers(api_key),
-                timeout=20
-            )
+            resp = http_requests.post(url, json=payload, headers=_gemini_headers(api_key), timeout=20)
             if resp.status_code == 404:
-                last_body = resp.json() if resp.headers.get('content-type','').startswith('application') else {}
-                continue  # try next model
-            break  # success or real error
+                try:
+                    last_err = resp.json()
+                except Exception:
+                    last_err = {}
+                continue
+            break  # success or a real error (not 404)
 
+        # If all known models 404'd, try dynamic discovery as last resort
         if resp is None or resp.status_code == 404:
-            # All known models failed - try dynamic discovery
             fallback = _discover_model(api_key)
             if fallback:
                 url = f"{GEMINI_BASE}/v1beta/models/{fallback}:generateContent"
                 resp = http_requests.post(url, json=payload, headers=_gemini_headers(api_key), timeout=20)
             else:
                 return jsonify({
-                    "response": "No Gemini model available. Please go to IT Admin → test-key to see available models.",
-                    "debug": last_body
+                    "response": "No Gemini model available for this API key. Visit /api/ai/test-key (IT Admin) to diagnose.",
+                    "debug": last_err
                 }), 503
 
         if resp.status_code == 429:
-            return jsonify({"response": "I'm receiving a high volume of requests. Please try again in a moment! 🙏"}), 429
+            return jsonify({"response": "High request volume — please try again in a moment! 🙏"}), 429
 
         if resp.status_code in (400, 401, 403):
-            body = resp.json() if resp.headers.get('content-type', '').startswith('application') else {}
-            err_msg = body.get('error', {}).get('message', 'unknown')
-            return jsonify({
-                "response": f"AI key error: {err_msg}. Please ask IT Admin to verify the GEMINI_API_KEY in Vercel."
-            }), 503
+            try:
+                body = resp.json()
+                err_msg = body.get('error', {}).get('message', 'Auth error')
+            except Exception:
+                err_msg = resp.text[:200]
+            return jsonify({"response": f"API key error: {err_msg}"}), 503
 
         if resp.status_code != 200:
-            return jsonify({"response": f"AI service error (HTTP {resp.status_code}). Please try again."}), 502
+            try:
+                body = resp.json()
+            except Exception:
+                body = {"raw": resp.text[:200]}
+            return jsonify({"response": f"Gemini error (HTTP {resp.status_code})", "debug": body}), 502
 
         result = resp.json()
         candidates = result.get("candidates", [])
         if not candidates:
-            return jsonify({"response": "I couldn't generate a response. Please try again!"}), 200
+            return jsonify({"response": "No response generated. Please try again!"}), 200
 
         ai_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
         if not ai_text:
             ai_text = "I couldn't generate a response. Please rephrase and try again."
 
-        return jsonify({"response": ai_text, "context": context, "model": model_path})
+        return jsonify({"response": ai_text, "context": context})
 
     except http_requests.exceptions.Timeout:
-        return jsonify({"response": "The AI took too long to respond. Please try again."}), 504
+        return jsonify({"response": "AI took too long to respond. Please try again."}), 504
     except Exception as e:
         return jsonify({"response": "Unexpected error. Please try again.", "debug": str(e)}), 500
 
@@ -252,13 +255,13 @@ def get_insights(student_id):
 @bp.route('/test-key')
 @login_required
 def test_key():
-    """IT Admin: test GEMINI_API_KEY and show available models."""
+    """IT Admin: diagnose GEMINI_API_KEY and show available models."""
     if current_user.role not in ['it_admin', 'admin', 'superadmin']:
         return jsonify({"error": "Unauthorized"}), 403
 
     api_key = (os.getenv("GEMINI_API_KEY") or "").strip()
     if not api_key:
-        return jsonify({"error": "GEMINI_API_KEY not set in environment"})
+        return jsonify({"error": "GEMINI_API_KEY not set in Vercel environment"})
 
     try:
         r = http_requests.get(
@@ -277,9 +280,10 @@ def test_key():
             return jsonify({
                 "key_prefix": api_key[:12] + "...",
                 "key_length": len(api_key),
-                "status": "KEY VALID",
+                "status": "KEY VALID ✓",
                 "available_generative_models": generatable,
-                "will_use": discovered
+                "will_use_model": discovered,
+                "configured_model_list": GEMINI_MODELS
             })
         else:
             return jsonify({
