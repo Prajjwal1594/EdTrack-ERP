@@ -31,10 +31,10 @@ A comprehensive full-stack web application for managing student grades, attendan
 
 ## Quick Start (Local)
 
-### 1. Clone / extract the project
+### 1. Navigate to the project root
 
 ```bash
-cd elwood
+cd EdTrack-ERP
 ```
 
 ### 2. Create a virtual environment
@@ -154,7 +154,7 @@ Run `python seed.py` to seed the database with demo accounts for all **22 CSV Ro
 ## Project Structure
 
 ```
-elwood/
+EdTrack-ERP/
 ├── run.py                  # Flask entry point
 ├── seed.py                 # Database seeder with demo data
 ├── config.py               # App configuration
