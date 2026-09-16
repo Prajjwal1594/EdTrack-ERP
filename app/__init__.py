@@ -245,6 +245,36 @@ def create_app(config_class=Config):
 
         return dict(is_feature_enabled=is_feature_enabled)
 
+    @app.context_processor
+    def inject_institution_context():
+        from app.models import College
+        from flask_login import current_user
+        from flask import session
+
+        college = None
+        if current_user and current_user.is_authenticated and current_user.college_id:
+            college = College.query.get(current_user.college_id)
+        elif 'active_college_code' in session:
+            college = College.query.filter_by(code=session['active_college_code']).first()
+
+        default_vocab = {
+            'org_type': 'School',
+            'class_name': 'Class',
+            'classes_name': 'Classes',
+            'term_name': 'Term',
+            'terms_name': 'Terms',
+            'faculty_name': 'Teacher',
+            'faculties_name': 'Teachers',
+            'head_title': 'Principal',
+            'batch_name': 'Academic Year',
+        }
+
+        return dict(
+            current_college=college,
+            vocab=college.vocab if college else default_vocab,
+            is_school=college.is_school if college else True
+        )
+
     @app.route('/health')
     def health_check():
         return jsonify({"status": "ok"}), 200
@@ -326,17 +356,23 @@ def create_app(config_class=Config):
                 from app.models import College
                 c1 = College.query.get(1)
                 if not c1:
-                    c1 = College(id=1, name="El'Wood International School", code="EWIU", address="14 Greenwood Avenue, Education City")  # type: ignore
+                    c1 = College(id=1, name="El'Wood International School", code="EWIU", address="14 Greenwood Avenue, Education City", institution_type="school")  # type: ignore
                     db.session.add(c1)
-                elif c1.name != "El'Wood International School":
-                    c1.name = "El'Wood International School"
+                else:
+                    if c1.name != "El'Wood International School":
+                        c1.name = "El'Wood International School"
+                    if not c1.institution_type:
+                        c1.institution_type = "school"
 
                 c2 = College.query.get(2)
                 if not c2:
-                    c2 = College(id=2, name="Sunrise Academy", code="SRA", address="88 Sunrise Boulevard, Metro District")  # type: ignore
+                    c2 = College(id=2, name="Sunrise Academy", code="SRA", address="88 Sunrise Boulevard, Metro District", institution_type="institute")  # type: ignore
                     db.session.add(c2)
-                elif c2.name != "Sunrise Academy":
-                    c2.name = "Sunrise Academy"
+                else:
+                    if c2.name != "Sunrise Academy":
+                        c2.name = "Sunrise Academy"
+                    if not c2.institution_type:
+                        c2.institution_type = "institute"
                 db.session.flush()
 
                 added_or_updated = False

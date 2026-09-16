@@ -22,7 +22,40 @@ class College(db.Model):
     phone = db.Column(db.String(30))
     email = db.Column(db.String(120))
     logo_url = db.Column(db.String(300))
+    institution_type = db.Column(db.String(20), default='school')  # 'school' or 'institute'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def is_school(self):
+        return (self.institution_type or 'school').lower() == 'school'
+
+    @property
+    def vocab(self):
+        """Dynamic terminology dictionary adapting UI for Schools vs Colleges/Institutes."""
+        if self.is_school:
+            return {
+                'org_type': 'School',
+                'class_name': 'Class',
+                'classes_name': 'Classes',
+                'term_name': 'Term',
+                'terms_name': 'Terms',
+                'faculty_name': 'Teacher',
+                'faculties_name': 'Teachers',
+                'head_title': 'Principal',
+                'batch_name': 'Academic Year',
+            }
+        else:
+            return {
+                'org_type': 'Institute',
+                'class_name': 'Course / Program',
+                'classes_name': 'Courses',
+                'term_name': 'Semester',
+                'terms_name': 'Semesters',
+                'faculty_name': 'Professor',
+                'faculties_name': 'Faculty',
+                'head_title': 'Dean / Director',
+                'batch_name': 'Batch',
+            }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

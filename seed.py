@@ -141,7 +141,8 @@ def seed(app=None, auto=False):
             code="EWIU",
             address="14 Greenwood Avenue, Education City",
             phone="+1 (555) 0142",
-            email="info@elwood.edu"
+            email="info@elwood.edu",
+            institution_type="school"
         )
         db.session.add(college1)
         db.session.flush()
@@ -301,7 +302,8 @@ def seed(app=None, auto=False):
             code="SRA",
             address="88 Sunrise Boulevard, Metro District",
             phone="+44 20 7946 0000",
-            email="info@sunrise.edu"
+            email="info@sunrise.edu",
+            institution_type="institute"
         )
         db.session.add(college2)
         db.session.flush()
