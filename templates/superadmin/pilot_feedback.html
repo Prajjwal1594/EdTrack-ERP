@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Pilot Feedback & Flaws — Super Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><i class="fa-solid fa-bug" style="color:#ef4444"></i> Pilot Feedback & Flaws</h1>
+    <p class="page-subtitle">Real-time issues, bug reports, and suggestions submitted by teachers, students, and principals.</p>
+  </div>
+  <div style="display:flex; gap:10px;">
+    <span class="badge" style="background:#fef2f2; color:#b91c1c; font-size:13px; font-weight:700; padding:8px 14px; border-radius:8px;">
+      {{ feedbacks|length }} Submissions
+    </span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0">
+    {% if feedbacks %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Subject & Details</th>
+          <th>School / College</th>
+          <th>Reported By</th>
+          <th>Page URL</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fb in feedbacks %}
+        <tr>
+          <td>
+            {% if fb.category == 'bug' %}
+              <span class="badge" style="background:#fee2e2; color:#991b1b; padding:4px 8px; border-radius:6px; font-weight:700; font-size:11px;">
+                🐞 Bug
+              </span>
+            {% elif fb.category == 'confusing_ui' %}
+              <span class="badge" style="background:#fef3c7; color:#92400e; padding:4px 8px; border-radius:6px; font-weight:700; font-size:11px;">
+                🤔 Confusing
+              </span>
+            {% elif fb.category == 'feature_request' %}
+              <span class="badge" style="background:#dbeafe; color:#1e40af; padding:4px 8px; border-radius:6px; font-weight:700; font-size:11px;">
+                💡 Idea
+              </span>
+            {% else %}
+              <span class="badge" style="background:#f1f5f9; color:#475569; padding:4px 8px; border-radius:6px; font-weight:700; font-size:11px;">
+                💬 General
+              </span>
+            {% endif %}
+          </td>
+          <td style="max-width:320px;">
+            <div style="font-weight:700; font-size:13px; color:#0f172a; margin-bottom:2px;">{{ fb.subject }}</div>
+            <div style="font-size:12px; color:#475569; line-height:1.4;">{{ fb.body }}</div>
+          </td>
+          <td>
+            {% if fb.college %}
+              <div style="font-weight:600; font-size:12px;">{{ fb.college.name }}</div>
+              <span style="font-size:10px; color:#64748b;">Code: {{ fb.college.code }}</span>
+            {% else %}
+              <span style="color:#94a3b8; font-size:12px;">Public / Global</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if fb.user %}
+              <div style="font-weight:600; font-size:12px;">{{ fb.user.name }}</div>
+              <div style="font-size:11px; color:#64748b;">{{ fb.user.role_display_name or fb.user.role }}</div>
+            {% else %}
+              <span style="color:#94a3b8; font-size:12px;">Anonymous</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if fb.page_url %}
+              <code style="font-size:11px; background:#f8fafc; padding:3px 6px; border-radius:4px; max-width:180px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ fb.page_url }}</code>
+            {% else %}
+              <span style="color:#cbd5e1">—</span>
+            {% endif %}
+          </td>
+          <td style="font-size:11px; color:#64748b; white-space:nowrap;">
+            {{ fb.created_at.strftime('%d %b %Y, %H:%M') if fb.created_at else '—' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center; padding:48px 24px;">
+      <i class="fas fa-check-circle" style="font-size:42px; color:#22c55e; margin-bottom:12px;"></i>
+      <h3 style="margin:0 0 6px 0; font-size:18px;">No Flaws Reported Yet!</h3>
+      <p style="color:#64748b; margin:0; font-size:13px;">When teachers or principals submit feedback using the floating widget, it will appear here instantly.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -37,6 +37,81 @@ def switch_school():
     return redirect(url_for('auth.login'))
 
 
+@bp.route('/register-school', methods=['GET', 'POST'])
+def register_school():
+    """Self-service onboarding page for new pilot schools and institutes."""
+    from app.models import College, User, AcademicTerm
+    from flask import session
+    from datetime import date
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        code = request.form.get('code', '').strip().upper()
+        institution_type = request.form.get('institution_type', 'school').strip().lower()
+        admin_name = request.form.get('admin_name', '').strip()
+        admin_email = request.form.get('admin_email', '').strip().lower()
+        admin_password = request.form.get('admin_password', '')
+        phone = request.form.get('phone', '').strip()
+
+        if not name or not code or not admin_email or not admin_password:
+            flash('Please fill in all required fields.', 'danger')
+            return render_template('auth/register_school.html')
+
+        if College.query.filter(func.lower(College.code) == code.lower()).first():
+            flash(f'School code "{code}" is already taken. Please choose another code.', 'danger')
+            return render_template('auth/register_school.html')
+
+        if User.query.filter_by(email=admin_email).first():
+            flash(f'Email "{admin_email}" is already registered. Please sign in or use another email.', 'danger')
+            return render_template('auth/register_school.html')
+
+        try:
+            # 1. Create College
+            college = College(
+                name=name,
+                code=code,
+                institution_type=institution_type,
+                phone=phone,
+                email=admin_email
+            )
+            db.session.add(college)
+            db.session.flush()
+
+            # 2. Create Principal / Admin User
+            admin_user = User(
+                name=admin_name,
+                email=admin_email,
+                role='admin',
+                college_id=college.id,
+                phone=phone
+            )
+            admin_user.set_password(admin_password)
+            admin_user.is_active = True
+            db.session.add(admin_user)
+
+            # 3. Create Default Starter Term
+            term_name = "Academic Year 2026-2027" if institution_type == 'school' else "Semester 1 (2026)"
+            default_term = AcademicTerm(
+                college_id=college.id,
+                name=term_name,
+                start_date=date.today(),
+                end_date=date(date.today().year + 1, 3, 31),
+                is_active=True
+            )
+            db.session.add(default_term)
+            db.session.commit()
+
+            # 4. Auto-login new admin into their new dashboard
+            login_user(admin_user)
+            session['active_college_code'] = college.code
+            flash(f'Congratulations! {college.name} workspace has been created.', 'success')
+            return redirect(url_for('admin.dashboard'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating school workspace: {str(e)}', 'danger')
+
+    return render_template('auth/register_school.html')
+
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET' and current_user.is_authenticated:
@@ -641,3 +716,39 @@ def alumni_referrals():
 def employer_recruitment():
     students = User.query.filter_by(role='student').all()
     return render_template('roles/employer_recruitment.html', students=students)
+
+
+@bp.route('/api/pilot/feedback', methods=['POST'])
+def submit_pilot_feedback():
+    """Receive in-app bug reports and feature feedback from pilot users."""
+    from app.models import Feedback
+    from flask import jsonify
+    data = request.get_json() or request.form
+    subject = (data.get('subject') or data.get('title') or 'Pilot Feedback').strip()
+    body = (data.get('body') or data.get('message') or '').strip()
+    category = data.get('category', 'bug')
+    page_url = data.get('page_url') or request.referrer or ''
+
+    if not body:
+        return jsonify({'status': 'error', 'message': 'Please provide details for the feedback.'}), 400
+
+    cid = current_user.college_id if current_user.is_authenticated else None
+    uid = current_user.id if current_user.is_authenticated else None
+
+    fb = Feedback(
+        user_id=uid,
+        college_id=cid,
+        category=category,
+        subject=subject,
+        body=body,
+        page_url=page_url,
+        status='pending'
+    )
+    db.session.add(fb)
+    db.session.commit()
+
+    return jsonify({
+        'status': 'success',
+        'message': 'Thank you! Your feedback has been received and will be reviewed.'
+    }), 200
+

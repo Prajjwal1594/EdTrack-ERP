@@ -796,11 +796,13 @@ class EventRegistration(db.Model):
 class Feedback(db.Model):
     __tablename__ = 'feedbacks'
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('students.id'))
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     college_id = db.Column(db.Integer, db.ForeignKey('colleges.id'))
-    category = db.Column(db.String(50), default='general')  # general, academic, infrastructure, faculty, other
+    category = db.Column(db.String(50), default='general')  # bug, confusing_ui, feature_request, general
     subject = db.Column(db.String(300), nullable=False)
     body = db.Column(db.Text, nullable=False)
+    page_url = db.Column(db.String(300))
     status = db.Column(db.String(20), default='pending')  # pending, reviewed, resolved
     admin_response = db.Column(db.Text)
     responded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -808,6 +810,7 @@ class Feedback(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     student = db.relationship('Student', backref=db.backref('feedbacks', lazy='dynamic'))
+    user = db.relationship('User', foreign_keys=[user_id])
     college = db.relationship('College')
     responder = db.relationship('User', foreign_keys=[responded_by])
 

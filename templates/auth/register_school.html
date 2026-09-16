@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Your School / Institute — EdTrack ERP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --accent: #d97706;
+      --bg: #0f172a;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      color: var(--text);
+    }
+    .register-card {
+      background: var(--card-bg);
+      max-width: 620px;
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+    .register-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%);
+      color: #ffffff;
+      padding: 28px 32px;
+      text-align: center;
+    }
+    .register-header h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .register-header p {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+    .register-body {
+      padding: 28px 32px;
+    }
+    .form-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--primary);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 580px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .register-body { padding: 20px; }
+      .register-header { padding: 20px; }
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 14px;
+    }
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 5px;
+    }
+    .form-control {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .type-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .type-option {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .type-option input { display: none; }
+    .type-option.active {
+      border-color: var(--primary-light);
+      background: #eff6ff;
+    }
+    .type-option i { font-size: 20px; color: var(--primary); }
+    .type-option .title { font-weight: 700; font-size: 13px; color: #0f172a; }
+    .type-option .sub { font-size: 11px; color: var(--muted); }
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      margin-top: 10px;
+    }
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+      box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    }
+    .footer-link {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .footer-link a { color: var(--primary-light); font-weight: 600; text-decoration: none; }
+    .footer-link a:hover { text-decoration: underline; }
+    .flash {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+  </style>
+</head>
+<body>
+
+<div class="register-card">
+  <div class="register-header">
+    <i class="fas fa-graduation-cap" style="font-size: 32px; color: #fbbf24; margin-bottom: 8px;"></i>
+    <h1>Start Your Free Pilot</h1>
+    <p>Setup your school or institute workspace in 60 seconds</p>
+  </div>
+
+  <div class="register-body">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.register_school') }}">
+      <!-- 1. Institution Type -->
+      <div class="form-section-title"><i class="fas fa-building"></i> 1. Choose Institution Type</div>
+      <div class="type-selector">
+        <label class="type-option active" id="opt-school">
+          <input type="radio" name="institution_type" value="school" checked onchange="selectType('school')">
+          <i class="fas fa-school"></i>
+          <div>
+            <div class="title">School (K-12)</div>
+            <div class="sub">Classes, Terms, Teachers</div>
+          </div>
+        </label>
+        <label class="type-option" id="opt-institute">
+          <input type="radio" name="institution_type" value="institute" onchange="selectType('institute')">
+          <i class="fas fa-university"></i>
+          <div>
+            <div class="title">College / Institute</div>
+            <div class="sub">Courses, Semesters, Faculty</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- 2. Organization Info -->
+      <div class="form-section-title"><i class="fas fa-landmark"></i> 2. Institution Profile</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Institution Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Greenwood High School" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subdomain Code *</label>
+          <input type="text" name="code" class="form-control" placeholder="e.g. greenwood or gwhs" maxlength="20" required style="text-transform: uppercase;">
+        </div>
+      </div>
+
+      <!-- 3. Principal / Admin Account -->
+      <div class="form-section-title"><i class="fas fa-user-shield"></i> 3. Administrator / Principal Account</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Admin Full Name *</label>
+          <input type="text" name="admin_name" class="form-control" placeholder="e.g. Dr. Ramesh Sharma" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Official Email Address *</label>
+          <input type="email" name="admin_email" class="form-control" placeholder="principal@greenwood.edu" required>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Password *</label>
+          <input type="password" name="admin_password" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" name="phone" class="form-control" placeholder="+91 98765 43210">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        <i class="fas fa-rocket"></i> Launch School Workspace
+      </button>
+
+      <div class="footer-link">
+        Already have an account? <a href="{{ url_for('auth.login') }}">Sign In to ERP</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function selectType(type) {
+  document.getElementById('opt-school').classList.toggle('active', type === 'school');
+  document.getElementById('opt-institute').classList.toggle('active', type === 'institute');
+}
+</script>
+
+</body>
+</html>

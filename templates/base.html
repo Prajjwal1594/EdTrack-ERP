@@ -650,8 +650,9 @@
     {% if current_user.role == 'superadmin' %}
       <span class="nav-section-label">Platform</span>
       <a href="{{ url_for('superadmin.dashboard') }}" class="nav-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <a href="{{ url_for('superadmin.pilot_feedback') }}" class="nav-link {% if request.endpoint == 'superadmin.pilot_feedback' %}active{% endif %}"><i class="fas fa-bug" style="color: #ef4444;"></i> Pilot Flaws & Feedback</a>
       <span class="nav-section-label">Colleges</span>
-      <a href="{{ url_for('superadmin.colleges') }}" class="nav-link {% if (request.blueprint or '') == 'superadmin' and 'college' in (request.endpoint or '') %}active{% endif %}"><i class="fas fa-building-columns"></i> All Colleges</a>
+      <a href="{{ url_for('superadmin.colleges') }}" class="nav-link {% if (request.blueprint or '') == 'superadmin' and 'college' in (request.endpoint or '') and request.endpoint != 'superadmin.new_college' %}active{% endif %}"><i class="fas fa-building-columns"></i> All Colleges</a>
       <a href="{{ url_for('superadmin.new_college') }}" class="nav-link {% if request.endpoint == 'superadmin.new_college' %}active{% endif %}"><i class="fas fa-plus-circle"></i> New College</a>
 
     {% elif current_user.role == 'admin' %}
@@ -978,6 +979,113 @@
     </div>
   </div>
 {% endif %}
+
+{% if current_user.is_authenticated %}
+  <!-- Pilot Feedback Floating Button -->
+  <button id="pilot-feedback-trigger" style="position: fixed; bottom: 22px; left: 22px; z-index: 9998; background: #0f172a; color: #f8fafc; border: 1px solid rgba(255,255,255,0.18); border-radius: 30px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;">
+    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
+    <i class="fas fa-comment-dots" style="color: #38bdf8;"></i> Report Flaw / Feedback
+  </button>
+
+  <!-- Pilot Feedback Modal -->
+  <div id="pilot-feedback-modal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); align-items: center; justify-content: center;">
+    <div style="background: #ffffff; color: #0f172a; border-radius: 12px; max-width: 440px; width: 92%; padding: 22px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); position: relative; font-family: 'DM Sans', sans-serif;">
+      <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #0f172a;"><i class="fas fa-bug" style="color: #ef4444; margin-right: 6px;"></i> Tell Us What's Not Working</h3>
+        <button type="button" id="pilot-feedback-close" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
+      </div>
+      <p style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 14px;">Found a flaw, confusing screen, or bug? Send it directly to our founder team.</p>
+      <form id="pilot-feedback-form">
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #334155;">Issue Category</label>
+          <select id="pf-category" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; font-family: inherit;">
+            <option value="bug">🐞 Bug / Something broke or gave an error</option>
+            <option value="confusing_ui">🤔 Confusing / Hard to use</option>
+            <option value="feature_request">💡 Missing feature / Suggestion</option>
+            <option value="general">💬 General feedback</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #334155;">Short Title</label>
+          <input type="text" id="pf-subject" placeholder="e.g. Attendance button not saving" required style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; font-family: inherit;">
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #334155;">Details</label>
+          <textarea id="pf-body" rows="3" placeholder="Describe what happened or what you expected..." required style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; font-family: inherit; resize: vertical;"></textarea>
+        </div>
+        <div id="pf-status-msg" style="font-size: 12px; margin-bottom: 10px; display: none;"></div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+          <button type="button" id="pilot-feedback-cancel" style="padding: 8px 14px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; font-size: 13px; cursor: pointer; font-weight: 600;">Cancel</button>
+          <button type="submit" id="pf-submit-btn" style="padding: 8px 16px; border-radius: 6px; border: none; background: #2563eb; color: #ffffff; font-size: 13px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-paper-plane"></i> Send Feedback
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+  (function() {
+    var trigger = document.getElementById('pilot-feedback-trigger');
+    var modal = document.getElementById('pilot-feedback-modal');
+    var closeBtn = document.getElementById('pilot-feedback-close');
+    var cancelBtn = document.getElementById('pilot-feedback-cancel');
+    var form = document.getElementById('pilot-feedback-form');
+    var statusMsg = document.getElementById('pf-status-msg');
+    var submitBtn = document.getElementById('pf-submit-btn');
+
+    if (!trigger || !modal) return;
+
+    function openModal() { modal.style.display = 'flex'; }
+    function closeModal() { modal.style.display = 'none'; form.reset(); statusMsg.style.display = 'none'; }
+
+    trigger.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+      var payload = {
+        category: document.getElementById('pf-category').value,
+        subject: document.getElementById('pf-subject').value,
+        body: document.getElementById('pf-body').value,
+        page_url: window.location.href
+      };
+
+      fetch('/api/pilot/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        statusMsg.style.display = 'block';
+        if (data.status === 'success') {
+          statusMsg.style.color = '#16a34a';
+          statusMsg.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+          setTimeout(function() { closeModal(); submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Feedback'; }, 1800);
+        } else {
+          statusMsg.style.color = '#dc2626';
+          statusMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (data.message || 'Error sending feedback');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Feedback';
+        }
+      })
+      .catch(function() {
+        statusMsg.style.display = 'block';
+        statusMsg.style.color = '#dc2626';
+        statusMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Network error. Please try again.';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Feedback';
+      });
+    });
+  })();
+  </script>
+{% endif %}
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

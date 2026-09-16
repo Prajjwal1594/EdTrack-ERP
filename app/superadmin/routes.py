@@ -91,6 +91,7 @@ def new_college():
         college = College(
             name    = request.form.get('name', '').strip(),
             code    = code,
+            institution_type = request.form.get('institution_type', 'school').strip().lower(),
             address = request.form.get('address', '').strip(),
             phone   = request.form.get('phone', '').strip(),
             email   = request.form.get('email', '').strip().lower(),
@@ -252,3 +253,13 @@ def api_stats():
             'faculty': User.query.filter_by(college_id=s.id, role='faculty').count(),
         })
     return jsonify(data)
+
+
+@bp.route('/pilot-feedback')
+@superadmin_required
+def pilot_feedback():
+    """Founder dashboard to review bugs, flaws, and feedback from pilot schools."""
+    from app.models import Feedback
+    feedbacks = Feedback.query.order_by(Feedback.created_at.desc()).all()
+    return render_template('superadmin/pilot_feedback.html', feedbacks=feedbacks)
+
