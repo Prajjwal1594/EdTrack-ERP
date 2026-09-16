@@ -179,6 +179,13 @@ def login():
                 user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password) and (user.is_active is not False):
+            from flask import session
+            active_code = session.get('active_college_code')
+            if active_code and user.role != 'superadmin':
+                if not user.college or user.college.code.lower() != active_code.lower():
+                    flash("These credentials do not belong to this school's portal.", 'danger')
+                    return render_template('auth/login.html')
+
             login_user(user, remember=remember)
             try:
                 user.last_login = datetime.utcnow()
