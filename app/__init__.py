@@ -9,6 +9,9 @@ from config import Config
 from flask_sqlalchemy.model import Model
 
 
+from flask_migrate import Migrate
+
+
 class BaseModel(Model):
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -16,6 +19,7 @@ class BaseModel(Model):
 
 
 db = SQLAlchemy(model_class=BaseModel)
+migrate = Migrate()
 login_manager = LoginManager()
 mail = Mail()
 socketio = SocketIO()
@@ -142,6 +146,7 @@ def create_app(config_class=Config):
     print(f"[STARTUP] DB URI prefix: {app.config.get('SQLALCHEMY_DATABASE_URI', '')[:20]}...", flush=True)
 
     db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     mail.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')

@@ -8,15 +8,7 @@ import json
 @login_manager.user_loader
 def load_user(user_id):
     try:
-        u = User.query.get(int(user_id))
-        if not u:
-            # If user table is empty (e.g. fresh lambda /tmp SQLite), auto-seed demo users
-            if not User.query.first():
-                from seed import seed
-                from flask import current_app
-                seed(current_app, auto=True)
-                u = User.query.get(int(user_id))
-        return u
+        return db.session.get(User, int(user_id))
     except Exception:
         return None
 
