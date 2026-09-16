@@ -50,7 +50,7 @@ def library():
                            my_issues=my_issues, overdue_count=overdue_count)
 '''
 
-for fpath in ['app/student/routes.py', 'elwood/app/student/routes.py']:
+for fpath in ['app/student/routes.py']:
     with open(fpath, 'r', encoding='utf-8') as f:
         content = f.read()
     needle = "@bp.route('/timetable')"
