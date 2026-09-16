@@ -39,7 +39,30 @@
           <label class="form-label">Role *</label>
           <select name="role" class="form-control" required id="roleSelect" onchange="toggleStudentFields(this.value)">
             <option value="">-- Select Role --</option>
-            {% for r, label in [('admin', 'Admin'), ('accountant', 'Accountant'), ('hr', 'HR'), ('faculty', 'Faculty'), ('student', 'Student'), ('parent', 'Parent')] %}
+            {% set all_roles = [
+              ('admin', 'Admin'), 
+              ('it_admin', 'IT Administrator'), 
+              ('principal', 'Principal'), 
+              ('registrar', 'Registrar'), 
+              ('hod', 'Head of Department (HOD)'), 
+              ('admission_officer', 'Admission Officer'), 
+              ('accountant', 'Accountant'), 
+              ('hr', 'HR'), 
+              ('examination_officer', 'Examination Officer'), 
+              ('faculty', 'Faculty'), 
+              ('course_coordinator', 'Course Coordinator'), 
+              ('academic_advisor', 'Academic Advisor'), 
+              ('librarian', 'Librarian'), 
+              ('hostel_warden', 'Hostel Warden'), 
+              ('transport_manager', 'Transport Manager'), 
+              ('placement_officer', 'Placement Officer'), 
+              ('student_affairs', 'Student Affairs'), 
+              ('student', 'Student'), 
+              ('parent', 'Parent'), 
+              ('alumni', 'Alumni'), 
+              ('employer', 'Employer')
+            ] %}
+            {% for r, label in all_roles %}
             <option value="{{ r }}" {% if user and user.role == r %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
