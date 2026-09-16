@@ -274,9 +274,23 @@
   <!-- Left Column: Login Form -->
   <div class="login-card">
     <div class="login-header">
-      <div class="crest">EW</div>
-      <h1>EdTrack ERP</h1>
-      <p>Select any demo role to sign in instantly</p>
+      <div class="crest">{{ current_college.code[:2] if current_college else 'ED' }}</div>
+      <h1>{{ current_college.name if current_college else 'EdTrack ERP' }}</h1>
+      <p>{{ vocab.org_type }} Management Portal</p>
+      {% if current_college %}
+        <div style="margin-top: 8px;">
+          <span style="font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.18); padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px;">
+            <i class="fas fa-building"></i> {{ current_college.code }}
+          </span>
+          <a href="{{ url_for('auth.switch_school') }}" style="font-size: 11px; color: var(--gold); margin-left: 8px; text-decoration: underline;">Switch Portal</a>
+        </div>
+      {% else %}
+        <div style="margin-top: 8px; font-size: 12px; opacity: 0.85;">
+          School Portals: 
+          <a href="{{ url_for('auth.school_portal', school_code='EWIU') }}" style="color: var(--gold); font-weight: 600;">El'Wood School</a> • 
+          <a href="{{ url_for('auth.school_portal', school_code='SRA') }}" style="color: var(--gold); font-weight: 600;">Sunrise Academy</a>
+        </div>
+      {% endif %}
     </div>
     <div class="login-body">
       {% with messages = get_flashed_messages(with_categories=true) %}

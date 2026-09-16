@@ -245,6 +245,22 @@ def create_app(config_class=Config):
 
         return dict(is_feature_enabled=is_feature_enabled)
 
+    @app.before_request
+    def resolve_tenant_from_subdomain():
+        from flask import request, session
+        from app.models import College
+        from sqlalchemy import func
+
+        host = request.host.split(':')[0]
+        parts = host.split('.')
+        # Check if subdomain exists (e.g. dps.edtrack.in or ewiu.localhost)
+        if len(parts) >= 2:
+            sub = parts[0].strip().lower()
+            if sub not in ('www', 'app', 'api', 'admin', 'ed-track-erp', '127', 'localhost'):
+                college = College.query.filter(func.lower(College.code) == sub).first()
+                if college:
+                    session['active_college_code'] = college.code
+
     @app.context_processor
     def inject_institution_context():
         from app.models import College

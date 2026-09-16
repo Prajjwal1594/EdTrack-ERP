@@ -14,6 +14,29 @@ def index():
     return redirect(url_for('auth.login'))
 
 
+@bp.route('/s/<school_code>')
+def school_portal(school_code):
+    """Direct branded entry link for pilot schools (e.g. /s/ewiu or /s/sra)."""
+    from app.models import College
+    from flask import session
+    college = College.query.filter(func.lower(College.code) == school_code.strip().lower()).first()
+    if college:
+        session['active_college_code'] = college.code
+        flash(f"Connected to {college.name} ({college.vocab['org_type']} Portal).", 'info')
+    else:
+        flash(f"School code '{school_code}' not found.", 'warning')
+    return redirect(url_for('auth.login'))
+
+
+@bp.route('/switch-school')
+def switch_school():
+    """Reset the active school session context."""
+    from flask import session
+    session.pop('active_college_code', None)
+    flash("Switched to global portal.", 'info')
+    return redirect(url_for('auth.login'))
+
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET' and current_user.is_authenticated:
