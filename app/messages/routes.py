@@ -34,7 +34,7 @@ def compose():
     if request.method == 'POST':
         recipient_id = request.form.get('recipient_id', type=int)
         recipient = User.query.get(recipient_id)
-        if not recipient:
+        if not recipient or (current_user.role != 'superadmin' and recipient.college_id != current_user.college_id):
             flash('Recipient not found.', 'danger')
             return redirect(url_for('messages.compose'))
 
@@ -103,6 +103,10 @@ def _get_thread(msg):
 @login_required
 def reply(mid):
     parent = Message.query.get_or_404(mid)
+    if parent.recipient_id != current_user.id and parent.sender_id != current_user.id:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('messages.inbox'))
+
     recipient_id = parent.sender_id if parent.recipient_id == current_user.id else parent.recipient_id
 
     reply_msg = Message(
@@ -122,6 +126,10 @@ def reply(mid):
 @login_required
 def delete_message(mid):
     msg = Message.query.get_or_404(mid)
+    if msg.sender_id != current_user.id and msg.recipient_id != current_user.id:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('messages.inbox'))
+
     if msg.sender_id == current_user.id:
         msg.is_deleted_sender = True
     if msg.recipient_id == current_user.id:

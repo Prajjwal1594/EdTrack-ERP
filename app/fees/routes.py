@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, make_response, current_app
+from flask import render_template, redirect, url_for, flash, request, jsonify, make_response, current_app, abort
 from flask_login import login_required, current_user
 import razorpay
 from functools import wraps
@@ -53,9 +53,14 @@ def index():
 @bp.route('/add', methods=['POST'])
 @staff_required
 def add_payment():
+    student_id = request.form.get('student_id', type=int)
+    student = Student.query.get_or_404(student_id)
+    if current_user.role != 'superadmin' and student.user.college_id != current_user.college_id:
+        abort(403)
+
     due_str = request.form.get('due_date')
     payment = FeePayment(
-        student_id=request.form.get('student_id', type=int),
+        student_id=student_id,
         fee_type_id=request.form.get('fee_type_id', type=int),
         term_id=request.form.get('term_id', type=int) or None,
         amount=request.form.get('amount', type=float),
@@ -74,6 +79,9 @@ def add_payment():
 @staff_required
 def mark_paid(pid):
     payment = FeePayment.query.get_or_404(pid)
+    if current_user.role != 'superadmin' and payment.student.user.college_id != current_user.college_id:
+        abort(404)
+
     payment.status = 'paid'
     payment.paid_at = datetime.utcnow()
     payment.payment_method = request.form.get('payment_method', 'cash')
@@ -91,6 +99,9 @@ def mark_paid(pid):
 @staff_required
 def waive_payment(pid):
     payment = FeePayment.query.get_or_404(pid)
+    if current_user.role != 'superadmin' and payment.student.user.college_id != current_user.college_id:
+        abort(404)
+
     payment.status = 'waived'
     payment.notes = request.form.get('reason', '') + ' [WAIVED]'
     db.session.commit()
@@ -102,6 +113,9 @@ def waive_payment(pid):
 @staff_required
 def delete_payment(pid):
     payment = FeePayment.query.get_or_404(pid)
+    if current_user.role != 'superadmin' and payment.student.user.college_id != current_user.college_id:
+        abort(404)
+
     db.session.delete(payment)
     db.session.commit()
     flash('Record deleted.', 'info')
@@ -111,6 +125,10 @@ def delete_payment(pid):
 @bp.route('/student/<int:student_id>')
 @login_required
 def student_fees(student_id):
+    student = Student.query.get_or_404(student_id)
+    if current_user.role != 'superadmin' and student.user.college_id != current_user.college_id:
+        abort(404)
+
     # Check access
     if current_user.role == 'parent':
         link = ParentStudentLink.query.filter_by(parent_id=current_user.id, student_id=student_id).first()
@@ -118,15 +136,13 @@ def student_fees(student_id):
             flash('Access denied.', 'danger')
             return redirect(url_for('parent.dashboard'))
     elif current_user.role == 'student':
-        student = Student.query.filter_by(user_id=current_user.id, id=student_id).first()
-        if not student:
+        if student.user_id != current_user.id:
             flash('Access denied.', 'danger')
             return redirect(url_for('student.dashboard'))
     elif current_user.role not in ('admin', 'faculty', 'accountant', 'superadmin'):
         flash('Access denied.', 'danger')
         return redirect(url_for('auth.dashboard'))
 
-    student = Student.query.get_or_404(student_id)
     payments = FeePayment.query.filter_by(student_id=student_id).order_by(FeePayment.created_at.desc()).all()
     total_paid = sum(p.amount for p in payments if p.status == 'paid')
     total_pending = sum(p.amount for p in payments if p.status == 'pending')
@@ -139,6 +155,8 @@ def student_fees(student_id):
 @login_required
 def download_receipt(pid):
     payment = FeePayment.query.get_or_404(pid)
+    if current_user.role != 'superadmin' and payment.student.user.college_id != current_user.college_id:
+        abort(404)
     
     # Check access permission
     if current_user.role == 'parent':

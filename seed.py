@@ -318,6 +318,11 @@ def seed(app=None, auto=False):
         accountant2.set_password("accountant123")
         db.session.add(accountant2)
 
+        itadmin2 = User(name="Sunrise IT Admin", email="itadmin2@sunrise.edu",
+                        role="it_admin", college_id=college2.id)
+        itadmin2.set_password("itadmin123")
+        db.session.add(itadmin2)
+
         faculty_data_2 = [
             ("Mr. Ahmed Malik",    "faculty2@sunrise.edu", "faculty123"),
             ("Ms. Clara Hernandez","clara@sunrise.edu",    "faculty123"),

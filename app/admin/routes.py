@@ -30,6 +30,33 @@ def admin_required(f):
     return login_required(decorated)
 
 
+def verify_tenant(record):
+    """Enforce strict multi-tenancy: abort(404) if record belongs to a different college."""
+    if not current_user.is_authenticated:
+        abort(401)
+    if current_user.role == 'superadmin':
+        return
+    
+    cid = None
+    if hasattr(record, 'college_id'):
+        cid = record.college_id
+    elif hasattr(record, 'user') and record.user and hasattr(record.user, 'college_id'):
+        cid = record.user.college_id
+    elif hasattr(record, 'student') and record.student and hasattr(record.student, 'user') and record.student.user:
+        cid = record.student.user.college_id
+    elif hasattr(record, 'semester_') and record.semester_ and hasattr(record.semester_, 'college_id'):
+        cid = record.semester_.college_id
+    elif hasattr(record, 'subject') and record.subject and hasattr(record.subject, 'college_id'):
+        cid = record.subject.college_id
+    elif hasattr(record, 'faculty') and record.faculty and hasattr(record.faculty, 'college_id'):
+        cid = record.faculty.college_id
+    elif hasattr(record, 'course') and record.course and hasattr(record.course, 'college_id'):
+        cid = record.course.college_id
+
+    if cid != current_user.college_id:
+        abort(404)
+
+
 @bp.route('/dashboard')
 @admin_required
 def dashboard():
@@ -292,6 +319,7 @@ def add_user():
 @admin_required
 def edit_user(uid):
     user = User.query.get_or_404(uid)
+    verify_tenant(user)
     if request.method == 'POST':
         user.name = request.form.get('name', user.name)
         if request.form.get('role'):
@@ -362,6 +390,7 @@ def export_students_csv():
 @admin_required
 def edit_erp_profile(uid):
     user = User.query.get_or_404(uid)
+    verify_tenant(user)
     if user.role != 'student' or not user.student_profile:
         flash('ERP details are only applicable for student accounts with an active profile.', 'warning')
         return redirect(url_for('admin.users'))
@@ -384,6 +413,7 @@ def edit_erp_profile(uid):
 @admin_required
 def delete_user(uid):
     user = User.query.get_or_404(uid)
+    verify_tenant(user)
     user.is_active = False
     db.session.commit()
     flash('User deactivated.', 'info')
@@ -416,6 +446,7 @@ def add_semester():
 @admin_required
 def delete_semester(cid):
     c = Semester.query.get_or_404(cid)
+    verify_tenant(c)
     db.session.delete(c)
     db.session.commit()
     flash('Semester deleted.', 'info')
@@ -450,6 +481,7 @@ def add_section():
 @admin_required
 def delete_section(sid):
     s = Section.query.get_or_404(sid)
+    verify_tenant(s)
     db.session.delete(s)
     db.session.commit()
     flash('Section deleted.', 'info')
@@ -482,6 +514,7 @@ def add_subject():
 @admin_required
 def delete_subject(sid):
     s = Subject.query.get_or_404(sid)
+    verify_tenant(s)
     db.session.delete(s)
     db.session.commit()
     flash('Subject deleted.', 'info')
@@ -521,6 +554,7 @@ def add_faculty_assignment():
 @admin_required
 def delete_faculty_assignment(aid):
     ta = FacultyAssignment.query.get_or_404(aid)
+    verify_tenant(ta)
     db.session.delete(ta)
     db.session.commit()
     flash('Assignment removed.', 'info')
@@ -557,8 +591,9 @@ def add_term():
 @bp.route('/terms/<int:tid>/activate', methods=['POST'])
 @admin_required
 def activate_term(tid):
-    AcademicTerm.query.filter_by(college_id=current_user.college_id).update({'is_active': False})
     term = AcademicTerm.query.get_or_404(tid)
+    verify_tenant(term)
+    AcademicTerm.query.filter_by(college_id=current_user.college_id).update({'is_active': False})
     term.is_active = True
     db.session.commit()
     flash(f'"{term.name}" is now the active term.', 'success')
@@ -569,6 +604,7 @@ def activate_term(tid):
 @admin_required
 def delete_term(tid):
     term = AcademicTerm.query.get_or_404(tid)
+    verify_tenant(term)
     db.session.delete(term)
     db.session.commit()
     flash('Term deleted.', 'info')
@@ -603,6 +639,7 @@ def add_fee_type():
 @admin_required
 def delete_fee_type(fid):
     ft = FeeType.query.get_or_404(fid)
+    verify_tenant(ft)
     db.session.delete(ft)
     db.session.commit()
     flash('Fee type deleted.', 'info')
@@ -677,6 +714,7 @@ def add_parent_link():
 @admin_required
 def delete_parent_link(lid):
     link = ParentStudentLink.query.get_or_404(lid)
+    verify_tenant(link)
     db.session.delete(link)
     db.session.commit()
     flash('Link removed.', 'info')
@@ -772,6 +810,7 @@ def add_announcement():
 @admin_required
 def delete_announcement(aid):
     ann = Announcement.query.get_or_404(aid)
+    verify_tenant(ann)
     db.session.delete(ann)
     db.session.commit()
     flash('Announcement deleted.', 'info')
@@ -782,6 +821,7 @@ def delete_announcement(aid):
 @admin_required
 def toggle_announcement(aid):
     ann = Announcement.query.get_or_404(aid)
+    verify_tenant(ann)
     ann.is_active = not ann.is_active
     db.session.commit()
     flash(f'Announcement {"activated" if ann.is_active else "deactivated"}.', 'info')
@@ -827,6 +867,7 @@ def add_event():
 @role_required('principal', 'student_affairs', 'placement_officer')
 def delete_event(eid):
     event = Event.query.get_or_404(eid)
+    verify_tenant(event)
     db.session.delete(event)
     db.session.commit()
     flash('Event deleted.', 'info')
@@ -845,6 +886,7 @@ def feedback_list():
 @role_required('principal', 'student_affairs')
 def respond_feedback(fid):
     fb = Feedback.query.get_or_404(fid)
+    verify_tenant(fb)
     response = request.form.get('admin_response')
     status = request.form.get('status', 'reviewed')
     if response:
@@ -866,6 +908,7 @@ def grievance_list():
 @role_required('principal', 'student_affairs', 'hostel_warden')
 def resolve_grievance(gid):
     g = Grievance.query.get_or_404(gid)
+    verify_tenant(g)
     action_taken = request.form.get('action_taken')
     status = request.form.get('status', 'resolved')
     if action_taken:
@@ -896,6 +939,7 @@ def leave_applications():
 @role_required('admin', 'superadmin', 'it_admin', 'hostel_warden', 'hr', 'principal')
 def leave_action(lid):
     leave = LeaveApplication.query.get_or_404(lid)
+    verify_tenant(leave)
     action = request.form.get('action')
     if action == 'approve':
         leave.status = 'approved'
@@ -951,6 +995,7 @@ def at_risk_dashboard():
 @admin_required
 def student_intervention(sid):
     student = Student.query.get_or_404(sid)
+    verify_tenant(student)
     if student.user.college_id != current_user.college_id:
         abort(403)
         
@@ -1158,8 +1203,10 @@ def assign_course_counselor():
     course_id = request.form.get('course_id', type=int)
     faculty_id = request.form.get('faculty_id', type=int)
     course = Course.query.get_or_404(course_id)
+    verify_tenant(course)
     if faculty_id:
         faculty = User.query.get_or_404(faculty_id)
+        verify_tenant(faculty)
         course.chief_counselor_id = faculty.id
         flash(f'Faculty {faculty.name} assigned as Chief Batch Counselor for Course "{course.name}".', 'success')
     else:
@@ -1175,8 +1222,10 @@ def assign_stream_counselor():
     stream_id = request.form.get('stream_id', type=int)
     faculty_id = request.form.get('faculty_id', type=int)
     stream = Stream.query.get_or_404(stream_id)
+    verify_tenant(stream)
     if faculty_id:
         faculty = User.query.get_or_404(faculty_id)
+        verify_tenant(faculty)
         stream.head_counselor_id = faculty.id
         flash(f'Faculty {faculty.name} assigned as Head Batch Counselor for Stream "{stream.name}".', 'success')
     else:
@@ -1192,8 +1241,10 @@ def assign_section_counselor():
     section_id = request.form.get('section_id', type=int)
     faculty_id = request.form.get('faculty_id', type=int)
     section = Section.query.get_or_404(section_id)
+    verify_tenant(section)
     if faculty_id:
         faculty = User.query.get_or_404(faculty_id)
+        verify_tenant(faculty)
         section.batch_counselor_id = faculty.id
         flash(f'Faculty {faculty.name} assigned as Batch Counselor for Section "{section.full_name}".', 'success')
     else:

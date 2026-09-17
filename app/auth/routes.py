@@ -469,26 +469,58 @@ def dashboard():
     elif role == 'parent':
         return redirect(url_for('parent.dashboard'))
 
-    # Gather metrics for custom role dashboards
-    total_students = Student.query.count()
-    total_faculty = User.query.filter_by(role='faculty').count()
-    total_courses = Course.query.count()
-    total_subjects = Subject.query.count()
-    total_assignments = Assignment.query.count()
-    total_enquiries = Enquiry.query.count()
-    total_applications = AdmissionApplication.query.count()
-    total_events = Event.query.count()
-    total_grievances = Grievance.query.count()
-    total_books = LibraryBook.query.count()
-    total_issues = BookIssue.query.filter_by(status='issued').count()
-    overdue_count = BookIssue.query.filter_by(status='overdue').count()
-    total_rooms = HostelRoom.query.count()
-    total_allocations = HostelAllocation.query.count()
-    total_routes = TransportRoute.query.count()
-    total_exams = Exam.query.count()
-    total_grades = Grade.query.count()
-    
-    rev = db.session.query(func.sum(FeePayment.amount)).scalar() or 1250000.0
+    # Gather metrics for custom role dashboards (strictly scoped to current user's college)
+    cid = current_user.college_id
+    if cid:
+        total_students = Student.query.join(User).filter(User.college_id == cid).count()
+        total_faculty = User.query.filter_by(role='faculty', college_id=cid).count()
+        total_courses = Course.query.filter_by(college_id=cid).count()
+        total_subjects = Subject.query.filter_by(college_id=cid).count()
+        total_assignments = Assignment.query.join(Subject).filter(Subject.college_id == cid).count()
+        total_enquiries = Enquiry.query.filter_by(college_id=cid).count()
+        total_applications = AdmissionApplication.query.filter_by(college_id=cid).count()
+        total_events = Event.query.filter_by(college_id=cid).count()
+        total_grievances = Grievance.query.filter_by(college_id=cid).count()
+        total_books = LibraryBook.query.filter_by(college_id=cid).count()
+        total_issues = BookIssue.query.filter_by(college_id=cid, status='issued').count()
+        overdue_count = BookIssue.query.filter_by(college_id=cid, status='overdue').count()
+        total_rooms = HostelRoom.query.filter_by(college_id=cid).count()
+        total_allocations = HostelAllocation.query.filter_by(college_id=cid).count()
+        total_routes = TransportRoute.query.filter_by(college_id=cid).count()
+        total_exams = Exam.query.join(Subject).filter(Subject.college_id == cid).count()
+        total_grades = Grade.query.join(Subject).filter(Subject.college_id == cid).count()
+        rev_val = db.session.query(func.sum(FeePayment.amount)).join(Student).join(User).filter(User.college_id == cid).scalar()
+        rev = float(rev_val) if rev_val is not None else 0.0
+        active_terms = AcademicTerm.query.filter_by(college_id=cid, is_active=True).count()
+        pending_leaves = LeaveApplication.query.filter_by(college_id=cid, status='pending').count()
+    elif current_user.role == 'superadmin':
+        total_students = Student.query.count()
+        total_faculty = User.query.filter_by(role='faculty').count()
+        total_courses = Course.query.count()
+        total_subjects = Subject.query.count()
+        total_assignments = Assignment.query.count()
+        total_enquiries = Enquiry.query.count()
+        total_applications = AdmissionApplication.query.count()
+        total_events = Event.query.count()
+        total_grievances = Grievance.query.count()
+        total_books = LibraryBook.query.count()
+        total_issues = BookIssue.query.filter_by(status='issued').count()
+        overdue_count = BookIssue.query.filter_by(status='overdue').count()
+        total_rooms = HostelRoom.query.count()
+        total_allocations = HostelAllocation.query.count()
+        total_routes = TransportRoute.query.count()
+        total_exams = Exam.query.count()
+        total_grades = Grade.query.count()
+        rev = float(db.session.query(func.sum(FeePayment.amount)).scalar() or 0.0)
+        active_terms = AcademicTerm.query.filter_by(is_active=True).count()
+        pending_leaves = LeaveApplication.query.filter_by(status='pending').count()
+    else:
+        total_students = total_faculty = total_courses = total_subjects = total_assignments = 0
+        total_enquiries = total_applications = total_events = total_grievances = 0
+        total_books = total_issues = overdue_count = total_rooms = total_allocations = total_routes = 0
+        total_exams = total_grades = active_terms = pending_leaves = 0
+        rev = 0.0
+
     college_name = current_user.college.name if current_user.college else "EdTrack Institution"
 
     context = {
@@ -515,9 +547,9 @@ def dashboard():
         'at_risk_count': 6,
         'faculty_attendance_rate': 96.5,
         'fee_clearance_pct': 92.4,
-        'active_terms': AcademicTerm.query.filter_by(is_active=True).count(),
+        'active_terms': active_terms,
         'occupancy_pct': round((total_allocations / max(total_rooms, 1)) * 100, 1),
-        'pending_leaves': LeaveApplication.query.filter_by(status='pending').count()
+        'pending_leaves': pending_leaves
     }
 
     if role in ['principal', 'executive']:
@@ -604,10 +636,20 @@ def academic_calendar():
 @bp.route('/principal/academic-delivery')
 @login_required
 def principal_academic_delivery():
-    total_faculty = User.query.filter_by(role='faculty').count()
-    total_courses = Course.query.count()
-    total_subjects = Subject.query.count()
-    total_assignments = Assignment.query.count()
+    cid = current_user.college_id
+    if cid:
+        total_faculty = User.query.filter_by(role='faculty', college_id=cid).count()
+        total_courses = Course.query.filter_by(college_id=cid).count()
+        total_subjects = Subject.query.filter_by(college_id=cid).count()
+        total_assignments = Assignment.query.join(Subject).filter(Subject.college_id == cid).count()
+    elif current_user.role == 'superadmin':
+        total_faculty = User.query.filter_by(role='faculty').count()
+        total_courses = Course.query.count()
+        total_subjects = Subject.query.count()
+        total_assignments = Assignment.query.count()
+    else:
+        total_faculty = total_courses = total_subjects = total_assignments = 0
+
     return render_template('roles/principal_academic_delivery.html',
                            total_faculty=total_faculty,
                            total_courses=total_courses,
@@ -618,10 +660,22 @@ def principal_academic_delivery():
 @bp.route('/principal/admissions-growth')
 @login_required
 def principal_admissions_growth():
-    total_students = Student.query.count()
-    total_enquiries = Enquiry.query.count()
-    total_applications = AdmissionApplication.query.count()
-    rev = db.session.query(func.sum(FeePayment.amount)).scalar() or 1250000.0
+    cid = current_user.college_id
+    if cid:
+        total_students = Student.query.join(User).filter(User.college_id == cid).count()
+        total_enquiries = Enquiry.query.filter_by(college_id=cid).count()
+        total_applications = AdmissionApplication.query.filter_by(college_id=cid).count()
+        rev_val = db.session.query(func.sum(FeePayment.amount)).join(Student).join(User).filter(User.college_id == cid).scalar()
+        rev = float(rev_val) if rev_val is not None else 0.0
+    elif current_user.role == 'superadmin':
+        total_students = Student.query.count()
+        total_enquiries = Enquiry.query.count()
+        total_applications = AdmissionApplication.query.count()
+        rev = float(db.session.query(func.sum(FeePayment.amount)).scalar() or 0.0)
+    else:
+        total_students = total_enquiries = total_applications = 0
+        rev = 0.0
+
     return render_template('roles/principal_admissions_growth.html',
                            total_students=total_students,
                            total_enquiries=total_enquiries,
@@ -639,70 +693,130 @@ def principal_accreditation_audit():
 @bp.route('/registrar/transcripts')
 @login_required
 def registrar_transcripts():
-    students = User.query.filter_by(role='student').all()
+    cid = current_user.college_id
+    if cid:
+        students = User.query.filter_by(role='student', college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        students = User.query.filter_by(role='student').all()
+    else:
+        students = []
     return render_template('roles/registrar_transcripts.html', students=students)
 
 
 @bp.route('/hod/department-workload')
 @login_required
 def hod_workload():
-    faculty = User.query.filter_by(role='faculty').all()
+    cid = current_user.college_id
+    if cid:
+        faculty = User.query.filter_by(role='faculty', college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        faculty = User.query.filter_by(role='faculty').all()
+    else:
+        faculty = []
     return render_template('roles/hod_workload.html', faculty=faculty)
 
 
 @bp.route('/admissions/merit-list')
 @login_required
 def admissions_merit_list():
-    applications = AdmissionApplication.query.all()
+    cid = current_user.college_id
+    if cid:
+        applications = AdmissionApplication.query.filter_by(college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        applications = AdmissionApplication.query.all()
+    else:
+        applications = []
     return render_template('roles/admissions_merit_list.html', applications=applications)
 
 
 @bp.route('/exam-officer/hall-tickets')
 @login_required
 def exam_hall_tickets():
-    students = User.query.filter_by(role='student').all()
+    cid = current_user.college_id
+    if cid:
+        students = User.query.filter_by(role='student', college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        students = User.query.filter_by(role='student').all()
+    else:
+        students = []
     return render_template('roles/exam_hall_tickets.html', students=students)
 
 
 @bp.route('/course-coordinator/co-po')
 @login_required
 def course_coordinator_copo():
-    subjects = Subject.query.all()
+    cid = current_user.college_id
+    if cid:
+        subjects = Subject.query.filter_by(college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        subjects = Subject.query.all()
+    else:
+        subjects = []
     return render_template('roles/course_coordinator_copo.html', subjects=subjects)
 
 
 @bp.route('/academic-advisor/counseling-logs')
 @login_required
 def academic_advisor_counseling():
-    students = User.query.filter_by(role='student').all()
+    cid = current_user.college_id
+    if cid:
+        students = User.query.filter_by(role='student', college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        students = User.query.filter_by(role='student').all()
+    else:
+        students = []
     return render_template('roles/academic_advisor_counseling.html', students=students)
 
 
 @bp.route('/librarian/fines-e-resources')
 @login_required
 def librarian_fines():
-    books = LibraryBook.query.all()
+    cid = current_user.college_id
+    if cid:
+        books = LibraryBook.query.filter_by(college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        books = LibraryBook.query.all()
+    else:
+        books = []
     return render_template('roles/librarian_fines.html', books=books)
 
 
 @bp.route('/warden/mess-inspections')
 @login_required
 def warden_mess_inspection():
-    rooms = HostelRoom.query.all()
+    cid = current_user.college_id
+    if cid:
+        rooms = HostelRoom.query.filter_by(college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        rooms = HostelRoom.query.all()
+    else:
+        rooms = []
     return render_template('roles/warden_mess_inspection.html', rooms=rooms)
 
 
 @bp.route('/transport/fleet-maintenance')
 @login_required
 def transport_fleet():
-    routes = TransportRoute.query.all()
+    cid = current_user.college_id
+    if cid:
+        routes = TransportRoute.query.filter_by(college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        routes = TransportRoute.query.all()
+    else:
+        routes = []
     return render_template('roles/transport_fleet.html', routes=routes)
 
 
 @bp.route('/placement/drive-manager')
 @login_required
 def placement_drives():
-    events = Event.query.all()
+    cid = current_user.college_id
+    if cid:
+        events = Event.query.filter_by(college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        events = Event.query.all()
+    else:
+        events = []
     return render_template('roles/placement_drives.html', events=events)
 
 
@@ -721,7 +835,13 @@ def alumni_referrals():
 @bp.route('/employer/recruitment-portal')
 @login_required
 def employer_recruitment():
-    students = User.query.filter_by(role='student').all()
+    cid = current_user.college_id
+    if cid:
+        students = User.query.filter_by(role='student', college_id=cid).all()
+    elif current_user.role == 'superadmin':
+        students = User.query.filter_by(role='student').all()
+    else:
+        students = []
     return render_template('roles/employer_recruitment.html', students=students)
 
 

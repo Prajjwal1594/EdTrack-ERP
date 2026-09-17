@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_required, current_user
 from functools import wraps
 from app.exams import bp
@@ -74,10 +74,23 @@ def create_exam():
     return render_template('exams/create.html', subjects=subjects, sections=sections)
 
 
+def verify_exam_tenant(exam):
+    if current_user.role == 'superadmin':
+        return
+    cid = None
+    if exam and getattr(exam, 'subject', None):
+        cid = exam.subject.college_id
+    elif exam and getattr(exam, 'section', None) and getattr(exam.section, 'semester', None):
+        cid = exam.section.semester.college_id
+    if cid is not None and cid != current_user.college_id:
+        abort(404)
+
+
 @bp.route('/<int:eid>/edit', methods=['GET', 'POST'])
 @faculty_required
 def edit_exam(eid):
     exam = Exam.query.get_or_404(eid)
+    verify_exam_tenant(exam)
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'add_question':
@@ -113,6 +126,7 @@ def edit_exam(eid):
 @faculty_required
 def delete_question(qid):
     q = ExamQuestion.query.get_or_404(qid)
+    verify_exam_tenant(q.exam)
     eid = q.exam_id
     db.session.delete(q)
     db.session.commit()
@@ -131,6 +145,7 @@ def take_exam(eid):
         flash('Student profile not found.', 'danger')
         return redirect(url_for('exams.index'))
     exam = Exam.query.get_or_404(eid)
+    verify_exam_tenant(exam)
 
     if not exam.is_published:
         flash('This exam is not available yet.', 'warning')
@@ -161,6 +176,7 @@ def submit_exam(eid):
         flash('Student profile not found.', 'danger')
         return redirect(url_for('exams.index'))
     exam = Exam.query.get_or_404(eid)
+    verify_exam_tenant(exam)
     sub = ExamSubmission.query.filter_by(exam_id=eid, student_id=student.id).first()
 
     if not sub or sub.submitted_at:
@@ -206,6 +222,7 @@ def submit_exam(eid):
 def exam_result(eid):
     student = Student.query.filter_by(user_id=current_user.id).first()
     exam = Exam.query.get_or_404(eid)
+    verify_exam_tenant(exam)
     sub = ExamSubmission.query.filter_by(exam_id=eid, student_id=student.id).first() if student else None
     questions = exam.questions.order_by(ExamQuestion.order_num).all()
     return render_template('exams/result.html', exam=exam, sub=sub, questions=questions, student=student)
@@ -215,6 +232,7 @@ def exam_result(eid):
 @faculty_required
 def exam_results(eid):
     exam = Exam.query.get_or_404(eid)
+    verify_exam_tenant(exam)
     submissions = (ExamSubmission.query.filter_by(exam_id=eid)
                    .filter(ExamSubmission.submitted_at != None).all())
     students_no_sub = (Student.query.filter_by(section_id=exam.section_id)
@@ -227,6 +245,7 @@ def exam_results(eid):
 @faculty_required
 def delete_exam(eid):
     exam = Exam.query.get_or_404(eid)
+    verify_exam_tenant(exam)
     db.session.delete(exam)
     db.session.commit()
     flash('Exam deleted.', 'info')

@@ -85,7 +85,8 @@ def chat():
                 if link:
                     authorized = True
             elif current_user.role in ['admin', 'faculty']:
-                authorized = True
+                if current_user.role == 'superadmin' or student.user.college_id == current_user.college_id:
+                    authorized = True
             if authorized:
                 context = gather_student_context(student)
             else:
@@ -231,18 +232,30 @@ def gather_faculty_context(user):
 
 
 def gather_admin_context():
-    return {
-        "type": "admin_overview",
-        "total_students": Student.query.count(),
-        "total_faculty": User.query.filter_by(role='faculty').count(),
-        "total_semesters": Semester.query.count()
-    }
+    cid = current_user.college_id
+    if cid:
+        return {
+            "type": "admin_overview",
+            "total_students": Student.query.join(User).filter(User.college_id == cid).count(),
+            "total_faculty": User.query.filter_by(role='faculty', college_id=cid).count(),
+            "total_semesters": Semester.query.filter_by(college_id=cid).count()
+        }
+    elif current_user.role == 'superadmin':
+        return {
+            "type": "admin_overview",
+            "total_students": Student.query.count(),
+            "total_faculty": User.query.filter_by(role='faculty').count(),
+            "total_semesters": Semester.query.count()
+        }
+    return {"type": "admin_overview", "total_students": 0, "total_faculty": 0, "total_semesters": 0}
 
 
 @bp.route('/insights/<int:student_id>')
 @login_required
 def get_insights(student_id):
     student = Student.query.get_or_404(student_id)
+    if current_user.role != 'superadmin' and student.user.college_id != current_user.college_id:
+        return jsonify({"error": "Unauthorized"}), 403
     context = gather_student_context(student)
     return jsonify(context)
 

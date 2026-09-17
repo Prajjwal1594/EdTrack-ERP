@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app import db
 from app.infra import bp
@@ -61,6 +61,8 @@ def transport():
 @role_required('transport_manager', 'principal')
 def delete_transport(id):
     tr = TransportRoute.query.get_or_404(id)
+    if tr.college_id != current_user.college_id and current_user.role != 'superadmin':
+        abort(404)
     db.session.delete(tr)
     db.session.commit()
     flash('Transport route deleted.', 'info')
@@ -69,14 +71,21 @@ def delete_transport(id):
 @bp.route('/transport/allocate', methods=['POST'])
 @role_required('transport_manager', 'principal')
 def allocate_transport():
-    student_id = request.form.get('student_id')
-    route_id = request.form.get('route_id')
+    student_id = request.form.get('student_id', type=int)
+    route_id = request.form.get('route_id', type=int)
     pickup_point = request.form.get('pickup_point')
     
     if student_id and route_id:
+        student = Student.query.get_or_404(student_id)
+        route = TransportRoute.query.get_or_404(route_id)
+        if current_user.role != 'superadmin':
+            if student.user.college_id != current_user.college_id or route.college_id != current_user.college_id:
+                abort(404)
+
         alloc = TransportAllocation(
             student_id=student_id,
             route_id=route_id,
+            college_id=current_user.college_id,
             pickup_point=pickup_point,
             status='active'
         )
@@ -113,9 +122,8 @@ def hostel():
 @role_required('hostel_warden', 'principal', 'student_affairs')
 def delete_hostel(id):
     room = HostelRoom.query.get_or_404(id)
-    if room.college_id != current_user.college_id:
-        flash('Access denied.', 'danger')
-        return redirect(url_for('infra.hostel'))
+    if room.college_id != current_user.college_id and current_user.role != 'superadmin':
+        abort(404)
     
     HostelAllocation.query.filter_by(room_id=id).delete()
     db.session.delete(room)
@@ -126,11 +134,16 @@ def delete_hostel(id):
 @bp.route('/hostel/allocate', methods=['POST'])
 @role_required('hostel_warden', 'principal', 'student_affairs')
 def allocate_hostel():
-    room_id = request.form.get('room_id')
-    student_id = request.form.get('student_id')
+    room_id = request.form.get('room_id', type=int)
+    student_id = request.form.get('student_id', type=int)
+    
+    room = HostelRoom.query.get_or_404(room_id)
+    student = Student.query.get_or_404(student_id)
+    if current_user.role != 'superadmin':
+        if room.college_id != current_user.college_id or student.user.college_id != current_user.college_id:
+            abort(404)
     
     # Check if room is full
-    room = HostelRoom.query.get(room_id)
     current_occ = HostelAllocation.query.filter_by(room_id=room_id, status='Occupied').count()
     if current_occ >= room.bed_capacity:
         flash('Room is already at full capacity.', 'danger')
@@ -187,9 +200,8 @@ def inventory():
 @role_required('librarian', 'hostel_warden', 'transport_manager', 'accountant', 'principal')
 def delete_inventory(id):
     item = InventoryItem.query.get_or_404(id)
-    if item.college_id != current_user.college_id:
-        flash('Access denied.', 'danger')
-        return redirect(url_for('infra.inventory'))
+    if item.college_id != current_user.college_id and current_user.role != 'superadmin':
+        abort(404)
     
     db.session.delete(item)
     db.session.commit()
@@ -200,9 +212,8 @@ def delete_inventory(id):
 @role_required('librarian', 'hostel_warden', 'transport_manager', 'accountant', 'principal')
 def edit_inventory(id):
     item = InventoryItem.query.get_or_404(id)
-    if item.college_id != current_user.college_id:
-        flash('Access denied.', 'danger')
-        return redirect(url_for('infra.inventory'))
+    if item.college_id != current_user.college_id and current_user.role != 'superadmin':
+        abort(404)
     
     item.name = request.form.get('name')
     item.quantity = request.form.get('quantity', type=int)
@@ -223,6 +234,10 @@ def issue_book():
     user_id = request.form.get('user_id', type=int)
     due_days = request.form.get('due_days', default=14, type=int)
     book = LibraryBook.query.get_or_404(book_id)
+    user = User.query.get_or_404(user_id)
+    if current_user.role != 'superadmin':
+        if book.college_id != current_user.college_id or user.college_id != current_user.college_id:
+            abort(404)
     if book.available_copies <= 0:
         flash(f'No available copies of "{book.title}" remaining.', 'danger')
         return redirect(url_for('infra.library'))
@@ -248,6 +263,8 @@ def issue_book():
 @role_required('librarian', 'principal')
 def return_book(issue_id):
     issue = BookIssue.query.get_or_404(issue_id)
+    if issue.college_id != current_user.college_id and current_user.role != 'superadmin':
+        abort(404)
     from datetime import date
     issue.return_date = date.today()
     issue.status = 'Returned'
@@ -266,6 +283,8 @@ def return_book(issue_id):
 @role_required('librarian', 'principal')
 def delete_book(id):
     book = LibraryBook.query.get_or_404(id)
+    if book.college_id != current_user.college_id and current_user.role != 'superadmin':
+        abort(404)
     active_issues = BookIssue.query.filter_by(book_id=id, status='Issued').count()
     if active_issues > 0:
         flash(f'Cannot delete book "{book.title}" because {active_issues} copy is currently checked out.', 'danger')
