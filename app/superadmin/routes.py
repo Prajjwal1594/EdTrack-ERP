@@ -26,10 +26,15 @@ def superadmin_required(f):
 @superadmin_required
 def dashboard():
     colleges = College.query.order_by(College.created_at.desc()).all()
+    schools_count = sum(1 for c in colleges if c.is_school)
+    colleges_count = len(colleges) - schools_count
 
     # Cross-college aggregate stats
     totals = {
+        'institutions': len(colleges),
         'colleges': len(colleges),
+        'schools_count': schools_count,
+        'colleges_count': colleges_count,
         'students': User.query.filter_by(role='student').count(),
         'faculty': User.query.filter_by(role='faculty').count(),
         'admins':   User.query.filter_by(role='admin').count(),
@@ -66,15 +71,18 @@ def dashboard():
 @superadmin_required
 def colleges():
     all_colleges = College.query.order_by(College.name).all()
+    schools_count = sum(1 for c in all_colleges if c.is_school)
+    colleges_count = len(all_colleges) - schools_count
     summaries = []
     for s in all_colleges:
         summaries.append({
             'college': s,
+            'is_school': s.is_school,
             'users':    User.query.filter_by(college_id=s.id).filter(User.role != 'superadmin').count(),
             'students': User.query.filter_by(college_id=s.id, role='student').count(),
             'faculty': User.query.filter_by(college_id=s.id, role='faculty').count(),
         })
-    return render_template('superadmin/colleges.html', summaries=summaries)
+    return render_template('superadmin/colleges.html', summaries=summaries, schools_count=schools_count, colleges_count=colleges_count)
 
 
 # ── Create college ─────────────────────────────────────────────────────────────
@@ -82,16 +90,18 @@ def colleges():
 @bp.route('/colleges/new', methods=['GET', 'POST'])
 @superadmin_required
 def new_college():
+    preset_type = request.args.get('type', 'school')
     if request.method == 'POST':
         code = request.form.get('code', '').strip().upper()
         if College.query.filter_by(code=code).first():
             flash(f'College code "{code}" is already in use.', 'danger')
-            return redirect(url_for('superadmin.new_college'))
+            return redirect(url_for('superadmin.new_college', type=preset_type))
 
+        inst_type = request.form.get('institution_type', preset_type).strip().lower()
         college = College(
             name    = request.form.get('name', '').strip(),
             code    = code,
-            institution_type = request.form.get('institution_type', 'school').strip().lower(),
+            institution_type = inst_type,
             address = request.form.get('address', '').strip(),
             phone   = request.form.get('phone', '').strip(),
             email   = request.form.get('email', '').strip().lower(),
@@ -105,7 +115,7 @@ def new_college():
         admin_pwd   = request.form.get('admin_password', 'ChangeMe123!')
         if admin_email and admin_name:
             if User.query.filter_by(email=admin_email).first():
-                flash(f'Admin email "{admin_email}" already exists — college created without an admin user.', 'warning')
+                flash(f'Admin email "{admin_email}" already exists — institution created without an admin user.', 'warning')
             else:
                 admin_user = User(
                     name      = admin_name,
@@ -117,10 +127,11 @@ def new_college():
                 db.session.add(admin_user)
 
         db.session.commit()
-        flash(f'College "{college.name}" created successfully.', 'success')
+        type_label = "School" if college.is_school else "College"
+        flash(f'{type_label} "{college.name}" created successfully.', 'success')
         return redirect(url_for('superadmin.college_detail', college_id=college.id))
 
-    return render_template('superadmin/college_form.html', college=None, action='create')
+    return render_template('superadmin/college_form.html', college=None, action='create', preset_type=preset_type)
 
 
 # ── College detail ──────────────────────────────────────────────────────────────
@@ -184,11 +195,14 @@ def edit_college(college_id):
 
         college.name    = request.form.get('name', college.name).strip()
         college.code    = new_code
+        if request.form.get('institution_type'):
+            college.institution_type = request.form.get('institution_type').strip().lower()
         college.address = request.form.get('address', college.address).strip()
         college.phone   = request.form.get('phone', college.phone).strip()
         college.email   = request.form.get('email', college.email).strip().lower()
         db.session.commit()
-        flash('College updated.', 'success')
+        type_label = "School" if college.is_school else "College"
+        flash(f'{type_label} updated.', 'success')
         return redirect(url_for('superadmin.college_detail', college_id=college.id))
 
     return render_template('superadmin/college_form.html', college=college, action='edit')

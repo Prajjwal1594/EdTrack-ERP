@@ -4,9 +4,18 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <h1 class="page-title">
-      <span style="background:var(--forest);color:var(--gold);padding:4px 10px;border-radius:6px;font-size:14px;margin-right:8px">{{ college.code }}</span>
-      {{ college.name }}
+    <h1 class="page-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
+      <span style="background:var(--forest);color:var(--gold);padding:4px 10px;border-radius:6px;font-size:14px">{{ college.code }}</span>
+      <span>{{ college.name }}</span>
+      {% if college.is_school %}
+        <span style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px">
+          <i class="fas fa-school"></i> School
+        </span>
+      {% else %}
+        <span style="background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px">
+          <i class="fas fa-university"></i> College
+        </span>
+      {% endif %}
     </h1>
     <p class="page-subtitle">
       {% if college.address %}{{ college.address }} &nbsp;·&nbsp; {% endif %}
@@ -18,7 +27,7 @@
       <i class="fa-solid fa-pen"></i> Edit
     </a>
     <a href="{{ url_for('superadmin.colleges') }}" class="btn btn-outline">
-      <i class="fa-solid fa-arrow-left"></i> All Colleges
+      <i class="fa-solid fa-arrow-left"></i> All Institutions
     </a>
   </div>
 </div>

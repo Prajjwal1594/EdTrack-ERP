@@ -1,40 +1,74 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit' if action == 'edit' else 'New' }} College — Super Admin{% endblock %}
+{% block title %}{{ 'Edit' if action == 'edit' else 'New' }} Institution — Super Admin{% endblock %}
 
 {% block content %}
+{% set current_type = (college.institution_type if college and college.institution_type else preset_type | default('school')) | lower %}
 <div class="page-header">
   <div>
     <h1 class="page-title">
       <i class="fa-solid fa-{{ 'pen' if action == 'edit' else 'plus-circle' }}" style="color:var(--gold)"></i>
-      {{ 'Edit College' if action == 'edit' else 'Register New College' }}
+      {% if action == 'edit' %}
+        Edit {{ 'School' if college.is_school else 'College' }}
+      {% else %}
+        Register New {{ 'School' if current_type == 'school' else 'College' }}
+      {% endif %}
     </h1>
     <p class="page-subtitle">
-      {% if action == 'edit' %}Update details for {{ college.name }}{% else %}Add a new college to your EdTrack instance{% endif %}
+      {% if action == 'edit' %}Update details for {{ college.name }}{% else %}Add a new school or college to your EdTrack instance{% endif %}
     </p>
   </div>
   <a href="{{ url_for('superadmin.colleges') }}" class="btn btn-outline">
-    <i class="fa-solid fa-arrow-left"></i> All Colleges
+    <i class="fa-solid fa-arrow-left"></i> All Institutions
   </a>
 </div>
 
-<div style="max-width:640px">
+<div style="max-width:680px">
   <form method="POST">
-    <!-- College info -->
+    <!-- Institution info -->
     <div class="card" style="margin-bottom:20px">
-      <div class="card-header"><h3 class="card-title"><i class="fa-solid fa-university"></i> College Information</h3></div>
+      <div class="card-header"><h3 class="card-title"><i class="fa-solid fa-building-columns"></i> Institution Information</h3></div>
       <div class="card-body">
+        <!-- Institution Type Selection -->
+        <div class="form-group" style="margin-bottom:20px;">
+          <label class="form-label" style="font-weight:700;">Select Institution Type <span style="color:var(--danger)">*</span></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px;">
+            <label style="cursor:pointer;display:block;">
+              <input type="radio" name="institution_type" value="school" {% if current_type == 'school' %}checked{% endif %} style="display:none;" id="typeSchool" onchange="updateTypeInfo()">
+              <div class="type-card" id="cardSchool" style="border:2px solid {% if current_type == 'school' %}var(--forest){% else %}var(--border){% endif %};background:{% if current_type == 'school' %}#f0fdf4{% else %}var(--white){% endif %};padding:14px;border-radius:10px;transition:all .2s;">
+                <div style="font-weight:700;color:var(--forest);font-size:14px;display:flex;align-items:center;gap:8px;">
+                  <i class="fas fa-school" style="font-size:16px;color:#16a34a;"></i> School (K-12)
+                </div>
+                <div style="font-size:11px;color:var(--ink-mid);margin-top:4px;">
+                  <strong>5 Core Roles:</strong> Admin, Principal, Faculty, Student, Parent
+                </div>
+              </div>
+            </label>
+            <label style="cursor:pointer;display:block;">
+              <input type="radio" name="institution_type" value="institute" {% if current_type != 'school' %}checked{% endif %} style="display:none;" id="typeCollege" onchange="updateTypeInfo()">
+              <div class="type-card" id="cardCollege" style="border:2px solid {% if current_type != 'school' %}var(--forest){% else %}var(--border){% endif %};background:{% if current_type != 'school' %}#f0fdf4{% else %}var(--white){% endif %};padding:14px;border-radius:10px;transition:all .2s;">
+                <div style="font-weight:700;color:var(--forest);font-size:14px;display:flex;align-items:center;gap:8px;">
+                  <i class="fas fa-university" style="font-size:16px;color:#2563eb;"></i> College / Institute
+                </div>
+                <div style="font-size:11px;color:var(--ink-mid);margin-top:4px;">
+                  <strong>21 Roles:</strong> Dean, HOD, Exam Officer, Hostel, Transport, etc.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label class="form-label">College Name <span style="color:var(--danger)">*</span></label>
+          <label class="form-label" id="nameLabel">Institution Name <span style="color:var(--danger)">*</span></label>
           <input type="text" name="name" class="form-control" required
                  value="{{ college.name if college else '' }}"
-                 placeholder="e.g. Sunrise International College">
+                 placeholder="e.g. Greenwood Academy or Metro Institute of Technology">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div class="form-group">
-            <label class="form-label">College Code <span style="color:var(--danger)">*</span></label>
+            <label class="form-label">Institution Code <span style="color:var(--danger)">*</span></label>
             <input type="text" name="code" class="form-control" required
                    value="{{ college.code if college else '' }}"
-                   placeholder="e.g. SIS" maxlength="20"
+                   placeholder="e.g. GWA or MIT" maxlength="20"
                    style="text-transform:uppercase">
             <div style="font-size:11px;color:var(--ink-light);margin-top:4px">Short, unique identifier. Will be uppercased.</div>
           </div>
@@ -94,11 +128,37 @@
     <div style="display:flex;gap:12px">
       <button type="submit" class="btn btn-primary">
         <i class="fa-solid fa-{{ 'floppy-disk' if action == 'edit' else 'plus' }}"></i>
-        {{ 'Save Changes' if action == 'edit' else 'Create College' }}
+        {{ 'Save Changes' if action == 'edit' else 'Create Institution' }}
       </button>
       <a href="{{ url_for('superadmin.college_detail', college_id=college.id) if action == 'edit' else url_for('superadmin.colleges') }}"
          class="btn btn-outline">Cancel</a>
     </div>
   </form>
 </div>
+
+<script>
+function updateTypeInfo() {
+  const isSchool = document.getElementById('typeSchool').checked;
+  const cardSchool = document.getElementById('cardSchool');
+  const cardCollege = document.getElementById('cardCollege');
+  const nameInput = document.querySelector('input[name="name"]');
+  const codeInput = document.querySelector('input[name="code"]');
+
+  if (isSchool) {
+    cardSchool.style.borderColor = 'var(--forest)';
+    cardSchool.style.background = '#f0fdf4';
+    cardCollege.style.borderColor = 'var(--border)';
+    cardCollege.style.background = 'var(--white)';
+    if (!nameInput.value) nameInput.placeholder = 'e.g. Greenwood International School';
+    if (!codeInput.value) codeInput.placeholder = 'e.g. GIS';
+  } else {
+    cardCollege.style.borderColor = 'var(--forest)';
+    cardCollege.style.background = '#f0fdf4';
+    cardSchool.style.borderColor = 'var(--border)';
+    cardSchool.style.background = 'var(--white)';
+    if (!nameInput.value) nameInput.placeholder = 'e.g. Metro Institute of Technology';
+    if (!codeInput.value) codeInput.placeholder = 'e.g. MIT';
+  }
+}
+</script>
 {% endblock %}

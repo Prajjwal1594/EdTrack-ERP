@@ -1,15 +1,26 @@
 {% extends "base.html" %}
-{% block title %}All Colleges — Super Admin{% endblock %}
+{% block title %}Institutions (Schools & Colleges) — Super Admin{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <h1 class="page-title"><i class="fa-solid fa-building-columns" style="color:var(--gold)"></i> Colleges</h1>
-    <p class="page-subtitle">{{ summaries|length }} college{{ 's' if summaries|length != 1 }} registered</p>
+    <h1 class="page-title"><i class="fa-solid fa-building-columns" style="color:var(--gold)"></i> Institutions</h1>
+    <p class="page-subtitle">{{ summaries|length }} institutions registered ({{ schools_count }} school{{ 's' if schools_count != 1 }}, {{ colleges_count }} college{{ 's' if colleges_count != 1 }})</p>
   </div>
-  <a href="{{ url_for('superadmin.new_college') }}" class="btn btn-primary">
-    <i class="fa-solid fa-plus"></i> New College
-  </a>
+  <div style="display:flex;gap:8px;">
+    <a href="{{ url_for('superadmin.new_college', type='school') }}" class="btn btn-outline">
+      <i class="fa-solid fa-school"></i> New School
+    </a>
+    <a href="{{ url_for('superadmin.new_college', type='college') }}" class="btn btn-primary">
+      <i class="fa-solid fa-university"></i> New College
+    </a>
+  </div>
+</div>
+
+<div class="filter-bar" style="margin-bottom:16px;display:flex;gap:8px;">
+  <button type="button" class="btn btn-sm btn-primary filter-tab" onclick="filterType('all', this)">All ({{ summaries|length }})</button>
+  <button type="button" class="btn btn-sm btn-ghost filter-tab" onclick="filterType('school', this)"><i class="fas fa-school"></i> Schools ({{ schools_count }})</button>
+  <button type="button" class="btn btn-sm btn-ghost filter-tab" onclick="filterType('college', this)"><i class="fas fa-university"></i> Colleges ({{ colleges_count }})</button>
 </div>
 
 <div class="card">
@@ -17,7 +28,8 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>College</th>
+          <th>Institution</th>
+          <th>Type</th>
           <th>Code</th>
           <th>Contact</th>
           <th>Students</th>
@@ -29,11 +41,22 @@
       </thead>
       <tbody>
         {% for s in summaries %}
-        <tr>
+        <tr class="inst-row" data-type="{{ 'school' if s.is_school else 'college' }}">
           <td>
             <div style="font-weight:600">{{ s.college.name }}</div>
             {% if s.college.address %}
             <div style="font-size:12px;color:var(--ink-light)">{{ s.college.address[:50] }}{% if s.college.address|length > 50 %}…{% endif %}</div>
+            {% endif %}
+          </td>
+          <td>
+            {% if s.is_school %}
+              <span class="badge" style="background:#dcfce7;color:#166534;font-size:11px;padding:3px 8px;border-radius:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+                <i class="fas fa-school"></i> School
+              </span>
+            {% else %}
+              <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:11px;padding:3px 8px;border-radius:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+                <i class="fas fa-university"></i> College
+              </span>
             {% endif %}
           </td>
           <td><code style="background:var(--cream);padding:2px 6px;border-radius:4px">{{ s.college.code }}</code></td>
@@ -54,8 +77,8 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="8" style="text-align:center;padding:40px;color:var(--ink-light)">
-            No colleges yet. <a href="{{ url_for('superadmin.new_college') }}">Create one now</a>.
+          <td colspan="9" style="text-align:center;padding:40px;color:var(--ink-light)">
+            No institutions yet. <a href="{{ url_for('superadmin.new_college', type='school') }}">Create a school</a> or <a href="{{ url_for('superadmin.new_college', type='college') }}">create a college</a> now.
           </td>
         </tr>
         {% endfor %}
@@ -63,4 +86,24 @@
     </table>
   </div>
 </div>
+
+<script>
+function filterType(type, btn) {
+  document.querySelectorAll('.filter-tab').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-ghost');
+  });
+  btn.classList.remove('btn-ghost');
+  btn.classList.add('btn-primary');
+
+  const rows = document.querySelectorAll('.inst-row');
+  rows.forEach(r => {
+    if (type === 'all' || r.dataset.type === type) {
+      r.style.display = '';
+    } else {
+      r.style.display = 'none';
+    }
+  });
+}
+</script>
 {% endblock %}

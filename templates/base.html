@@ -651,9 +651,10 @@
       <span class="nav-section-label">Platform</span>
       <a href="{{ url_for('superadmin.dashboard') }}" class="nav-link {% if request.endpoint == 'superadmin.dashboard' %}active{% endif %}"><i class="fas fa-gauge-high"></i> Dashboard</a>
       <a href="{{ url_for('superadmin.pilot_feedback') }}" class="nav-link {% if request.endpoint == 'superadmin.pilot_feedback' %}active{% endif %}"><i class="fas fa-bug" style="color: #ef4444;"></i> Pilot Flaws & Feedback</a>
-      <span class="nav-section-label">Colleges</span>
-      <a href="{{ url_for('superadmin.colleges') }}" class="nav-link {% if (request.blueprint or '') == 'superadmin' and 'college' in (request.endpoint or '') and request.endpoint != 'superadmin.new_college' %}active{% endif %}"><i class="fas fa-building-columns"></i> All Colleges</a>
-      <a href="{{ url_for('superadmin.new_college') }}" class="nav-link {% if request.endpoint == 'superadmin.new_college' %}active{% endif %}"><i class="fas fa-plus-circle"></i> New College</a>
+      <span class="nav-section-label">Institutions</span>
+      <a href="{{ url_for('superadmin.colleges') }}" class="nav-link {% if (request.blueprint or '') == 'superadmin' and 'college' in (request.endpoint or '') and request.endpoint != 'superadmin.new_college' %}active{% endif %}"><i class="fas fa-school-flag"></i> All Institutions</a>
+      <a href="{{ url_for('superadmin.new_college', type='school') }}" class="nav-link {% if request.endpoint == 'superadmin.new_college' and request.args.get('type') != 'college' %}active{% endif %}"><i class="fas fa-school" style="color: #10b981;"></i> + New School</a>
+      <a href="{{ url_for('superadmin.new_college', type='college') }}" class="nav-link {% if request.endpoint == 'superadmin.new_college' and request.args.get('type') == 'college' %}active{% endif %}"><i class="fas fa-university" style="color: #6366f1;"></i> + New College</a>
 
     {% elif current_user.role == 'admin' %}
       <span class="nav-section-label">Overview</span>
