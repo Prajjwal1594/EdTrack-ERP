@@ -285,10 +285,14 @@ def add_user():
         if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'danger')
             return redirect(url_for('admin.add_user'))
+        role = request.form.get('role', '').strip().lower()
+        if role not in ['admin', 'principal', 'faculty', 'student', 'parent']:
+            flash('Invalid role. Allowed roles for college: Admin, Principal, Faculty, Student, Parent.', 'danger')
+            return redirect(url_for('admin.add_user'))
         user = User(
             name=request.form.get('name', '').strip(),
             email=email,
-            role=request.form.get('role'),
+            role=role,
             phone=request.form.get('phone', ''),
             college_id=current_user.college_id
         )
@@ -1072,7 +1076,7 @@ def upload_users():
                 continue
 
             role = (row.get('role') or 'student').lower().strip()
-            if role not in ['admin', 'faculty', 'student', 'parent', 'hr']:
+            if role not in ['admin', 'principal', 'faculty', 'student', 'parent']:
                 role = 'student'
 
             phone = row.get('phone') or row.get('mobile') or ''
