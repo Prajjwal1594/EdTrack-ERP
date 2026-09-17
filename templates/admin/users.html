@@ -15,10 +15,15 @@
 </div>
 
 <div class="filter-bar">
-  {% for role in ['', 'admin', 'principal', 'faculty', 'student', 'parent'] %}
+  {% if is_school %}
+    {% set filter_roles = ['', 'admin', 'principal', 'faculty', 'student', 'parent'] %}
+  {% else %}
+    {% set filter_roles = ['', 'admin', 'principal', 'faculty', 'student', 'parent', 'it_admin', 'registrar', 'hod', 'accountant', 'hr', 'librarian'] %}
+  {% endif %}
+  {% for role in filter_roles %}
   <a href="{{ url_for('admin.users', role=role) }}"
      class="btn btn-sm {{ 'btn-primary' if role_filter == role else 'btn-ghost' }}">
-    {{ role | title if role else 'All' }}
+    {{ role.replace('_', ' ') | title if role else 'All' }}
   </a>
   {% endfor %}
 </div>

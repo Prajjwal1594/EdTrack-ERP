@@ -120,11 +120,35 @@
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Role</label>
             <select name="role" class="form-control">
-              <option value="admin">Admin</option>
-              <option value="principal">Principal</option>
-              <option value="faculty">Faculty</option>
-              <option value="student">Student</option>
-              <option value="parent">Parent</option>
+              {% if college.is_school %}
+                <option value="admin">Admin</option>
+                <option value="principal">Principal</option>
+                <option value="faculty">Faculty</option>
+                <option value="student">Student</option>
+                <option value="parent">Parent</option>
+              {% else %}
+                <option value="admin">Admin</option>
+                <option value="it_admin">IT Administrator</option>
+                <option value="principal">Principal</option>
+                <option value="registrar">Registrar</option>
+                <option value="hod">Head of Department (HOD)</option>
+                <option value="admission_officer">Admission Officer</option>
+                <option value="accountant">Accountant</option>
+                <option value="hr">HR</option>
+                <option value="examination_officer">Examination Officer</option>
+                <option value="faculty">Faculty</option>
+                <option value="course_coordinator">Course Coordinator</option>
+                <option value="academic_advisor">Academic Advisor</option>
+                <option value="librarian">Librarian</option>
+                <option value="hostel_warden">Hostel Warden</option>
+                <option value="transport_manager">Transport Manager</option>
+                <option value="placement_officer">Placement Officer</option>
+                <option value="student_affairs">Student Affairs</option>
+                <option value="student">Student</option>
+                <option value="parent">Parent</option>
+                <option value="alumni">Alumni</option>
+                <option value="employer">Employer</option>
+              {% endif %}
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0">

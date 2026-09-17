@@ -202,9 +202,19 @@ def add_college_admin(college_id):
     college = College.query.get_or_404(college_id)
     email  = request.form.get('email', '').strip().lower()
     name   = request.form.get('name', '').strip()
+    pwd    = request.form.get('password', 'ChangeMe123!')
     role   = request.form.get('role', 'admin').strip().lower()
-    if role not in ['admin', 'principal', 'faculty', 'student', 'parent']:
-        flash('Invalid role. Allowed roles for college: Admin, Principal, Faculty, Student, Parent.', 'danger')
+    school_roles = ['admin', 'principal', 'faculty', 'student', 'parent']
+    college_roles = [
+        'admin', 'it_admin', 'principal', 'registrar', 'hod', 'admission_officer',
+        'accountant', 'hr', 'examination_officer', 'faculty', 'course_coordinator',
+        'academic_advisor', 'librarian', 'hostel_warden', 'transport_manager',
+        'placement_officer', 'student_affairs', 'student', 'parent', 'alumni', 'employer'
+    ]
+    allowed_roles = school_roles if college.is_school else college_roles
+    if role not in allowed_roles:
+        org_label = 'school' if college.is_school else 'college'
+        flash(f'Invalid role for this {org_label}. Allowed: {", ".join(allowed_roles)}.', 'danger')
         return redirect(url_for('superadmin.college_detail', college_id=college_id))
 
     if not email or not name:

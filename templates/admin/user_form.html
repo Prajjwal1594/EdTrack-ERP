@@ -39,17 +39,43 @@
           <label class="form-label">Role *</label>
           <select name="role" class="form-control" required id="roleSelect" onchange="toggleStudentFields(this.value)">
             <option value="">-- Select Role --</option>
-            {% set allowed_roles = [
-              ('admin', 'Admin'), 
-              ('principal', 'Principal'), 
-              ('faculty', 'Faculty'), 
-              ('student', 'Student'), 
-              ('parent', 'Parent')
-            ] %}
-            {% for r, label in allowed_roles %}
+            {% if is_school %}
+              {% set available_roles = [
+                ('admin', 'Admin'), 
+                ('principal', 'Principal'), 
+                ('faculty', 'Faculty'), 
+                ('student', 'Student'), 
+                ('parent', 'Parent')
+              ] %}
+            {% else %}
+              {% set available_roles = [
+                ('admin', 'Admin'), 
+                ('it_admin', 'IT Administrator'), 
+                ('principal', 'Principal'), 
+                ('registrar', 'Registrar'), 
+                ('hod', 'Head of Department (HOD)'), 
+                ('admission_officer', 'Admission Officer'), 
+                ('accountant', 'Accountant'), 
+                ('hr', 'HR'), 
+                ('examination_officer', 'Examination Officer'), 
+                ('faculty', 'Faculty'), 
+                ('course_coordinator', 'Course Coordinator'), 
+                ('academic_advisor', 'Academic Advisor'), 
+                ('librarian', 'Librarian'), 
+                ('hostel_warden', 'Hostel Warden'), 
+                ('transport_manager', 'Transport Manager'), 
+                ('placement_officer', 'Placement Officer'), 
+                ('student_affairs', 'Student Affairs'), 
+                ('student', 'Student'), 
+                ('parent', 'Parent'), 
+                ('alumni', 'Alumni'), 
+                ('employer', 'Employer')
+              ] %}
+            {% endif %}
+            {% for r, label in available_roles %}
             <option value="{{ r }}" {% if user and user.role == r %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
-            {% if user and user.role and user.role not in ['admin', 'principal', 'faculty', 'student', 'parent'] %}
+            {% if user and user.role and user.role not in (available_roles | map(attribute=0) | list) %}
             <option value="{{ user.role }}" selected>{{ user.role.replace('_', ' ').title() }} (Current)</option>
             {% endif %}
           </select>

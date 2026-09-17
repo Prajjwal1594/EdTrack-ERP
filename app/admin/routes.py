@@ -286,8 +286,18 @@ def add_user():
             flash('Email already registered.', 'danger')
             return redirect(url_for('admin.add_user'))
         role = request.form.get('role', '').strip().lower()
-        if role not in ['admin', 'principal', 'faculty', 'student', 'parent']:
-            flash('Invalid role. Allowed roles for college: Admin, Principal, Faculty, Student, Parent.', 'danger')
+        is_school = current_user.college.is_school if (current_user.college and hasattr(current_user.college, 'is_school')) else True
+        school_roles = ['admin', 'principal', 'faculty', 'student', 'parent']
+        college_roles = [
+            'admin', 'it_admin', 'principal', 'registrar', 'hod', 'admission_officer',
+            'accountant', 'hr', 'examination_officer', 'faculty', 'course_coordinator',
+            'academic_advisor', 'librarian', 'hostel_warden', 'transport_manager',
+            'placement_officer', 'student_affairs', 'student', 'parent', 'alumni', 'employer'
+        ]
+        allowed_roles = school_roles if is_school else college_roles
+        if role not in allowed_roles:
+            org_label = 'school' if is_school else 'college'
+            flash(f'Invalid role selected for this {org_label}.', 'danger')
             return redirect(url_for('admin.add_user'))
         user = User(
             name=request.form.get('name', '').strip(),
@@ -1075,8 +1085,17 @@ def upload_users():
                 errors.append(f"Row {idx}: Email '{email}' is already registered.")
                 continue
 
+            is_school = current_user.college.is_school if (current_user.college and hasattr(current_user.college, 'is_school')) else True
+            school_roles = ['admin', 'principal', 'faculty', 'student', 'parent']
+            college_roles = [
+                'admin', 'it_admin', 'principal', 'registrar', 'hod', 'admission_officer',
+                'accountant', 'hr', 'examination_officer', 'faculty', 'course_coordinator',
+                'academic_advisor', 'librarian', 'hostel_warden', 'transport_manager',
+                'placement_officer', 'student_affairs', 'student', 'parent', 'alumni', 'employer'
+            ]
+            allowed_roles = school_roles if is_school else college_roles
             role = (row.get('role') or 'student').lower().strip()
-            if role not in ['admin', 'principal', 'faculty', 'student', 'parent']:
+            if role not in allowed_roles:
                 role = 'student'
 
             phone = row.get('phone') or row.get('mobile') or ''
