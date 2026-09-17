@@ -408,6 +408,30 @@ def create_app(config_class=Config):
                 if added_or_updated:
                     db.session.commit()
                     print("[STARTUP] Synchronized CSV demo role accounts for El'Wood School.", flush=True)
+
+                sunrise_accounts = [
+                    ("admin", "Ms. Diana Clarke", "admin2@sunrise.edu", "admin123"),
+                    ("it_admin", "Sunrise IT Admin", "itadmin2@sunrise.edu", "itadmin123"),
+                    ("accountant", "Sarah Jenkins", "accountant2@sunrise.edu", "accountant123"),
+                    ("faculty", "Mr. Ahmed Malik", "faculty2@sunrise.edu", "faculty123"),
+                    ("faculty", "Ms. Clara Hernandez", "clara@sunrise.edu", "faculty123"),
+                    ("student", "Maya Patel", "student2@sunrise.edu", "student123"),
+                ]
+                sunrise_updated = False
+                for s_role, s_name, s_email, s_pwd in sunrise_accounts:
+                    su = User.query.filter_by(email=s_email).first()
+                    if not su:
+                        su = User(name=s_name, email=s_email, role=s_role, college_id=2)
+                        su.set_password(s_pwd)
+                        db.session.add(su)
+                        sunrise_updated = True
+                    elif su.college_id != 2:
+                        su.college_id = 2
+                        sunrise_updated = True
+
+                if sunrise_updated:
+                    db.session.commit()
+                    print("[STARTUP] Synchronized demo accounts for Sunrise Academy.", flush=True)
         except Exception as e:
             print(f"[STARTUP] ERROR during db.create_all()/sync: {e}", flush=True)
             traceback.print_exc()
