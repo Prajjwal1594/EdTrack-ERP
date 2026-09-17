@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admission Enquiry Submitted — {{ college.name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #10b981;
+      --forest: #1b3d2f;
+      --gold: #d4af37;
+      --slate: #0f172a;
+      --card-bg: rgba(255, 255, 255, 0.95);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);
+      color: #1e293b;
+    }
+    .success-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      max-width: 520px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      animation: slideUp 0.4s ease-out;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .icon-wrapper {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: #ecfdf5;
+      color: #059669;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 0 0 10px rgba(16, 185, 129, 0.15);
+    }
+    .school-badge {
+      display: inline-block;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    p.lead {
+      font-size: 15px;
+      color: #64748b;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .details-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 14px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .details-row:last-child { border-bottom: none; }
+    .details-label { color: #64748b; font-weight: 500; }
+    .details-val { color: #0f172a; font-weight: 600; }
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 12px;
+      background: var(--forest);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover {
+      background: #143024;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .footer-note {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="success-card">
+    <div class="icon-wrapper">
+      <i class="fas fa-check"></i>
+    </div>
+    <div class="school-badge">
+      <i class="fas fa-graduation-cap"></i> {{ college.name }}
+    </div>
+    <h1>Enquiry Submitted!</h1>
+    <p class="lead">Thank you for your interest. We have received your admission enquiry and our admissions office will reach out to you shortly.</p>
+
+    <div class="details-box">
+      <div class="details-row">
+        <span class="details-label">Reference ID</span>
+        <span class="details-val">#ENQ-{{ "%04d"|format(enquiry.id) }}</span>
+      </div>
+      <div class="details-row">
+        <span class="details-label">Student Name</span>
+        <span class="details-val">{{ enquiry.student_name }}</span>
+      </div>
+      {% if enquiry.target_class %}
+      <div class="details-row">
+        <span class="details-label">Class / Grade</span>
+        <span class="details-val">{{ enquiry.target_class }}</span>
+      </div>
+      {% endif %}
+      {% if enquiry.phone %}
+      <div class="details-row">
+        <span class="details-label">Contact Number</span>
+        <span class="details-val">{{ enquiry.phone }}</span>
+      </div>
+      {% endif %}
+      <div class="details-row">
+        <span class="details-label">Status</span>
+        <span class="details-val" style="color:#059669"><i class="fas fa-circle-dot" style="font-size:10px"></i> Received</span>
+      </div>
+    </div>
+
+    <button onclick="window.history.back()" class="btn">
+      <i class="fas fa-arrow-left" style="margin-right:8px"></i> Return to Website
+    </button>
+
+    <div class="footer-note">
+      Powered by <strong>EdTrack ERP</strong> Admissions Management
+    </div>
+  </div>
+</body>
+</html>

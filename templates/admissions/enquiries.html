@@ -7,9 +7,9 @@
     <h1>Admissions Leads (Enquiries)</h1>
     <p>Manage prospective student leads and follow-ups.</p>
   </div>
-  <div class="page-header-right">
-    <button class="btn btn-primary"><i class="fas fa-plus"></i> Manual Entry</button>
-    <a href="{{ url_for('admissions.public_inquire', college_id=current_user.college_id) }}" target="_blank" class="btn btn-outline"><i class="fas fa-external-link-alt"></i> Public Form</a>
+  <div class="page-header-right" style="display:flex;gap:8px;">
+    <button type="button" class="btn btn-primary" onclick="openWebsiteConnectModal()"><i class="fas fa-globe"></i> Connect Website</button>
+    <a href="{{ url_for('admissions.public_inquire', college_id=current_user.college_id) }}" target="_blank" class="btn btn-outline"><i class="fas fa-external-link-alt"></i> Hosted Form</a>
   </div>
 </div>
 
@@ -41,7 +41,13 @@
               {% if enq.email %}<i class="fas fa-envelope fa-fw text-muted"></i> {{ enq.email }}{% endif %}
             </div>
           </td>
-          <td>{{ enq.source or 'Unknown' }}</td>
+          <td>
+            {% if 'Website' in (enq.source or '') %}
+              <span class="badge" style="background:#e0f2fe;color:#0369a1;"><i class="fas fa-globe"></i> {{ enq.source }}</span>
+            {% else %}
+              <span class="badge" style="background:#f1f5f9;color:#475569;">{{ enq.source or 'Direct' }}</span>
+            {% endif %}
+          </td>
           <td>
             {% if enq.status == 'New' %}
               <span class="badge bg-gold" style="color: black;"><i class="fas fa-sparkles"></i> New</span>
@@ -76,4 +82,125 @@
     </table>
   </div>
 </div>
+
+<!-- Website Integration Modal -->
+<div id="websiteConnectModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.6);backdrop-filter:blur(6px);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;width:100%;max-width:760px;border-radius:18px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);padding:30px;position:relative;">
+    <button type="button" onclick="closeWebsiteConnectModal()" style="position:absolute;top:20px;right:20px;background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;">&times;</button>
+    
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+      <div style="width:40px;height:40px;border-radius:10px;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:20px;">
+        <i class="fas fa-globe"></i>
+      </div>
+      <div>
+        <h2 style="font-size:20px;font-weight:700;margin:0;">Connect Website to Admissions CRM</h2>
+        <p style="font-size:13px;color:#64748b;margin:0;">Automatically capture inquiries from your external school/college website directly into this portal.</p>
+      </div>
+    </div>
+
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin:20px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <span style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Your School Code</span>
+        <div style="font-size:16px;font-weight:800;color:#0f172a;letter-spacing:0.5px;">{{ current_user.college.code if current_user.college else 'EWIU' }}</div>
+      </div>
+      <div>
+        <span style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">API Endpoint</span>
+        <div style="font-size:13px;font-weight:600;color:#059669;"><code>{{ request.host_url }}api/admissions/inquire</code></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:8px;border-bottom:1px solid #e2e8f0;margin-bottom:18px;">
+      <button type="button" class="btn btn-sm btn-primary tab-btn" onclick="switchTab('widget', this)">1. Embed Widget (1-Line)</button>
+      <button type="button" class="btn btn-sm btn-ghost tab-btn" onclick="switchTab('htmlform', this)">2. HTML Form</button>
+      <button type="button" class="btn btn-sm btn-ghost tab-btn" onclick="switchTab('fetch', this)">3. JavaScript Fetch</button>
+    </div>
+
+    <!-- Tab 1: Widget -->
+    <div id="tab-widget" class="tab-pane">
+      <p style="font-size:13px;color:#475569;margin-bottom:10px;">Paste this single line before the closing <code>&lt;/body&gt;</code> tag on your website. It adds an interactive floating admission button and inquiry modal instantly:</p>
+      <div style="position:relative;">
+        <pre style="background:#0f172a;color:#f8fafc;padding:16px;border-radius:10px;font-size:13px;overflow-x:auto;"><code>&lt;script src="{{ request.host_url }}static/js/edtrack-admission-widget.js" data-school="{{ current_user.college.code if current_user.college else 'EWIU' }}"&gt;&lt;/script&gt;</code></pre>
+        <button type="button" onclick="copySnippet(this)" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.15);color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+    </div>
+
+    <!-- Tab 2: HTML Form -->
+    <div id="tab-htmlform" class="tab-pane" style="display:none;">
+      <p style="font-size:13px;color:#475569;margin-bottom:10px;">Use this form directly inside your website's contact or admissions page:</p>
+      <div style="position:relative;">
+        <pre style="background:#0f172a;color:#f8fafc;padding:16px;border-radius:10px;font-size:12px;overflow-x:auto;"><code>&lt;form action="{{ request.host_url }}api/admissions/inquire" method="POST"&gt;
+  &lt;input type="hidden" name="school_code" value="{{ current_user.college.code if current_user.college else 'EWIU' }}" /&gt;
+  &lt;!-- Optional redirect back to your site: --&gt;
+  &lt;!-- &lt;input type="hidden" name="redirect_url" value="https://yourschool.com/thank-you.html" /&gt; --&gt;
+
+  &lt;input type="text" name="student_name" placeholder="Student Full Name" required /&gt;
+  &lt;input type="text" name="parent_name" placeholder="Parent / Guardian Name" /&gt;
+  &lt;input type="tel" name="phone" placeholder="Phone / Mobile Number" required /&gt;
+  &lt;input type="email" name="email" placeholder="Email Address" /&gt;
+  &lt;input type="text" name="target_class" placeholder="Class / Grade Applying For" /&gt;
+  &lt;textarea name="notes" placeholder="Questions or Message"&gt;&lt;/textarea&gt;
+
+  &lt;button type="submit"&gt;Submit Admission Enquiry&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+        <button type="button" onclick="copySnippet(this)" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.15);color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+    </div>
+
+    <!-- Tab 3: JS Fetch -->
+    <div id="tab-fetch" class="tab-pane" style="display:none;">
+      <p style="font-size:13px;color:#475569;margin-bottom:10px;">For modern websites (React, Vue, or custom JS forms), submit asynchronously using <code>fetch()</code>:</p>
+      <div style="position:relative;">
+        <pre style="background:#0f172a;color:#f8fafc;padding:16px;border-radius:10px;font-size:12px;overflow-x:auto;"><code>fetch('{{ request.host_url }}api/admissions/inquire', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    school_code: '{{ current_user.college.code if current_user.college else 'EWIU' }}',
+    student_name: 'John Doe',
+    parent_name: 'Jane Doe',
+    phone: '+91 9876543210',
+    email: 'jane@example.com',
+    target_class: 'Grade 5',
+    notes: 'Interested in sports facilities'
+  })
+})
+.then(res =&gt; res.json())
+.then(data =&gt; console.log('Enquiry received! ID:', data.enquiry_id));</code></pre>
+        <button type="button" onclick="copySnippet(this)" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.15);color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;text-align:right;">
+      <button type="button" class="btn btn-outline" onclick="closeWebsiteConnectModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openWebsiteConnectModal() {
+  document.getElementById('websiteConnectModal').style.display = 'flex';
+}
+function closeWebsiteConnectModal() {
+  document.getElementById('websiteConnectModal').style.display = 'none';
+}
+function switchTab(tabName, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-ghost');
+  });
+  btn.classList.remove('btn-ghost');
+  btn.classList.add('btn-primary');
+
+  document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + tabName).style.display = 'block';
+}
+function copySnippet(btn) {
+  const code = btn.previousElementSibling.innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
+}
+</script>
 {% endblock %}

@@ -212,6 +212,9 @@ def create_app(config_class=Config):
     # ── Enterprise ERP Module Blueprints ─────────────────────────────────────
     from app.admissions import bp as admissions_bp
     app.register_blueprint(admissions_bp, url_prefix='/admissions')
+    from app.admissions.routes import api_inquire, api_school_info
+    app.add_url_rule('/api/admissions/inquire', view_func=api_inquire, methods=['POST', 'OPTIONS'])
+    app.add_url_rule('/api/admissions/school-info', view_func=api_school_info, methods=['GET', 'OPTIONS'])
 
     from app.infra import bp as infra_bp
     app.register_blueprint(infra_bp, url_prefix='/infra')
