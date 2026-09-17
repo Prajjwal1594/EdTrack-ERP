@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Admin Dashboard — El'Wood{% endblock %}
+{% block title %}Admin Dashboard — {{ current_user.college.name if current_user.college else 'EdTrack' }}{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 {% block extra_head %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -18,7 +18,9 @@
   </div>
   <div class="flex gap-8" style="flex-wrap:wrap;">
     <a href="{{ url_for('admin.upload_users') }}" class="btn btn-outline"><i class="fas fa-file-excel"></i> Bulk Import (CSV/Excel)</a>
+    {% if not is_school %}
     <a href="{{ url_for('admin.counselor_assignments') }}" class="btn btn-outline"><i class="fas fa-user-shield"></i> Counselors & HODs</a>
+    {% endif %}
     <a href="{{ url_for('admin.add_user') }}" class="btn btn-gold"><i class="fas fa-user-plus"></i> Add User</a>
   </div>
 </div>
@@ -115,21 +117,24 @@
         <a href="{{ url_for('admin.at_risk_dashboard') }}" class="btn btn-danger"><i class="fas fa-exclamation-triangle"></i> At-Risk Monitoring</a>
         {% endif %}
         <a href="{{ url_for('admin.upload_users') }}" class="btn btn-gold"><i class="fas fa-file-excel"></i> Bulk Upload Users (CSV/Excel)</a>
+        {% if not is_school %}
         <a href="{{ url_for('admin.counselor_assignments') }}" class="btn btn-primary"><i class="fas fa-user-shield"></i> Counselors & HODs Assigning</a>
+        <a href="{{ url_for('admin.courses_management') }}" class="btn btn-outline"><i class="fas fa-graduation-cap"></i> Manage Courses & Streams</a>
+        {% endif %}
         <a href="{{ url_for('admin.export_attendance_matrix_csv') }}" class="btn btn-outline"><i class="fas fa-file-csv"></i> Export Attendance Matrix (CSV)</a>
         <a href="{{ url_for('admin.admission') }}" class="btn btn-outline"><i class="fas fa-file-signature"></i> Admission Form</a>
         <a href="{{ url_for('admin.add_user') }}" class="btn btn-outline"><i class="fas fa-user-plus"></i> Add Single User</a>
-        <a href="{{ url_for('admin.semesters') }}" class="btn btn-outline"><i class="fas fa-university"></i> Manage Semesters</a>
+        <a href="{{ url_for('admin.semesters') }}" class="btn btn-outline"><i class="fas fa-{% if is_school %}chalkboard{% else %}university{% endif %}"></i> Manage {{ vocab.classes_name }}</a>
         <a href="{{ url_for('admin.terms') }}" class="btn btn-outline"><i class="fas fa-calendar"></i> Manage Terms</a>
         <a href="{{ url_for('admin.faculty_assignments') }}" class="btn btn-outline"><i class="fas fa-chalkboard-user"></i> Assign Faculty</a>
         <a href="{{ url_for('fees.index') }}" class="btn btn-outline"><i class="fas fa-money-bill-wave"></i> Fee Management</a>
-        <a href="{{ url_for('admin.college_settings') }}" class="btn btn-ghost"><i class="fas fa-gear"></i> College Settings</a>
+        <a href="{{ url_for('admin.college_settings') }}" class="btn btn-ghost"><i class="fas fa-gear"></i> {{ vocab.org_type }} Settings</a>
       </div>
     </div>
 
     {% if college %}
     <div class="card">
-      <div class="card-header"><span class="card-title">College Info</span></div>
+      <div class="card-header"><span class="card-title">{{ vocab.org_type }} Info</span></div>
       <div class="card-body text-small text-muted" style="display:flex;flex-direction:column;gap:6px;">
         <div><strong style="color:var(--ink)">{{ college.name }}</strong></div>
         {% if college.address %}<div><i class="fas fa-location-dot" style="width:14px"></i> {{ college.address }}</div>{% endif %}

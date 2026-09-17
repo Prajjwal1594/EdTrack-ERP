@@ -90,6 +90,7 @@
         {% set st = user.student_profile if user and user.student_profile else None %}
         
         <h4 style="font-size:14px; font-weight:600; color:var(--forest); margin-bottom:14px;"><i class="fas fa-graduation-cap"></i> Academic Tagging & Enrollment</h4>
+        {% if not is_school %}
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Course</label>
@@ -130,6 +131,19 @@
             </select>
           </div>
         </div>
+        {% else %}
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Class & Section *</label>
+            <select name="section_id" class="form-control">
+              <option value="">— Select Class & Section —</option>
+              {% for s in sections %}
+              <option value="{{ s.id }}" {% if st and st.section_id == s.id %}selected{% endif %}>{{ s.full_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% endif %}
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Regn / Enrollment Number</label>

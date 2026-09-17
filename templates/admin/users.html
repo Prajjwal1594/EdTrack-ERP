@@ -8,7 +8,9 @@
     <p>{{ users | length }} user{{ 's' if users | length != 1 }}</p>
   </div>
   <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    {% if not is_school %}
     <a href="{{ url_for('admin.counselor_assignments') }}" class="btn btn-outline"><i class="fas fa-user-shield"></i> Counselors & HODs</a>
+    {% endif %}
     <a href="{{ url_for('admin.upload_users') }}" class="btn btn-outline"><i class="fas fa-file-excel"></i> Upload Users (CSV/Excel)</a>
     <a href="{{ url_for('admin.add_user') }}" class="btn btn-gold"><i class="fas fa-user-plus"></i> Add User</a>
   </div>
@@ -51,8 +53,13 @@
           <td class="text-muted text-small">
             {% if u.role == 'student' and u.student_profile %}
               {% set st = u.student_profile %}
-              <div><strong>{{ st.course_name }}</strong> {% if st.stream_name != 'N/A' %} - {{ st.stream_name }}{% endif %}</div>
-              <div style="font-size:11px; color:var(--ink-light);">Batch: {{ st.batch_name }} | Sec: {{ st.section_name }}</div>
+              {% if is_school %}
+                <div><strong>Section: {{ st.section_name }}</strong></div>
+                <div style="font-size:11px; color:var(--ink-light);">Enrollment: {{ st.enrollment_number or '—' }}</div>
+              {% else %}
+                <div><strong>{{ st.course_name }}</strong> {% if st.stream_name != 'N/A' %} - {{ st.stream_name }}{% endif %}</div>
+                <div style="font-size:11px; color:var(--ink-light);">Batch: {{ st.batch_name }} | Sec: {{ st.section_name }}</div>
+              {% endif %}
             {% else %}
               —
             {% endif %}

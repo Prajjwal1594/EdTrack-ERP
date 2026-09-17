@@ -9,7 +9,7 @@
 <div class="card">
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Semester</th><th>Section</th><th>Room</th><th>Capacity</th><th>Students</th><th></th></tr></thead>
+      <thead><tr><th>{{ vocab.class_name }}</th><th>Section</th><th>Room</th><th>Capacity</th><th>Students</th><th></th></tr></thead>
       <tbody>
         {% for s in sections %}
         <tr>
@@ -36,7 +36,7 @@
     <div class="modal-header"><span class="modal-title">Add Section</span><button class="modal-close" onclick="closeModal('addSectionModal')">×</button></div>
     <form method="POST" action="{{ url_for('admin.add_section') }}">
       <div class="modal-body">
-        <div class="form-group"><label class="form-label">Semester *</label>
+        <div class="form-group"><label class="form-label">{{ vocab.class_name }} *</label>
           <select name="semester_id" class="form-control" required>
             {% for c in semesters %}<option value="{{ c.id }}">{{ c.name }} ({{ c.academic_year }})</option>{% endfor %}
           </select>

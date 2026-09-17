@@ -68,12 +68,14 @@
       <input type="text" id="rosterSearch" onkeyup="filterRoster()" placeholder="Search name, roll no, email..." style="width: 100%; padding: 8px 12px 8px 38px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px;">
     </div>
     
+    {% if not is_school %}
     <select id="programFilter" onchange="filterRoster()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; background: var(--white);">
       <option value="all">All Programs & Courses</option>
       {% for c in courses %}
       <option value="{{ c.name|lower }}">{{ c.name }}</option>
       {% endfor %}
     </select>
+    {% endif %}
 
     <select id="statusFilter" onchange="filterRoster()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; background: var(--white);">
       <option value="all">All Attendance & Statuses</option>
@@ -101,7 +103,7 @@
         <tr style="background: var(--cream); border-bottom: 2px solid var(--border); color: var(--forest); font-weight: 700;">
           <th style="padding: 14px 16px;">Student Profile & Avatar</th>
           <th style="padding: 14px 16px;">Roll & Enrollment No.</th>
-          <th style="padding: 14px 16px;">Course & Section</th>
+          <th style="padding: 14px 16px;">{% if is_school %}Class & Section{% else %}Course & Section{% endif %}</th>
           <th style="padding: 14px 16px;">Attendance Rate</th>
           <th style="padding: 14px 16px;">Parent / Guardian Contact</th>
           <th style="padding: 14px 16px;">Behavioral Notes</th>
@@ -137,7 +139,7 @@
             {% if sp and sp.section %}
               <span class="badge" style="background:#dbeafe;color:#1e40af;font-weight:700;padding:4px 10px;border-radius:12px;">{{ sp.section.full_name }}</span>
             {% else %}
-              <span class="badge" style="background:#fef3c7;color:#92400e;font-weight:700;padding:4px 10px;border-radius:12px;">{{ sp.target_class if sp and sp.target_class else 'B.Tech CSE - Sec A' }}</span>
+              <span class="badge" style="background:#fef3c7;color:#92400e;font-weight:700;padding:4px 10px;border-radius:12px;">{{ sp.target_class if sp and sp.target_class else ('Class 5 - Sec A' if is_school else 'B.Tech CSE - Sec A') }}</span>
             {% endif %}
             <div style="font-size: 11px; color: var(--ink-mid); margin-top: 2px;">Session: {{ sp.session if sp and sp.session else '2026-2027' }}</div>
           </td>

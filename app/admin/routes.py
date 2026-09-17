@@ -1208,6 +1208,10 @@ def sample_csv():
 @bp.route('/counselors', methods=['GET'])
 @role_required('admin', 'superadmin', 'it_admin', 'academic_advisor', 'principal')
 def counselor_assignments():
+    if current_user.college and current_user.college.is_school and current_user.role != 'superadmin':
+        flash("Counselor and HOD assignments are higher-education features and not applicable for K-12 schools.", "info")
+        return redirect(url_for('admin.dashboard'))
+
     courses = Course.query.filter_by(college_id=current_user.college_id).order_by(Course.name).all()
     streams = Stream.query.filter_by(college_id=current_user.college_id).order_by(Stream.name).all()
     sections = Section.query.join(Semester, isouter=True).filter((Semester.college_id == current_user.college_id) | (Section.course_id.in_([c.id for c in courses]))).all()
@@ -1223,6 +1227,10 @@ def counselor_assignments():
 @bp.route('/counselors/assign-course', methods=['POST'])
 @admin_required
 def assign_course_counselor():
+    if current_user.college and current_user.college.is_school and current_user.role != 'superadmin':
+        flash("Counselor assignments are not applicable for schools.", "danger")
+        return redirect(url_for('admin.dashboard'))
+
     course_id = request.form.get('course_id', type=int)
     faculty_id = request.form.get('faculty_id', type=int)
     course = Course.query.get_or_404(course_id)
@@ -1242,6 +1250,10 @@ def assign_course_counselor():
 @bp.route('/counselors/assign-stream', methods=['POST'])
 @admin_required
 def assign_stream_counselor():
+    if current_user.college and current_user.college.is_school and current_user.role != 'superadmin':
+        flash("Counselor assignments are not applicable for schools.", "danger")
+        return redirect(url_for('admin.dashboard'))
+
     stream_id = request.form.get('stream_id', type=int)
     faculty_id = request.form.get('faculty_id', type=int)
     stream = Stream.query.get_or_404(stream_id)
@@ -1261,6 +1273,10 @@ def assign_stream_counselor():
 @bp.route('/counselors/assign-section', methods=['POST'])
 @admin_required
 def assign_section_counselor():
+    if current_user.college and current_user.college.is_school and current_user.role != 'superadmin':
+        flash("Counselor assignments are not applicable for schools.", "danger")
+        return redirect(url_for('admin.dashboard'))
+
     section_id = request.form.get('section_id', type=int)
     faculty_id = request.form.get('faculty_id', type=int)
     section = Section.query.get_or_404(section_id)
@@ -1282,6 +1298,10 @@ def assign_section_counselor():
 @bp.route('/courses', methods=['GET', 'POST'])
 @role_required('admin', 'superadmin', 'it_admin', 'principal', 'course_coordinator')
 def courses_management():
+    if current_user.college and current_user.college.is_school and current_user.role != 'superadmin':
+        flash("Courses, streams, and batch management are higher-education features and not applicable for K-12 schools. Manage Classes & Sections instead.", "info")
+        return redirect(url_for('admin.semesters'))
+
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'add_course':
